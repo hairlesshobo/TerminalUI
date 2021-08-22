@@ -9,8 +9,8 @@ namespace TerminalUI.Elements
         
         public TerminalPoint TopLeftPoint { get; private protected set; }
         public TerminalPoint TopRightPoint { get; private protected set; }
-        public TerminalPoint BottomLeftPoint { get; private protected set; }
-        public TerminalPoint BottomRightPoint { get; private protected set; }
+        public TerminalPoint BottomLeftPoint { get; private protected set; } = null;
+        public TerminalPoint BottomRightPoint { get; private protected set; } = null;
 
         public abstract void Redraw();
 

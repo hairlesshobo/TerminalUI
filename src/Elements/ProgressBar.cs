@@ -2,13 +2,12 @@ using System;
 
 namespace TerminalUI.Elements
 {
-    public class ProgressBar
+    public class ProgressBar : Element
     {
-        private TerminalPoint progressBarPoint;
         private ProgressDisplay display;
         private ProgressOptions options;
-        private int width;
         private int barWidth;
+        private double currentPercent;
 
         public ProgressBar(
             int width = 0,
@@ -17,26 +16,30 @@ namespace TerminalUI.Elements
             double startPercent = 0.0
             )
         {
-            this.progressBarPoint = TerminalPoint.GetCurrent();
-            this.width = width;
+            this.Height = width;
+            this.Width = Terminal.Width;
+            
+            this.TopLeftPoint = TerminalPoint.GetCurrent();
+            this.TopRightPoint = new TerminalPoint(this.TopLeftPoint.Left + this.Width, this.TopLeftPoint.Top);
+
             this.display = display;
             this.options = options;
 
-            if (this.width == 0)
-                this.width = Console.WindowWidth;
+            if (this.Width == 0)
+                this.Width = Terminal.Width;
 
-            this.barWidth = this.width;
+            this.barWidth = this.Width;
 
             if (this.display != ProgressDisplay.NoPercent)
-                this.barWidth = this.width - 5;
+                this.barWidth = this.Width - 5;
 
             this.UpdateProgress(startPercent);
         }
 
-        public void UpdateProgress(double currentPercent)
+        public override void Redraw()
         {
             TerminalPoint previousPoint = TerminalPoint.GetCurrent();
-            this.progressBarPoint.MoveTo();
+            this.TopLeftPoint.MoveTo();
 
             if (currentPercent > 1)
                 currentPercent /= 100.0;
@@ -61,6 +64,13 @@ namespace TerminalUI.Elements
                 Terminal.Write(String.Format("{0,-5}", pctString));
 
             previousPoint.MoveTo();
+        }
+
+        public void UpdateProgress(double newPercent)
+        {
+            this.currentPercent = newPercent;
+
+            this.Redraw();
         }
     }
 }

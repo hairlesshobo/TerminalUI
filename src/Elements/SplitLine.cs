@@ -2,28 +2,36 @@ using System;
 
 namespace TerminalUI.Elements
 {
-    public class SplitLine
+    public class SplitLine : Element
     {
-        private TerminalPoint linePoint;
+        private static string _leftText;
+        private static string _rightText;
+
 
         public SplitLine(string leftText, string rightText)
         {
-            linePoint = TerminalPoint.GetCurrent();
+            _leftText = leftText;
+            _rightText = rightText;
 
-            // Console.CursorLeft = 0;
+            this.TopLeftPoint = TerminalPoint.GetCurrent();
+            this.TopRightPoint = new TerminalPoint(Terminal.Width, this.TopLeftPoint.Top);
+            this.BottomLeftPoint = null;
+            this.BottomRightPoint = null;
 
-            Terminal.WriteColor(ConsoleColor.White, leftText);
+            this.Height = 1;
+            this.Width = TopRightPoint.Left - TopLeftPoint.Left;
 
-            Console.CursorLeft = Console.WindowWidth - rightText.Length;
-            Terminal.WriteColor(ConsoleColor.Magenta, rightText);
+            this.Redraw();
+        }
 
-            linePoint.MoveTo();
-            
-            // Console.CursorLeft = 0;
+        public override void Redraw()
+        {
+            Terminal.WriteColor(ConsoleColor.White, _leftText);
 
-            // I don't need to drop down a line because writing all the way to the end of the line,
-            // it seems to automatically drop down a line for me
-            // Console.CursorTop -= 1;
+            Console.CursorLeft = Terminal.Width - _rightText.Length;
+            Terminal.WriteColor(ConsoleColor.Magenta, _rightText);
+
+            this.TopLeftPoint.MoveTo();
         }
 
         public string UpdateLeft(string text)

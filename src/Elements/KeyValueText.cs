@@ -2,15 +2,15 @@ using System;
 
 namespace TerminalUI.Elements
 {
-    public class KeyValueText
+    public class KeyValueText : Element
     {
-        private TerminalPoint kvtPoint;
         private TerminalPoint kvtRightPoint;
         private int prevRightWidth = 0;
+        private string rightText = String.Empty;
 
         public KeyValueText(string keyName, string valueText, int leftWidth = 0)
         {
-            kvtPoint = TerminalPoint.GetCurrent();
+            this.TopLeftPoint = TerminalPoint.GetCurrent();
 
             if (leftWidth < 0)
                 keyName = keyName.PadLeft(leftWidth * -1);
@@ -24,27 +24,36 @@ namespace TerminalUI.Elements
             this.UpdateValue(valueText);
         }
 
-        public void UpdateValue(string newText)
+        public override void Redraw()
         {
             TerminalPoint previousPoint = TerminalPoint.GetCurrent();
             kvtRightPoint.MoveTo();
 
-            if (newText == null)
-                newText = String.Empty;
+            if (this.rightText == null)
+                this.rightText = String.Empty;
 
-            Console.Write(newText);
+            Console.Write(this.rightText);
             
-            if (newText.Length < prevRightWidth)
+            if (this.rightText.Length < prevRightWidth)
             {
-                int spacesToClear = prevRightWidth - newText.Length;
+                int spacesToClear = prevRightWidth - this.rightText.Length;
 
                 for (int i = 0; i < spacesToClear; i++)
                     Console.Write(' ');
             }
 
-            prevRightWidth = newText.Length;
+            prevRightWidth = this.rightText.Length;
+
+            this.TopRightPoint = TerminalPoint.GetCurrent();
 
             previousPoint.MoveTo();
+        }
+
+        public void UpdateValue(string newText)
+        {
+            this.rightText = newText;
+
+            this.Redraw();
         }
     }
 }
