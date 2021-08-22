@@ -4,6 +4,26 @@ namespace TerminalUI
 {
     public static class Terminal
     {
+        public static int Width => Console.WindowWidth;
+        public static int Height => Console.WindowHeight;
+        public static int Left => Console.CursorLeft;
+        public static int Top => Console.CursorTop;
+
+        public static ConsoleColor DefaultBackgroundColor { get; private set; } = Console.BackgroundColor;
+        public static ConsoleColor DefaultForegroundColor { get; private set; } = Console.ForegroundColor;
+
+        public static ConsoleColor BackgroundColor
+        {
+            get => Console.BackgroundColor;
+            set => Console.BackgroundColor = value;
+        }
+
+        public static ConsoleColor ForegroundColor
+        {
+            get => Console.ForegroundColor;
+            set => Console.ForegroundColor = value;
+        }
+
         /// <summary>
         ///     Proxy method for <see cref="Console.Write(char)" />. Reserved for future use
         /// </summary>
@@ -33,16 +53,23 @@ namespace TerminalUI
             Console.ForegroundColor = originalColor;
         }
 
-        // public static void WriteLineC(ConsoleColor color, char inputChar)
-        //     => Write(color, new string(new char[] { inputChar }));
+        public static void WriteLine() 
+            => Terminal.NextLine();
 
-        // public static void WriteLineC(ConsoleColor color, string inputString)
-        // {
-        //     ConsoleColor originalColor = Console.ForegroundColor;
-        //     Console.ForegroundColor = color;
-        //     Console.WriteLine(inputString);
-        //     Console.ForegroundColor = originalColor;
-        // }
+        public static void WriteLine(string inputString)
+        {
+            Console.Write(inputString);
+            Terminal.NextLine();
+        }
+
+        public static void WriteLineColor(ConsoleColor color, char inputChar)
+            => WriteLineColor(color, new string(new char[] { inputChar }));
+
+        public static void WriteLineColor(ConsoleColor color, string inputString)
+        {
+            WriteColor(color, inputString);
+            Terminal.NextLine();
+        }
 
 
         public static void NextLine()
@@ -50,5 +77,20 @@ namespace TerminalUI
             Console.CursorLeft = 0;
             Console.CursorTop += 1;
         }
+
+        public static void SetDefaultBackgroundColor(ConsoleColor color)
+            => DefaultBackgroundColor = color;
+
+        public static void SetDefaultForegroundColor(ConsoleColor color)
+            => DefaultForegroundColor = color;
+
+        public static void ResetColor()
+        {
+            Console.BackgroundColor = DefaultBackgroundColor;
+            Console.ForegroundColor = DefaultForegroundColor;
+        }
+
+        public static void Clear()
+            => Console.Clear();
     }
 }

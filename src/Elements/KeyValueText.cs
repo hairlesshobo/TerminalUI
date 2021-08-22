@@ -1,6 +1,6 @@
 using System;
 
-namespace TerminalUI.Objects
+namespace TerminalUI.Elements
 {
     public class KeyValueText
     {

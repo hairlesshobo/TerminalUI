@@ -1,6 +1,6 @@
 using System;
 
-namespace TerminalUI.Objects
+namespace TerminalUI.Elements
 {
     public class SplitLine
     {
@@ -12,10 +12,10 @@ namespace TerminalUI.Objects
 
             // Console.CursorLeft = 0;
 
-            Console.Write(leftText);
+            Terminal.WriteColor(ConsoleColor.White, leftText);
 
             Console.CursorLeft = Console.WindowWidth - rightText.Length;
-            Console.Write(rightText);
+            Terminal.WriteColor(ConsoleColor.Magenta, rightText);
 
             linePoint.MoveTo();
             
