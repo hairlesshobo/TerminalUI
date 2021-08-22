@@ -29,6 +29,9 @@ namespace TerminalUI.Elements
             TerminalPoint previousPoint = TerminalPoint.GetCurrent();
             kvtRightPoint.MoveTo();
 
+            if (newText == null)
+                newText = String.Empty;
+
             Console.Write(newText);
             
             if (newText.Length < prevRightWidth)

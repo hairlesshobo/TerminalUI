@@ -4,21 +4,19 @@ using System.Threading;
 
 namespace TerminalUI
 {
-    public static class ShortcutKeyHelper
+    public static class KeyInput
     {
-        private static Dictionary<ConsoleKey, Action> _registeredKeys;
+        private static Dictionary<Key, Action<Key>> _registeredKeys;
         private static CancellationTokenSource _cts;
         private static volatile bool _listening;
         private static Thread _thread;
 
-        static ShortcutKeyHelper()
+        static KeyInput()
         {
-            _registeredKeys = new Dictionary<ConsoleKey, Action>();
+            _registeredKeys = new Dictionary<Key, Action<Key>>();
         }
 
-        // TODO: Add support for modifiers
-
-        public static bool RegisterKey(ConsoleKey key, Action callback)
+        public static bool RegisterKey(Key key, Action<Key> callback)
         {
             if (callback == null)
                 return false;
@@ -31,7 +29,7 @@ namespace TerminalUI
             return true;
         }
 
-        public static bool UnregisterKey(ConsoleKey key)
+        public static bool UnregisterKey(Key key)
         {
             if (!_registeredKeys.ContainsKey(key))
                 return false;
@@ -54,6 +52,9 @@ namespace TerminalUI
             return true;
         }
 
+        public static void ClearAllKeys()
+            => _registeredKeys.Clear();
+
         public static void StopListening()
         {
             if (!_listening)
@@ -72,10 +73,11 @@ namespace TerminalUI
             {
                 if (Console.KeyAvailable)
                 {
-                    ConsoleKeyInfo keyInfo = Console.ReadKey();
+                    ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+                    Key key = Key.FromConsoleKeyInfo(keyInfo);
 
-                    if (_registeredKeys.ContainsKey(keyInfo.Key))
-                        _registeredKeys[keyInfo.Key]();
+                    if (_registeredKeys.ContainsKey(key))
+                        _registeredKeys[key](key);
                 }
             }
 

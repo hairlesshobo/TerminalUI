@@ -6,18 +6,46 @@ namespace TerminalUI.Elements
 {
     public class StatusBarItem
     {
-        public string Text { get; set; }
-        public ConsoleKey? Key { get; set; }
-        public Action Callback { get; set; }
+        public string Name { get; set; }
+        public Key[] Keys { get; set; }
+        public Action<Key> Callback { get; set; }
         public bool ShowKey { get; set; } = true;
+
+        private Action removeCallback = () => { };
+
+        public StatusBarItem()
+        {
+
+        }
+
+        public StatusBarItem(string name)
+        {
+            this.Name = name;
+        }
+
+        public StatusBarItem(string name, Action<Key> callback, params Key[] keys)
+        {
+            this.Name = name;
+            this.Callback = callback;
+            this.Keys = keys;
+        }
+
+        public void Remove()
+            => removeCallback();
+
+        internal void AddRemoveCallback(Action callback)
+            => removeCallback = callback;
     }
 
     public class StatusBar : Element
     {
-        public StatusBar(params StatusBarItem[] items) => Init(items.ToList());
-        public StatusBar() => Init(new List<StatusBarItem>());
+        private List<StatusBarItem> _items;
+        private static StatusBar _instance;
 
-        private void Init(List<StatusBarItem> items)
+        public StatusBar(params StatusBarItem[] items) => Init(items);
+        public StatusBar() => Init(new StatusBarItem[]{ });
+
+        private void Init(StatusBarItem[] items)
         {
             this.Height = 1;
             this.Width = Terminal.Width;
@@ -27,26 +55,68 @@ namespace TerminalUI.Elements
             this.BottomLeftPoint = null;
             this.BottomRightPoint = null;
 
+            ShowItems(items);
+        }
+
+        public void ShowItems(params StatusBarItem[] items)
+        {
+            _items = items.ToList();
+
+            Redraw();
+        }
+
+        public override void Redraw()
+        {
+
             TerminalPoint prevPoint = TerminalPoint.GetCurrent();
+            ConsoleColor prevBackgroundColor = Console.BackgroundColor;
 
             this.TopLeftPoint.MoveTo();
 
-            ConsoleColor prevBackgroundColor = Console.BackgroundColor;
             Console.BackgroundColor = ConsoleColor.DarkBlue;
 
-            foreach (StatusBarItem item in items)
+            for (int i = 0; i < _items.Count; i++)
             {
-                Terminal.Write(' ');
-                if (item.Key != null && item.Callback != null && item.ShowKey)
-                {
-                    ShortcutKeyHelper.RegisterKey(item.Key.Value, item.Callback);
+                StatusBarItem item = _items[i];
 
-                    Terminal.WriteColor(ConsoleColor.Magenta, item.Key.Value.ToString());
-                    Terminal.Write(' ');
+                Terminal.Write(' ');
+
+                if (item.Keys != null && item.Callback != null)
+                {
+                    for (int k = 0; k < item.Keys.Length; k++)
+                    {
+                        Key key = item.Keys[k];
+
+                        KeyInput.RegisterKey(key, item.Callback);
+
+                        if (item.ShowKey)
+                            Terminal.WriteColor(ConsoleColor.Magenta, $"{key.ToString()}");
+
+                        if (k < (item.Keys.Length-1))
+                            Terminal.WriteColor(ConsoleColor.DarkGray, "/");
+                    }
+
+                    if (item.ShowKey)
+                        Terminal.Write(' ');
                 }
 
-                Terminal.Write(item.Text);
+                Terminal.Write(item.Name);
                 Terminal.Write(' ');
+
+                item.AddRemoveCallback(() => {
+                    if (item.Keys != null)
+                    {
+                        foreach (Key key in item.Keys)
+                            KeyInput.UnregisterKey(key);
+                    }
+
+                    _items.Remove(item);
+
+                    this.Redraw();
+                });
+
+                if (i < (_items.Count-1))
+                    Terminal.Write((char)BoxChars.ThinVertical);
             }
 
             int charsToBlank = this.Width - Terminal.Left;
@@ -57,9 +127,23 @@ namespace TerminalUI.Elements
             Console.BackgroundColor = prevBackgroundColor;
         }
 
-        public override void Redraw()
+        public void RemoveItemByName(string name)
         {
-            throw new NotImplementedException();
+            if (String.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException(nameof(name));
+
+            var item = _items.FirstOrDefault(x => x.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+
+            if (item != null)
+                item.Remove();
+        }
+
+        public static StatusBar GetInstance()
+        {
+            if (_instance == null)
+                _instance = new StatusBar();
+
+            return _instance;
         }
     }
 }

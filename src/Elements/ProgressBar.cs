@@ -52,7 +52,7 @@ namespace TerminalUI.Elements
             for (int i = 0; i < this.barWidth; i++)
             {
                 if (i < filled)
-                    Terminal.WriteColor(ConsoleColor.Yellow, (char)BlockChars.Solid);
+                    Terminal.WriteColor(TerminalColor.ProgressBarFilled, (char)BlockChars.Solid);
                 else
                     Terminal.Write((char)BlockChars.MediumShade);
             }
