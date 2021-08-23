@@ -39,7 +39,8 @@ namespace TerminalUI.Elements
 
     public class StatusBar : Element
     {
-        private List<StatusBarItem> _items;
+        private List<StatusBarItem> _items = new List<StatusBarItem>();
+        private List<StatusBarItem> _prevItems = new List<StatusBarItem>();
         private static StatusBar _instance;
 
         public StatusBar(params StatusBarItem[] items) => Init(items);
@@ -60,6 +61,9 @@ namespace TerminalUI.Elements
 
         public void ShowItems(params StatusBarItem[] items)
         {
+            // stash the current items so that, during redraw, we can remove any key bindings we have
+            _prevItems = _items;
+
             _items = items.ToList();
 
             Redraw();
@@ -67,7 +71,8 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
-
+            this.RemovePreviousKeyBindings();
+            
             TerminalPoint prevPoint = TerminalPoint.GetCurrent();
             ConsoleColor prevBackgroundColor = Console.BackgroundColor;
 
@@ -125,6 +130,21 @@ namespace TerminalUI.Elements
                 Terminal.Write(' ');
 
             Console.BackgroundColor = prevBackgroundColor;
+            prevPoint.MoveTo();
+        }
+
+        private void RemovePreviousKeyBindings()
+        {
+            foreach (StatusBarItem prevItem in _prevItems)
+            {
+                if (prevItem.Keys != null)
+                {
+                    foreach (Key key in prevItem.Keys)
+                        KeyInput.UnregisterKey(key);
+                }
+            }
+
+            _prevItems.Clear();
         }
 
         public void RemoveItemByName(string name)

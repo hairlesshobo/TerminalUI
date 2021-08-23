@@ -79,6 +79,8 @@ namespace TerminalUI
                     if (_registeredKeys.ContainsKey(key))
                         _registeredKeys[key](key);
                 }
+                else
+                    Thread.Sleep(10);
             }
 
             _listening = false;

@@ -36,6 +36,7 @@ namespace TerminalUI.Elements
             TerminalPoint prevPoint = TerminalPoint.GetCurrent();
 
             this.TopLeftPoint.MoveTo();
+            Terminal.BackgroundColor = TerminalColor.HeaderBackground;
 
             if (splText == null)
                 splText = new SplitLine(this.Left, this.Right);
@@ -45,10 +46,11 @@ namespace TerminalUI.Elements
             this.BottomLeftPoint.MoveTo();
 
             if (hl == null)
-                hl = new HorizontalLine(Terminal.DefaultForegroundColor, LineType.Thin);
+                hl = new HorizontalLine(TerminalColor.DefaultForeground, LineType.Thin);
             else
                 hl.Redraw();
 
+            Terminal.ResetBackground();
             prevPoint.MoveTo();
         }
     }

@@ -52,13 +52,17 @@ namespace TerminalUI.Elements
             if (display == ProgressDisplay.Left)
                 Terminal.Write(String.Format("{0,5}", pctString));
 
-            for (int i = 0; i < this.barWidth; i++)
-            {
-                if (i < filled)
-                    Terminal.WriteColor(TerminalColor.ProgressBarFilled, (char)BlockChars.Solid);
-                else
-                    Terminal.Write((char)BlockChars.MediumShade);
-            }
+            Terminal.ForegroundColor = TerminalColor.ProgressBarFilled;
+
+            for (int i = 0; i <= filled; i++)
+                Terminal.Write((char)BlockChars.Solid);
+            
+            Terminal.ForegroundColor = TerminalColor.ProgressBarUnfilled;
+
+            for (int i = filled; i < this.barWidth; i++)
+                Terminal.Write((char)BlockChars.MediumShade);
+
+            Terminal.ResetForeground();
 
             if (display == ProgressDisplay.Right)
                 Terminal.Write(String.Format("{0,-5}", pctString));

@@ -15,9 +15,6 @@ namespace TerminalUI
         public static int Left => Console.CursorLeft;
         public static int Top => Console.CursorTop;
 
-        public static ConsoleColor DefaultBackgroundColor { get; private set; } = Console.BackgroundColor;
-        public static ConsoleColor DefaultForegroundColor { get; private set; } = Console.ForegroundColor;
-
         public static ConsoleColor BackgroundColor
         {
             get => Console.BackgroundColor;
@@ -93,12 +90,6 @@ namespace TerminalUI
         public static void NextLine()
             => Console.SetCursorPosition(0, Terminal.Top+1);
 
-        public static void SetDefaultBackgroundColor(ConsoleColor color)
-            => DefaultBackgroundColor = color;
-
-        public static void SetDefaultForegroundColor(ConsoleColor color)
-            => DefaultForegroundColor = color;
-
         public static void ResetColor()
         {
             ResetForeground();
@@ -106,10 +97,10 @@ namespace TerminalUI
         }
 
         public static void ResetForeground()
-            => Console.ForegroundColor = DefaultForegroundColor;
+            => Console.ForegroundColor = TerminalColor.DefaultForeground;
 
         public static void ResetBackground()
-            => Console.BackgroundColor = DefaultBackgroundColor;
+            => Console.BackgroundColor = TerminalColor.DefaultBackground;
 
         public static void Clear(bool rawClear = false)
         {

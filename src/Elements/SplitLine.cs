@@ -4,12 +4,21 @@ namespace TerminalUI.Elements
 {
     public class SplitLine : Element
     {
+        private ConsoleColor? _leftColor = null;
+        private ConsoleColor? _rightColor = null;
+
+        private ConsoleColor LeftColor => (_leftColor != null ? _leftColor.Value : TerminalColor.HeaderLeft);
+        private ConsoleColor RightColor => (_rightColor != null ? _rightColor.Value : TerminalColor.HeaderRight);
+
         private string leftText;
         private string rightText;
 
 
-        public SplitLine(string leftText, string rightText)
+        public SplitLine(string leftText, string rightText, ConsoleColor? leftColor = null, ConsoleColor? rightColor = null)
         {
+            this._leftColor = leftColor;
+            this._rightColor = rightColor;
+
             this.TopLeftPoint = TerminalPoint.GetCurrent();
             this.TopRightPoint = new TerminalPoint(Terminal.Width, this.TopLeftPoint.Top);
             this.BottomLeftPoint = null;
@@ -23,7 +32,7 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
-            Terminal.Write(leftText);
+            Terminal.WriteColor(this.LeftColor, leftText);
 
             int splitChars = this.Width - leftText.Length - rightText.Length;
 
@@ -33,7 +42,7 @@ namespace TerminalUI.Elements
                     Terminal.Write(' ');
             }
 
-            Terminal.Write(rightText);
+            Terminal.WriteColor(this.RightColor, rightText);
 
             this.TopLeftPoint.MoveTo();
         }
