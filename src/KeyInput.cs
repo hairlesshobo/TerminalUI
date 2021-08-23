@@ -10,6 +10,12 @@ namespace TerminalUI
         private static CancellationTokenSource _cts;
         private static volatile bool _listening;
         private static Thread _thread;
+        private static List<char> _buffer = new List<char>();
+        private static volatile bool _echoChar = false;
+        private static volatile bool _bufferChars = false;
+        private static Action<string> _stringCallback = (_) => { };
+
+        public static bool Listening => _listening;
 
         static KeyInput()
         {
@@ -71,13 +77,28 @@ namespace TerminalUI
 
             while (!_cts.Token.IsCancellationRequested)
             {
-                if (Console.KeyAvailable)
+                if (Console.KeyAvailable && _listening)
                 {
-                    ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+                    ConsoleKeyInfo keyInfo = Console.ReadKey(!_echoChar);
                     Key key = Key.FromConsoleKeyInfo(keyInfo);
 
                     if (_registeredKeys.ContainsKey(key))
                         _registeredKeys[key](key);
+                    else if (_bufferChars == true)
+                    {
+                        if (keyInfo.Key == ConsoleKey.Enter)
+                        {
+                            _echoChar = false;
+                            _bufferChars = false;
+                            _stringCallback(new string(_buffer.ToArray()));
+                            _buffer.Clear();
+                        }
+                        else if (keyInfo.Key == ConsoleKey.Backspace)
+                            _buffer.RemoveAt(_buffer.Count-1);
+                        else
+                            _buffer.Add(keyInfo.KeyChar);
+                    }
+                        
                 }
                 else
                     Thread.Sleep(10);
@@ -85,5 +106,19 @@ namespace TerminalUI
 
             _listening = false;
         }
+
+        public static void ReadString(Action<string> callback)
+        {
+            _echoChar = true;
+            _bufferChars = true;
+            _buffer.Clear();
+            _stringCallback = callback;
+        }
+
+        private static void Pause()
+            => _listening = false;
+
+        private static void Resume()
+            => _listening = true;
     }
 }
