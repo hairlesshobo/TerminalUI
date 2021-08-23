@@ -63,10 +63,11 @@ namespace TerminalUI
 
         public static void StopListening()
         {
-            if (!_listening)
-                return;
+            // if (!_listening)
+            //     return;
 
-            Action cancelAction = () => _cts.Cancel();
+            // Action cancelAction = () => _cts.Cancel();
+            _cts.Cancel();
 
             _thread.Join();
         }
