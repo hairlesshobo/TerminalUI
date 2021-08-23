@@ -4,15 +4,12 @@ namespace TerminalUI.Elements
 {
     public class SplitLine : Element
     {
-        private static string _leftText;
-        private static string _rightText;
+        private string leftText;
+        private string rightText;
 
 
         public SplitLine(string leftText, string rightText)
         {
-            _leftText = leftText;
-            _rightText = rightText;
-
             this.TopLeftPoint = TerminalPoint.GetCurrent();
             this.TopRightPoint = new TerminalPoint(Terminal.Width, this.TopLeftPoint.Top);
             this.BottomLeftPoint = null;
@@ -21,27 +18,46 @@ namespace TerminalUI.Elements
             this.Height = 1;
             this.Width = TopRightPoint.Left - TopLeftPoint.Left;
 
-            this.Redraw();
+            this.Update(leftText, rightText);
         }
 
         public override void Redraw()
         {
-            Terminal.WriteColor(ConsoleColor.White, _leftText);
+            Terminal.Write(leftText);
 
-            Console.CursorLeft = Terminal.Width - _rightText.Length;
-            Terminal.WriteColor(ConsoleColor.Magenta, _rightText);
+            int splitChars = this.Width - leftText.Length - rightText.Length;
+
+            if (splitChars > 0)
+            {
+                for (int i = 0; i < splitChars; i++)
+                    Terminal.Write(' ');
+            }
+
+            Terminal.Write(rightText);
 
             this.TopLeftPoint.MoveTo();
         }
 
-        public string UpdateLeft(string text)
+        public void Update(string left, string right)
         {
-            throw new NotImplementedException();
+            leftText = left;
+            rightText = right;
+
+            this.Redraw();
         }
 
-        public string UpdateRight(string text)
+        public void UpdateLeft(string text)
         {
-            throw new NotImplementedException();
+            leftText = text;
+
+            this.Redraw();
+        }
+
+        public void UpdateRight(string text)
+        {
+            rightText = text;
+
+            this.Redraw();
         }
     }
 }

@@ -1,9 +1,15 @@
 ﻿using System;
+using System.Text;
+using TerminalUI.Elements;
 
 namespace TerminalUI
 {
     public static class Terminal
     {
+        public static Header Header { get; private set; } = null;
+        public static StatusBar StatusBar { get; private set; } = null;
+        public static TerminalPoint RootPoint { get; private set; } = TerminalPoint.GetCurrent();
+
         public static int Width => Console.WindowWidth;
         public static int Height => Console.WindowHeight;
         public static int Left => Console.CursorLeft;
@@ -47,10 +53,16 @@ namespace TerminalUI
 
         public static void WriteColor(ConsoleColor color, string inputString)
         {
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = color;
+            Terminal.ForegroundColor = color;
             Terminal.Write(inputString);
-            Console.ForegroundColor = originalColor;
+            Terminal.ResetForeground();
+        }
+
+        public static void WriteColorBG(ConsoleColor color, string inputString)
+        {
+            Terminal.BackgroundColor = color;
+            Terminal.Write(inputString);
+            Terminal.ResetBackground();
         }
 
         public static void WriteLine() 
@@ -58,7 +70,7 @@ namespace TerminalUI
 
         public static void WriteLine(string inputString)
         {
-            Console.Write(inputString);
+            Terminal.Write(inputString);
             Terminal.NextLine();
         }
 
@@ -71,12 +83,15 @@ namespace TerminalUI
             Terminal.NextLine();
         }
 
+        public static void WriteLineColorBG(ConsoleColor color, string inputString)
+        {
+            WriteColorBG(color, inputString);
+            Terminal.NextLine();
+        }
+
 
         public static void NextLine()
-        {
-            Console.CursorLeft = 0;
-            Console.CursorTop += 1;
-        }
+            => Console.SetCursorPosition(0, Terminal.Top+1);
 
         public static void SetDefaultBackgroundColor(ConsoleColor color)
             => DefaultBackgroundColor = color;
@@ -86,11 +101,77 @@ namespace TerminalUI
 
         public static void ResetColor()
         {
-            Console.BackgroundColor = DefaultBackgroundColor;
-            Console.ForegroundColor = DefaultForegroundColor;
+            ResetForeground();
+            ResetBackground();
         }
 
-        public static void Clear()
-            => Console.Clear();
+        public static void ResetForeground()
+            => Console.ForegroundColor = DefaultForegroundColor;
+
+        public static void ResetBackground()
+            => Console.BackgroundColor = DefaultBackgroundColor;
+
+        public static void Clear(bool rawClear = false)
+        {
+            if (rawClear)
+                Console.Clear();
+            else
+            {
+                RootPoint.MoveTo();
+                
+                int height = Height;
+
+                if (Header != null)
+                    height -= 2;
+
+                if (StatusBar != null)
+                    height -= 1;
+
+                StringBuilder sb = new StringBuilder();
+                    
+                for (int w = 0; w < Width; w++)
+                    sb.Append(' ');
+
+                string wideString = sb.ToString();
+
+                for (int h = 0; h < height; h++)
+                {
+                    Console.CursorLeft = 0;
+                    Terminal.Write(wideString);
+                }
+
+                RootPoint.MoveTo();
+
+                // Console.Clear();
+
+                // Header?.Redraw();
+                // StatusBar?.Redraw();
+
+                // RootPoint.MoveTo();
+            }
+        }
+
+        public static Header InitHeader(string left, string right)
+        {
+            if (Header == null)
+            {
+                Header = new Header(left, right);
+                RootPoint = new TerminalPoint(0, 2);
+            }
+            else
+                Header.UpdateHeader(left, right);
+
+            return Header;
+        }
+
+        public static StatusBar InitStatusBar(params StatusBarItem[] items)
+        {
+            if (StatusBar == null)
+                StatusBar = new StatusBar(items);
+            else
+                StatusBar.ShowItems(items);
+
+            return StatusBar;
+        }
     }
 }

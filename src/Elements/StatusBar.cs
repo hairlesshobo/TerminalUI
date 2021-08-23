@@ -50,8 +50,8 @@ namespace TerminalUI.Elements
             this.Height = 1;
             this.Width = Terminal.Width;
             
-            this.TopLeftPoint = new TerminalPoint(0, Terminal.Height);
-            this.TopRightPoint = new TerminalPoint(Terminal.Width, Terminal.Height);
+            this.TopLeftPoint = new TerminalPoint(0, Terminal.Height-1);
+            this.TopRightPoint = new TerminalPoint(Terminal.Width, Terminal.Height-1);
             this.BottomLeftPoint = null;
             this.BottomRightPoint = null;
 
