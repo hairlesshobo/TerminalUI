@@ -23,6 +23,20 @@ namespace TerminalUI.Elements
             this.UpdateHeader(left, right);
         }
 
+        public void UpdateLeft(string left)
+        {
+            this.Left = left;
+
+            this.Redraw();
+        }
+
+        public void UpdateRight(string right)
+        {
+            this.Right = right;
+
+            this.Redraw();
+        }
+
         public void UpdateHeader(string left, string right)
         {
             this.Left = left;

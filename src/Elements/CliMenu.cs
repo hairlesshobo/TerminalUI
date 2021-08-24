@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace TerminalUI.Elements
 {
@@ -8,29 +9,24 @@ namespace TerminalUI.Elements
 
     public class CliMenuEntry : CliMenuEntry<string>
     {
-        public CliMenuEntry():base()
-        {}
+        public CliMenuEntry() : base()
+        { }
     }
 
     public class CliMenuEntry<TKey>
     {
         public string Name { get; set; }
-        public Action Action { get; set; }
+        public Func<Task> Task { get; set; }
         public bool Disabled { get; set; } = false;
         public bool Header { get; set; } = false;
         public TKey SelectedValue { get; set; }
         public ConsoleKey ShortcutKey { get; set; }
         public ConsoleColor ForegroundColor { get; set; } = Console.ForegroundColor;
         public ConsoleColor BackgroundColor { get; set; } = Console.BackgroundColor;
-        public bool Selected { 
-            get
-            {
-                return _selected;
-            }
-            internal set
-            {
-                _selected = value;
-            }
+        public bool Selected
+        {
+            get => _selected;
+            internal set => _selected = value;
         }
 
         private bool _selected;
@@ -47,7 +43,9 @@ namespace TerminalUI.Elements
         public ConsoleColor CursorForegroundColor { get; set; } = ConsoleColor.DarkGreen;
         public ConsoleColor CursorArrowColor { get; set; } = ConsoleColor.Green;
         public ConsoleColor DisabledForegroundColor { get; set; } = ConsoleColor.DarkGray;
-        public Boolean MultiSelect { 
+        public bool EnableCancel { get; set; } = false;
+        public bool MultiSelect
+        {
             get => _multiSelect;
             private set => _multiSelect = value;
         }
@@ -67,24 +65,40 @@ namespace TerminalUI.Elements
         #endregion Private Fields
 
         #region Constructors
-        public CliMenu (List<CliMenuEntry<TKey>> entries, bool multiSelect)
-        {
-            Initalize(entries, multiSelect);
-        }
+        public CliMenu(List<CliMenuEntry<TKey>> entries, bool multiSelect)
+            => Initalize(entries, multiSelect);
 
-        public CliMenu (List<CliMenuEntry<TKey>> Entries)
-        {
-            Initalize(Entries, false);
-        }
-        
-        public void Initalize (List<CliMenuEntry<TKey>> Entries, bool multiSelect)
+        public CliMenu(List<CliMenuEntry<TKey>> Entries)
+            => Initalize(Entries, false);
+
+        public CliMenu()
+            => Initalize(null, false);
+
+        public void Initalize(List<CliMenuEntry<TKey>> entries, bool multiSelect)
         {
             this.MultiSelect = multiSelect;
-            _entries = Entries;
-            _cursorIndex = _entries.IndexOf(_entries.First(x => !x.Disabled && !x.Header));
+            this.OnCancel += delegate { };
+
+            SetMenuItems(entries);
+        }
+        #endregion Constructors
+
+        #region Public Methods
+        // public List<TKey> Show()
+        //     => throw new NotImplementedException();
+
+        // public List<TKey> Show(bool clearScreen)
+        //     => throw new NotImplementedException();
+
+        public void SetMenuItems(List<CliMenuEntry<TKey>> entries)
+        {
+            _entries = entries;
+            _cursorIndex = 0;
 
             if (_entries != null)
             {
+                _cursorIndex = _entries.IndexOf(_entries.First(x => !x.Disabled && !x.Header));
+
                 if (_multiSelect == false && (!_entries.Any(x => x.Selected && !x.Disabled && !x.Header)))
                     _entries.First(x => !x.Disabled && !x.Header).Selected = true;
 
@@ -95,23 +109,15 @@ namespace TerminalUI.Elements
                     _entries.First().Selected = true;
                 }
             }
-
-            this.OnCancel += delegate {};
         }
-        #endregion Constructors
 
-        #region Public Methods
-        public List<TKey> Show()
-            => throw new NotImplementedException();
+        public Task<List<TKey>> Show()
+            => Show(true);
 
-        public List<TKey> Show(bool clearScreen)
-            => throw new NotImplementedException();
-
-        public void Show(Action<List<TKey>> callback)
-            => Show(callback, true);
-
-        public void Show(Action<List<TKey>> callback, bool clearScreen)
+        public async Task<List<TKey>> Show(bool clearScreen)
         {
+            _choosenItems = null;
+
             Console.CursorVisible = false;
             _foregroundColor = Console.ForegroundColor;
             _backgroundColor = Console.BackgroundColor;
@@ -135,7 +141,7 @@ namespace TerminalUI.Elements
             Console.SetCursorPosition(0, _startLine + _entries.Count() + 1);
 
             string message = "to select item";
-            
+
             if (_multiSelect == true)
             {
                 message = "when finished";
@@ -159,36 +165,52 @@ namespace TerminalUI.Elements
             // Console.Write(" to cancel");
             // Console.WriteLine();
 
+            var quitItem = new StatusBarItem(
+                "Quit Application",
+                (key) => 
+                {
+                    Environment.Exit(0);
+                    return Task.Delay(0);
+                },
+                Key.MakeKey(ConsoleKey.Q)
+            );
+
+            var cancelItem = new StatusBarItem(
+                "Cancel",
+                async (key) => {
+                    this.AbortMenu();
+                    await Task.Delay(0);
+                },
+                Key.MakeKey(ConsoleKey.C, ConsoleModifiers.Control)
+            );
+
             Terminal.StatusBar.ShowItems(
-                new StatusBarItem(
-                    "Quit Application",
-                    (key) => Environment.Exit(0),
-                    Key.MakeKey(ConsoleKey.Q)
-                ),
+                (this.EnableCancel ? cancelItem : quitItem),
                 new StatusBarItem(
                     "Select Item",
-                    (key) => {
+                    async (key) =>
+                    {
                         // Console.CursorVisible = true;
                         // Console.SetCursorPosition(0, _startLine+_entries.Count()+1);
 
                         // if (_canceled == false)
                         // {
-                            if (_multiSelect == false)
-                            {
-                                CliMenuEntry<TKey> finalEntry = _entries.First(x => x.Selected);
+                        if (_multiSelect == false)
+                        {
+                            CliMenuEntry<TKey> finalEntry = _entries.First(x => x.Selected);
 
-                                if (clearScreen)
-                                    Terminal.Clear();
+                            if (clearScreen)
+                                Terminal.Clear();
 
-                                if (finalEntry != null && finalEntry.Action != null)
-                                    finalEntry.Action();
+                            if (finalEntry != null && finalEntry.Task != null)
+                                await finalEntry.Task();
 
-                                callback(new List<TKey>() {
-                                    finalEntry.SelectedValue
-                                });
-                            }
-                            else
-                                callback(this.SelectedEntries);
+                            _choosenItems = new List<TKey>() {
+                                finalEntry.SelectedValue
+                            };
+                        }
+                        else
+                            _choosenItems = this.SelectedEntries;
                         // }
                         // else
                         // {
@@ -200,7 +222,8 @@ namespace TerminalUI.Elements
                 ),
                 new StatusBarItem(
                     "Navigate",
-                    (key) => {
+                    (key) =>
+                    {
                         CliMenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
                         CliMenuEntry<TKey> previousEntry = selectedEntry;
 
@@ -225,6 +248,8 @@ namespace TerminalUI.Elements
                             WriteMenuEntry(previousEntry);
                             WriteMenuEntry(_entries[_cursorIndex]);
                         }
+
+                        return Task.Delay(0);
 
                         // if (key.Key == ConsoleKey.Enter)
                         //     break;
@@ -332,17 +357,21 @@ namespace TerminalUI.Elements
             //     return null;
             // }
 
-            // while (_choosenItems == null && _canceled == false)
-            // {
-            //     Thread.Sleep(10);
-            //     // delay until the user does something
-            // }
+            return await Task.Run(async () => 
+            {
+                // delay until the user does something
+                while (_choosenItems == null && _canceled == false)
+                    await Task.Delay(10);
 
-            // if (_canceled)
-            //     return null;
+                if (_canceled)
+                    return null;
 
-            // return _choosenItems;
+                return _choosenItems;
+            });
         }
+
+        public void AbortMenu()
+            => _canceled = true;
         #endregion Public Methods
 
         #region Private Methods
@@ -350,7 +379,7 @@ namespace TerminalUI.Elements
         {
             if (down == true)
             {
-                if (_cursorIndex < (_entries.Count()-1))
+                if (_cursorIndex < (_entries.Count() - 1))
                     _cursorIndex++;
                 else
                     _cursorIndex = 0;
@@ -363,7 +392,7 @@ namespace TerminalUI.Elements
                 if (_cursorIndex > 0)
                     _cursorIndex--;
                 else
-                    _cursorIndex = _entries.Count()-1;
+                    _cursorIndex = _entries.Count() - 1;
 
                 if (_entries[_cursorIndex].Disabled || _entries[_cursorIndex].Header)
                     MoveCursor(_entries[_cursorIndex], down);
@@ -385,7 +414,7 @@ namespace TerminalUI.Elements
 
             Console.CursorLeft = 0;
             Console.CursorTop = _startLine + entryIndex;
-            
+
 
             if (Entry.Header)
             {
@@ -421,12 +450,12 @@ namespace TerminalUI.Elements
             if (_multiSelect == true)
             {
                 Console.Write("[");
-            
+
                 if (Entry.Selected == true)
                     Console.Write("X");
                 else
                     Console.Write(" ");
-            
+
                 Console.Write("] ");
             }
 
@@ -448,7 +477,7 @@ namespace TerminalUI.Elements
 
                     if (letter == '`' && i < letters.Length)
                     {
-                        char nextLetter = letters[i+1];
+                        char nextLetter = letters[i + 1];
                         bool setColor = false;
 
                         switch (nextLetter)

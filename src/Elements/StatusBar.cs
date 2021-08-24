@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace TerminalUI.Elements
 {
@@ -8,7 +9,7 @@ namespace TerminalUI.Elements
     {
         public string Name { get; set; }
         public Key[] Keys { get; set; }
-        public Action<Key> Callback { get; set; }
+        public Func<Key, Task> Task { get; set; }
         public bool ShowKey { get; set; } = true;
 
         private Action removeCallback = () => { };
@@ -23,10 +24,10 @@ namespace TerminalUI.Elements
             this.Name = name;
         }
 
-        public StatusBarItem(string name, Action<Key> callback, params Key[] keys)
+        public StatusBarItem(string name, Func<Key, Task> task, params Key[] keys)
         {
             this.Name = name;
-            this.Callback = callback;
+            this.Task = task;
             this.Keys = keys;
         }
 
@@ -86,13 +87,14 @@ namespace TerminalUI.Elements
 
                 Terminal.Write(' ');
 
-                if (item.Keys != null && item.Callback != null)
+                if (item.Keys != null && item.Task != null)
                 {
                     for (int k = 0; k < item.Keys.Length; k++)
                     {
                         Key key = item.Keys[k];
 
-                        KeyInput.RegisterKey(key, item.Callback);
+                        // TODO: Convert to task
+                        KeyInput.RegisterKey(key, item.Task);
 
                         if (item.ShowKey)
                             Terminal.WriteColor(ConsoleColor.Magenta, $"{key.ToString()}");

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using TerminalUI;
 
 namespace TerminalUI.Elements
@@ -258,7 +259,10 @@ namespace TerminalUI.Elements
                 Terminal.InitStatusBar(
                     new StatusBarItem(
                         "Main Menu",
-                        (key) => _abort = true,
+                        (key) => {
+                            _abort = true;
+                            return Task.Delay(0);
+                        },
                         Key.MakeKey(ConsoleKey.Q)
                     ),
                     new StatusBarItem(
@@ -276,6 +280,8 @@ namespace TerminalUI.Elements
                                 ScrollToTop();
                             else if (key.RootKey == ConsoleKey.End)
                                 ScrollToBottom();
+
+                            return Task.Delay(0);
                         },
                         Key.MakeKey(ConsoleKey.DownArrow),
                         Key.MakeKey(ConsoleKey.UpArrow),

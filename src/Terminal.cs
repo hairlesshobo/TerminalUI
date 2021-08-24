@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using TerminalUI.Elements;
 
@@ -6,6 +7,7 @@ namespace TerminalUI
 {
     public static class Terminal
     {
+        private static TextWriter debugWriter = TextWriter.Null;
         public static Header Header { get; private set; } = null;
         public static StatusBar StatusBar { get; private set; } = null;
         public static TerminalPoint RootPoint { get; private set; } = TerminalPoint.GetCurrent();
@@ -31,6 +33,14 @@ namespace TerminalUI
         {
             get => Console.CursorVisible;
             set => Console.CursorVisible = value;
+        }
+
+        static Terminal()
+        {
+            string debugLogPath = Environment.GetEnvironmentVariable("TUI_DEBUG_LOG");
+
+            if (!String.IsNullOrWhiteSpace(debugLogPath))
+                debugWriter = File.CreateText(debugLogPath);
         }
 
         /// <summary>
@@ -90,6 +100,12 @@ namespace TerminalUI
         {
             WriteColorBG(color, inputString);
             Terminal.NextLine();
+        }
+
+        public static void WriteDebugLine(string inputString)
+        {
+            debugWriter.WriteLine(inputString);
+            debugWriter.Flush();
         }
 
 
@@ -173,5 +189,8 @@ namespace TerminalUI
 
         public static void SetCursorPosition(int left, int top)
             => Console.SetCursorPosition(left, top);
+
+        public static void Start()
+            => KeyInput.StartLoop();
     }
 }

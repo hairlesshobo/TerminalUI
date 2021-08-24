@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace TerminalUI
 {
     public static class KeyInput
     {
-        private static Dictionary<Key, Action<Key>> _registeredKeys;
+        private static volatile bool _started = false;
+        private static Dictionary<Key, Func<Key, Task>> _registeredKeys;
+        private static Task<string> _readStringTask = null;
         private static CancellationTokenSource _cts;
         private static volatile bool _listening;
         private static Thread _thread;
@@ -18,11 +21,9 @@ namespace TerminalUI
         public static bool Listening => _listening;
 
         static KeyInput()
-        {
-            _registeredKeys = new Dictionary<Key, Action<Key>>();
-        }
+            => _registeredKeys = new Dictionary<Key, Func<Key, Task>>();
 
-        public static bool RegisterKey(Key key, Action<Key> callback)
+        public static bool RegisterKey(Key key, Func<Key, Task> callback)
         {
             if (callback == null)
                 return false;
@@ -45,17 +46,19 @@ namespace TerminalUI
             return true;
         }
 
-        public static bool ListenForKeys()
+        public static void StartLoop()
         {
+            if (_started)
+                return;
+
             _cts = new CancellationTokenSource();
 
-            if (_listening)
-                return false;
+            DoListen();
 
-            _thread = new Thread(DoListen);
-            _thread.Start();
+            // _thread = new Thread(DoListen);
+            // _thread.Start();
 
-            return true;
+            // return true;
         }
 
         public static void ClearAllKeys()
@@ -81,19 +84,17 @@ namespace TerminalUI
                 if (Console.KeyAvailable && _listening)
                 {
                     ConsoleKeyInfo keyInfo = Console.ReadKey(!_echoChar);
+
                     Key key = Key.FromConsoleKeyInfo(keyInfo);
+
+                    Terminal.WriteDebugLine($"KeyInput: {key.ToString()}");
 
                     if (_registeredKeys.ContainsKey(key))
                         _registeredKeys[key](key);
                     else if (_bufferChars == true)
                     {
                         if (keyInfo.Key == ConsoleKey.Enter)
-                        {
-                            _echoChar = false;
                             _bufferChars = false;
-                            _stringCallback(new string(_buffer.ToArray()));
-                            _buffer.Clear();
-                        }
                         else if (keyInfo.Key == ConsoleKey.Backspace)
                             _buffer.RemoveAt(_buffer.Count-1);
                         else
@@ -102,18 +103,34 @@ namespace TerminalUI
                         
                 }
                 else
-                    Thread.Sleep(10);
+                    Task.Delay(10, _cts.Token);
             }
 
             _listening = false;
         }
 
-        public static void ReadString(Action<string> callback)
+        public async static Task<string> ReadStringAsync(CancellationToken cToken)
         {
             _echoChar = true;
             _bufferChars = true;
             _buffer.Clear();
-            _stringCallback = callback;
+
+            string result = await Task.Run(() => 
+            {
+                while (_bufferChars && cToken.IsCancellationRequested == false)
+                    Task.Delay(10, cToken);
+
+                if (cToken.IsCancellationRequested)
+                    return null;
+
+                return new string(_buffer.ToArray());
+            }, cToken);
+
+            _echoChar = false;
+            _bufferChars = false;
+            _buffer.Clear();
+
+            return result;
         }
 
         private static void Pause()
