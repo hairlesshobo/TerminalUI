@@ -27,6 +27,12 @@ namespace TerminalUI
             set => Console.ForegroundColor = value;
         }
 
+        public static bool CursorVisible
+        {
+            get => Console.CursorVisible;
+            set => Console.CursorVisible = value;
+        }
+
         /// <summary>
         ///     Proxy method for <see cref="Console.Write(char)" />. Reserved for future use
         /// </summary>
@@ -164,5 +170,8 @@ namespace TerminalUI
 
             return StatusBar;
         }
+
+        public static void SetCursorPosition(int left, int top)
+            => Console.SetCursorPosition(left, top);
     }
 }

@@ -7,11 +7,8 @@ using TerminalUI;
 
 namespace TerminalUI.Elements
 {
-    public class Pager : IDisposable
+    public class Pager : Element, IDisposable
     {
-        // Add TerminalPoint for Header line
-        // Add TerminalPoint for text line
-        // Add inheritance from Element
         #region Constants
         private const string _statusLineLeft = "Navigate: <up>/<down> or <pageUp>/<pageDown>  Exit: q";
         // private const string _statusLineLeft = "Navigate: <up>/<down> or <pageUp>/<pageDown>  Save To File: <ctrl>+s  Exit: q or <esc>";
@@ -26,7 +23,8 @@ namespace TerminalUI.Elements
         public bool Highlight { get; set; } = false;
         public ConsoleColor HighlightColor { get; set; } = ConsoleColor.DarkYellow;
         public int StartLine { get; set; } = 2;
-        public int FirstLine => (this.ShowHeader ? this.StartLine + 1 : this.StartLine);
+
+        public int FirstLine => this.StartLine + (this.ShowHeader ? 1 : 0);
         public int WindowHeight => (Terminal.Height - this.StartLine - (this.ShowHeader ? 1 : 0));
         public int WindowWidth => Terminal.Width;
         public int LineNumberWidth => (this.ShowLineNumbers ? (_topLineIndexPointer + this.MaxLines).ToString().Length : 0);
@@ -35,6 +33,8 @@ namespace TerminalUI.Elements
         public bool DeferDraw => _deferDraw;
         public int BottomLine => Terminal.Height - 1;
         public bool Started => _started;
+
+        public TerminalPoint FirstTextLinePoint { get; private set; }
         #endregion Public Properties
 
         #region Private Fields
@@ -54,7 +54,16 @@ namespace TerminalUI.Elements
 
         #region Constructor
         public Pager()
-            => _lines = new List<string>();
+        {
+            _lines = new List<string>();
+
+            this.TopLeftPoint = new TerminalPoint(0, 2);
+            this.TopRightPoint = new TerminalPoint(Terminal.Width, 2);
+            this.BottomLeftPoint = new TerminalPoint(0, Terminal.Height - 1);
+            this.BottomRightPoint = new TerminalPoint(Terminal.Width, Terminal.Height - 1);
+
+            this.FirstTextLinePoint = new TerminalPoint(0, this.TopLeftPoint.Top+1);
+        }
 
         public void Start()
         {
@@ -159,17 +168,17 @@ namespace TerminalUI.Elements
         // {
         //     lock (_consoleLock)
         //     {
-        //         Console.SetCursorPosition(0, this.BottomLine);
-        //         Console.BackgroundColor = ConsoleColor.DarkGreen;
-        //         Console.ForegroundColor = ConsoleColor.Black;
-        //         Console.CursorVisible = true;
-        //         Console.Write(String.Empty.PadRight(this.WindowWidth));
+        //         Terminal.SetCursorPosition(0, this.BottomLine);
+        //         Terminal.BackgroundColor = ConsoleColor.DarkGreen;
+        //         Terminal.ForegroundColor = ConsoleColor.Black;
+        //         Terminal.CursorVisible = true;
+        //         Terminal.Write(String.Empty.PadRight(this.WindowWidth));
 
-        //         Console.SetCursorPosition(0, this.BottomLine);
-        //         Console.Write("Enter file name (blank to abort): ");
-        //         string fileName = Console.ReadLine();
-        //         Console.ResetColor();
-        //         Console.CursorVisible = false;
+        //         Terminal.SetCursorPosition(0, this.BottomLine);
+        //         Terminal.Write("Enter file name (blank to abort): ");
+        //         string fileName = KeyInput.ReadLine();
+        //         Terminal.ResetColor();
+        //         Terminal.CursorVisible = false;
 
         //         Redraw();
 
@@ -179,14 +188,14 @@ namespace TerminalUI.Elements
         //         {
         //             if (File.Exists(fileName))
         //             {
-        //                 Console.SetCursorPosition(0, this.BottomLine);
-        //                 Console.BackgroundColor = ConsoleColor.DarkRed;
-        //                 Console.ForegroundColor = ConsoleColor.Black;
-        //                 Console.Write(String.Empty.PadRight(this.WindowWidth));
+        //                 Terminal.SetCursorPosition(0, this.BottomLine);
+        //                 Terminal.BackgroundColor = ConsoleColor.DarkRed;
+        //                 Terminal.ForegroundColor = ConsoleColor.Black;
+        //                 Terminal.Write(String.Empty.PadRight(this.WindowWidth));
 
-        //                 Console.SetCursorPosition(0, this.BottomLine);
-        //                 Console.Write("ERROR: File already exists, try again.");
-        //                 Console.ResetColor();
+        //                 Terminal.SetCursorPosition(0, this.BottomLine);
+        //                 Terminal.Write("ERROR: File already exists, try again.");
+        //                 Terminal.ResetColor();
 
         //                 Thread.Sleep(2000);
         //                 Redraw();
@@ -199,14 +208,14 @@ namespace TerminalUI.Elements
         //                         stream.WriteLine(line);
         //                 }
 
-        //                 Console.SetCursorPosition(0, this.BottomLine);
-        //                 Console.BackgroundColor = ConsoleColor.DarkGreen;
-        //                 Console.ForegroundColor = ConsoleColor.Black;
-        //                 Console.Write(String.Empty.PadRight(this.WindowWidth));
+        //                 Terminal.SetCursorPosition(0, this.BottomLine);
+        //                 Terminal.BackgroundColor = ConsoleColor.DarkGreen;
+        //                 Terminal.ForegroundColor = ConsoleColor.Black;
+        //                 Terminal.Write(String.Empty.PadRight(this.WindowWidth));
 
-        //                 Console.SetCursorPosition(0, this.BottomLine);
-        //                 Console.Write($"Success! Text saved to {fileName}");
-        //                 Console.ResetColor();
+        //                 Terminal.SetCursorPosition(0, this.BottomLine);
+        //                 Terminal.Write($"Success! Text saved to {fileName}");
+        //                 Terminal.ResetColor();
 
         //                 Thread.Sleep(2000);
         //                 Redraw();    
@@ -244,7 +253,7 @@ namespace TerminalUI.Elements
         {
             lock (_consoleLock)
             {
-                Console.CursorVisible = false;
+                Terminal.CursorVisible = false;
 
                 Terminal.InitStatusBar(
                     new StatusBarItem(
@@ -317,8 +326,8 @@ namespace TerminalUI.Elements
             lock (_consoleLock)
             {
                 Terminal.Clear();
-                // Console.SetCursorPosition(0, 0);
-                // Console.CursorVisible = true;
+                // Terminal.SetCursorPosition(0, 0);
+                // Terminal.CursorVisible = true;
                 Terminal.ResetColor();
             }
 
@@ -327,7 +336,7 @@ namespace TerminalUI.Elements
             GC.WaitForPendingFinalizers();
         }
 
-        private void Redraw()
+        public override void Redraw()
         {
             if (!_abort)
             {
@@ -343,7 +352,7 @@ namespace TerminalUI.Elements
                 {
                     lock (_consoleLock)
                     {
-                        Console.SetCursorPosition(0, this.FirstLine + i);
+                        Terminal.SetCursorPosition(0, this.FirstLine + i);
 
                         if (ShowLineNumbers == true)
                         {
@@ -395,10 +404,10 @@ namespace TerminalUI.Elements
 
                 lock (_consoleLock)
                 {
-                    Console.SetCursorPosition(0, this.StartLine);
-                    Console.BackgroundColor = ConsoleColor.DarkBlue;
-                    Console.Write(line.PadRight(this.MaxWidth));
-                    Console.ResetColor();
+                    Terminal.SetCursorPosition(0, this.StartLine);
+                    Terminal.BackgroundColor = ConsoleColor.DarkBlue;
+                    Terminal.Write(line.PadRight(this.MaxWidth));
+                    Terminal.ResetColor();
                 }
             }
         }
@@ -420,12 +429,13 @@ namespace TerminalUI.Elements
 
             lock (_consoleLock)
             {
-                Console.SetCursorPosition(0, this.BottomLine);
-                Console.BackgroundColor = ConsoleColor.DarkBlue;
-                Console.Write(line.PadRight(leftPad) + lineIndex);
-                Console.ResetColor();
+                Terminal.SetCursorPosition(0, this.BottomLine);
+                Terminal.BackgroundColor = ConsoleColor.DarkBlue;
+                Terminal.Write(line.PadRight(leftPad) + lineIndex);
+                Terminal.ResetColor();
             }
         }
+
         #endregion Private Methods
     }
 }

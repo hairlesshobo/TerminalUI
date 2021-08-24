@@ -67,6 +67,18 @@ namespace TerminalUI
         {
             switch ((int)this.RootKey)
             {
+                case 33: // PageUp
+                    return "PgUp";
+                
+                case 34: // PageDown
+                    return "PgDn";
+                
+                case 35: // End
+                    return ((char)ArrowChars.End).ToString();
+                
+                case 36: // Home
+                    return ((char)ArrowChars.Home).ToString();
+                
                 case 37: // LeftArrow
                     return ((char)ArrowChars.Left).ToString();
                     
@@ -78,6 +90,7 @@ namespace TerminalUI
                     
                 case 40: // DownArrow
                     return ((char)ArrowChars.Down).ToString();
+                    
             }
 
             return this.RootKey.ToString();
