@@ -56,7 +56,7 @@ namespace TerminalUI
             StringBuilder builder = new StringBuilder();
             
             if (Modifiers != null)
-                builder.Append(Modifiers.Value.ToString().Replace(", ", "+") + "+");
+                builder.Append(Modifiers.Value.ToString().Replace("Control", "Ctrl").Replace(", ", "+") + "+");
 
             builder.Append(GetRootKeyCharacter());
 
@@ -67,6 +67,9 @@ namespace TerminalUI
         {
             switch ((int)this.RootKey)
             {
+                case 32: // Space
+                    return "Space";
+
                 case 33: // PageUp
                     return "PgUp";
                 

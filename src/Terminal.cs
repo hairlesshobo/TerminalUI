@@ -12,6 +12,8 @@ namespace TerminalUI
         public static StatusBar StatusBar { get; private set; } = null;
         public static TerminalPoint RootPoint { get; private set; } = TerminalPoint.GetCurrent();
 
+        public static int UsableHeight => Terminal.Height - (Header == null ? 0 : 2) - (StatusBar == null ? 0 : 1);
+        public static int UsableWidth => Terminal.Width;
         public static int Width => Console.WindowWidth;
         public static int Height => Console.WindowHeight;
         public static int Left => Console.CursorLeft;

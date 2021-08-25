@@ -24,20 +24,34 @@ namespace TerminalUI.Elements
         public bool Selected { get; internal set; }
     }
 
-    public class CliMenu<TKey>
+    public class CliMenu<TKey> : Element
     {
+        // TODO:
+        // -- Add ability to define columns and format as a table view
+        // -- Add ability to edit entries in table mode 
         #region Public Properties
+        [Obsolete]
         public string MenuLabel { get; set; } = null;
-        public ConsoleColor HeaderColor { get; set; } = ConsoleColor.Magenta;
-        public ConsoleColor KeyColor { get; set; } = ConsoleColor.DarkYellow;
-        public ConsoleColor CursorBackgroundColor { get; set; } = ConsoleColor.DarkGray;
-        public ConsoleColor CursorForegroundColor { get; set; } = ConsoleColor.DarkGreen;
-        public ConsoleColor CursorArrowColor { get; set; } = ConsoleColor.Green;
-        public ConsoleColor DisabledForegroundColor { get; set; } = ConsoleColor.DarkGray;
         public bool EnableCancel { get; set; } = false;
         public bool MultiSelect { get; private set; } = false;
         public List<TKey> SelectedValues => _entries.Where(x => x.Selected).Select(x => x.SelectedValue).ToList();
         public IReadOnlyList<TKey> SelectedEntries => (IReadOnlyList<TKey>)_entries;
+        public int MaxLines => Terminal.UsableHeight - 1;
+        public int LeftPad { 
+            get => _leftPad; 
+            set 
+            {
+                if (value < 0 || value > 8)
+                    throw new ArgumentOutOfRangeException();
+
+                _leftPad = value;
+                _leftPadStr = String.Empty;
+
+                for (int i = 0; i < LeftPad; i++)
+                    _leftPadStr += " ";
+            }
+        }
+
         #endregion Public Properties
 
         #region Private Fields
@@ -47,8 +61,9 @@ namespace TerminalUI.Elements
         private int _cursorIndex = -1;
         private bool _canceled = false;
         private List<TKey> _choosenItems = null;
-
-        private int _startLine;
+        private string _leftPadStr = "    ";
+        private int _leftPad = 4;
+        private int _entryOffset = 0;
         #endregion Private Fields
 
         #region Constructors
@@ -91,10 +106,7 @@ namespace TerminalUI.Elements
             }
         }
 
-        public Task<List<TKey>> Show()
-            => ShowAsync(true);
-
-        public async Task<List<TKey>> ShowAsync(bool clearScreen)
+        public async Task<List<TKey>> ShowAsync(bool clearScreen = true)
         {
             _choosenItems = null;
 
@@ -102,49 +114,57 @@ namespace TerminalUI.Elements
             _foregroundColor = Terminal.ForegroundColor;
             _backgroundColor = Terminal.BackgroundColor;
 
-            if (clearScreen)
-                Terminal.Clear();
+            Terminal.Clear();
 
-            Terminal.WriteLine();
+            this.TopLeftPoint = TerminalPoint.GetCurrent();
+            this.TopRightPoint = this.TopLeftPoint.AddX(Terminal.UsableWidth);
+            this.BottomLeftPoint = this.TopLeftPoint.AddY(Terminal.UsableHeight);
+            this.BottomRightPoint = this.BottomLeftPoint.AddX(Terminal.UsableWidth);
 
-            if (this.MenuLabel != null)
+            this.Redraw();
+
+            // Terminal.SetCursorPosition(0, _startLine + _entries.Count());
+
+            // string message = "to select item";
+
+            // if (this.MultiSelect == true)
+            // {
+            //     message = "when finished";
+            //     Terminal.Write("Press ");
+            //     Terminal.WriteColor(this.KeyColor, "<space>");
+            //     Terminal.Write(" to select entry, ");
+            //     Terminal.WriteColor(this.KeyColor, "<Shift>-A");
+            //     Terminal.Write(" to select all, ");
+            //     Terminal.WriteColor(this.KeyColor, "<Shift>-D");
+            //     Terminal.Write(" to deselect all");
+            //     Terminal.WriteLine();
+            // }
+
+            this.SetupStatusBar();
+
+            return await Task.Run(async () => 
             {
-                Terminal.WriteLineColor(this.HeaderColor, this.MenuLabel);
-                Terminal.WriteLine();
-            }
+                // delay until the user does something
+                while (_choosenItems == null && _canceled == false)
+                    await Task.Delay(10);
 
-            _startLine = Terminal. Top;
+                if (_canceled)
+                    return null;
 
-            foreach (CliMenuEntry<TKey> entry in _entries)
+                return _choosenItems;
+            });
+        }
+
+        public override void Redraw()
+        {
+            Terminal.Clear();
+
+            foreach (CliMenuEntry<TKey> entry in _entries.Skip(_entryOffset).Take(MaxLines))
                 WriteMenuEntry(entry);
+        }
 
-            Terminal.SetCursorPosition(0, _startLine + _entries.Count() + 1);
-
-            string message = "to select item";
-
-            if (this.MultiSelect == true)
-            {
-                message = "when finished";
-                Terminal.Write("Press ");
-                Terminal.WriteColor(this.KeyColor, "<space>");
-                Terminal.Write(" to select entry, ");
-                Terminal.WriteColor(this.KeyColor, "<Shift>-A");
-                Terminal.Write(" to select all, ");
-                Terminal.WriteColor(this.KeyColor, "<Shift>-D");
-                Terminal.Write(" to deselect all");
-                Terminal.WriteLine();
-            }
-
-            // Terminal.WriteLine();
-            // Terminal.Write("Press ");
-            // Formatting.WriteC(this.KeyColor, "<enter>");
-            // Terminal.Write($" {message}, ");
-            // Formatting.WriteC(this.KeyColor, "<esc>");
-            // Terminal.Write(" or ");
-            // Formatting.WriteC(this.KeyColor, "q");
-            // Terminal.Write(" to cancel");
-            // Terminal.WriteLine();
-
+        private void SetupStatusBar()
+        {
             List<StatusBarItem> statusBarItems = new List<StatusBarItem>();
 
             if (this.EnableCancel)
@@ -172,18 +192,14 @@ namespace TerminalUI.Elements
             }
 
             statusBarItems.Add(new StatusBarItem(
-                "Select Item",
+                "Accept",
                 async (key) =>
                 {
-                    // Terminal.CursorVisible = true;
-                    // Terminal.SetCursorPosition(0, _startLine+_entries.Count()+1);
-
                     if (this.MultiSelect == false)
                     {
                         CliMenuEntry<TKey> finalEntry = _entries.First(x => x.Selected);
 
-                        if (clearScreen)
-                            Terminal.Clear();
+                        Terminal.Clear();
 
                         if (finalEntry != null && finalEntry.Task != null)
                             await finalEntry.Task();
@@ -199,11 +215,13 @@ namespace TerminalUI.Elements
             ));
 
             statusBarItems.Add(new StatusBarItem(
-                "Navigate",
+                "Nav",
                 (key) =>
                 {
                     CliMenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
                     CliMenuEntry<TKey> previousEntry = selectedEntry;
+
+                    bool down = (key.RootKey == ConsoleKey.DownArrow);
 
                     if (this.MultiSelect == false)
                         selectedEntry.Selected = false;
@@ -223,146 +241,66 @@ namespace TerminalUI.Elements
                     }
                     else
                     {
-                        WriteMenuEntry(previousEntry);
                         WriteMenuEntry(_entries[_cursorIndex]);
+
+                        if (down)
+                        {
+                            if (_cursorIndex > 0)
+                                WriteMenuEntry(previousEntry);
+                        }
+                        else
+                        {
+                            if (_entryOffset == 0 && _cursorIndex < this.MaxLines-1)
+                                WriteMenuEntry(previousEntry);
+                        }
                     }
 
                     return Task.Delay(0);
-
-                    // if (key.Key == ConsoleKey.Enter)
-                    //     break;
                 },
                 Key.MakeKey(ConsoleKey.UpArrow),
                 Key.MakeKey(ConsoleKey.DownArrow)
             ));
 
-            statusBarItems.Add(new StatusBarItem(
-                "Select Item",
-                async (key) => {
-                    if (key.RootKey == ConsoleKey.Spacebar)
-                    {
-                        CliMenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
-            
-                        selectedEntry.Selected = !selectedEntry.Selected;
-                        WriteMenuEntry(selectedEntry);
+            if (this.MultiSelect == true)
+            {
+                statusBarItems.Add(new StatusBarItem(
+                    "Mark Item",
+                    async (key) => {
+                        if (key.RootKey == ConsoleKey.Spacebar)
+                        {
+                            CliMenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
+                
+                            selectedEntry.Selected = !selectedEntry.Selected;
+                            WriteMenuEntry(selectedEntry);
 
+                            await Task.Delay(0);
+                        }
+                    },
+                    Key.MakeKey(ConsoleKey.Spacebar)
+                ));
+
+                statusBarItems.Add(new StatusBarItem(
+                    "Select All",
+                    async (key) => {
+                        _entries.ForEach(x => x.Selected = true);
+                        this.Redraw();
                         await Task.Delay(0);
-                    }
-                },
-                Key.MakeKey(ConsoleKey.Spacebar)
-            ));
+                    },
+                    Key.MakeKey(ConsoleKey.A, ConsoleModifiers.Control)
+                ));
+
+                statusBarItems.Add(new StatusBarItem(
+                    "Deselect All",
+                    async (key) => {
+                        _entries.ForEach(x => x.Selected = false);
+                        this.Redraw();
+                        await Task.Delay(0);
+                    },
+                    Key.MakeKey(ConsoleKey.D, ConsoleModifiers.Control)
+                ));
+            }
 
             Terminal.StatusBar.ShowItems(statusBarItems.ToArray());
-
-
-            // while (1 == 1)
-            // {
-            //     ConsoleKeyInfo key = Terminal.ReadKey(true);
-
-            //     CliMenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
-            //     CliMenuEntry<TKey> previousEntry = selectedEntry;
-
-            //     if (_multiSelect == false && (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.DownArrow))
-            //         selectedEntry.Selected = false;
-
-            //     // if (_multiSelect == true)
-            //     // {
-            //     //     if (key.Key == ConsoleKey.Spacebar)
-            //     //     {
-            //     //         selectedEntry.Selected = !selectedEntry.Selected;
-            //     //         WriteMenuEntry(selectedEntry);
-            //     //     }
-            //     //     else if (key.Modifiers == ConsoleModifiers.Shift)
-            //     //     {
-            //     //         if (key.Key == ConsoleKey.A)
-            //     //         {
-            //     //             foreach (CliMenuEntry<TKey> entry in _entries)
-            //     //             {
-            //     //                 entry.Selected = true;
-            //     //                 WriteMenuEntry(entry);
-            //     //             }
-            //     //         }
-            //     //         else if (key.Key == ConsoleKey.D)
-            //     //         {
-            //     //             foreach (CliMenuEntry<TKey> entry in _entries)
-            //     //             {
-            //     //                 entry.Selected = false;
-            //     //                 WriteMenuEntry(entry);
-            //     //             }
-            //     //         }
-            //     //     }
-            //     // }
-
-            //     // if (key.Key == ConsoleKey.Escape || key.Key == ConsoleKey.Q || (key.Key == ConsoleKey.C && key.Modifiers == ConsoleModifiers.Control))
-            //     // {
-            //     //     _canceled = true;
-            //     //     break;
-            //     // }
-            //     // else if
-            //      if (key.Key == ConsoleKey.DownArrow)
-            //         MoveCursor(selectedEntry, true);
-            //     else if (key.Key == ConsoleKey.UpArrow)
-            //         MoveCursor(selectedEntry, false);
-
-
-            //     if (_multiSelect == false && (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.DownArrow))
-            //     {
-            //         WriteMenuEntry(previousEntry);
-            //         selectedEntry = _entries[_cursorIndex];
-            //         selectedEntry.Selected = true;
-            //         WriteMenuEntry(selectedEntry);
-            //     }
-            //     else
-            //     {
-            //         WriteMenuEntry(previousEntry);
-            //         WriteMenuEntry(_entries[_cursorIndex]);
-            //     }
-
-            //     if (key.Key == ConsoleKey.Enter)
-            //         break;
-            // }
-
-
-
-            // // Terminal.CursorVisible = true;
-            // // Terminal.SetCursorPosition(0, _startLine+_entries.Count()+1);
-
-            // if (_canceled == false)
-            // {
-            //     if (_multiSelect == false)
-            //     {
-            //         CliMenuEntry<TKey> finalEntry = _entries.First(x => x.Selected);
-
-            //         if (ClearScreen)
-            //             Terminal.Clear();
-
-            //         if (finalEntry != null && finalEntry.Action != null)
-            //             finalEntry.Action();
-
-            //         return new List<TKey>() {
-            //             finalEntry.SelectedValue
-            //         };
-            //     }
-            //     else
-            //         return this.SelectedEntries;
-            // }
-            // else
-            // {
-            //     this.OnCancel();
-            //     return null;
-            // }
-
-            return await Task.Run(async () => 
-            {
-                // delay until the user does something
-                while (_choosenItems == null && _canceled == false)
-                    await Task.Delay(10);
-
-                if (_canceled)
-                    return null;
-
-                return _choosenItems;
-            });
         }
 
         public void AbortMenu()
@@ -376,9 +314,25 @@ namespace TerminalUI.Elements
             if (down == true)
             {
                 if (_cursorIndex < (_entries.Count() - 1))
+                {
                     _cursorIndex++;
+
+                    if ((_cursorIndex-_entryOffset) == this.MaxLines)
+                    {
+                        _entryOffset += 1;
+
+                        if (this._entries.Count >= this.MaxLines)
+                            this.Redraw();
+                    }
+                }
                 else
+                {
                     _cursorIndex = 0;
+                    _entryOffset = 0;
+
+                    if (this._entries.Count >= this.MaxLines)
+                        this.Redraw();
+                }
 
                 if (_entries[_cursorIndex].Disabled || _entries[_cursorIndex].Header)
                     MoveCursor(_entries[_cursorIndex], down);
@@ -386,9 +340,25 @@ namespace TerminalUI.Elements
             else
             {
                 if (_cursorIndex > 0)
+                {
                     _cursorIndex--;
+
+                    if (_entryOffset > 0)
+                    {
+                        _entryOffset--;
+
+                        if (this._entries.Count >= this.MaxLines)
+                            this.Redraw();
+                    }
+                }
                 else
-                    _cursorIndex = _entries.Count() - 1;
+                {
+                    _cursorIndex = _entries.Count - 1;
+                    _entryOffset = (_entries.Count > this.MaxLines ? _entries.Count - this.MaxLines : 0);
+
+                    if (this._entries.Count >= this.MaxLines)
+                        this.Redraw();
+                }
 
                 if (_entries[_cursorIndex].Disabled || _entries[_cursorIndex].Header)
                     MoveCursor(_entries[_cursorIndex], down);
@@ -404,119 +374,60 @@ namespace TerminalUI.Elements
             _cursorIndex = newIndex;
         }
 
-        private void WriteMenuEntry(CliMenuEntry<TKey> Entry)
+        private void WriteMenuEntry(CliMenuEntry<TKey> entry)
         {
-            int entryIndex = _entries.IndexOf(Entry);
+            int entryIndex = _entries.IndexOf(entry);
 
-            Terminal.SetCursorPosition(0, _startLine + entryIndex);
+            this.TopLeftPoint.AddY(entryIndex-_entryOffset).MoveTo();
 
-            if (Entry.Header)
+            // print the header
+            if (entry.Header == true && entry.Name != null)
             {
-                Terminal.ForegroundColor = ConsoleColor.Cyan;
-                Terminal.BackgroundColor = _backgroundColor;
+                Terminal.ForegroundColor = TerminalColor.CliMenuHeaderForeground;
+                Terminal.Write($"----- {entry.Name} -----");
+                Terminal.ResetForeground();
             }
-
+            else if (entry.Disabled == true)
+            {
+                Terminal.ForegroundColor = TerminalColor.CliMenuDisabledForeground;
+                Terminal.Write($"{_leftPadStr}  {entry.Name}");
+                Terminal.ResetForeground();
+            }
             else
             {
-                Terminal.BackgroundColor = _backgroundColor;
-                Terminal.Write("    ");
+                string multiSelectChcekbox = String.Empty;
+                
+                if (this.MultiSelect)
+                    multiSelectChcekbox = "[" + (entry.Selected == true? "X" : " ") + "]";
 
                 if (entryIndex == _cursorIndex)
                 {
-                    Terminal.BackgroundColor = this.CursorBackgroundColor;
-                    Terminal.ForegroundColor = this.CursorArrowColor;
-                    Terminal.Write("> ");
-                    Terminal.ForegroundColor = this.CursorForegroundColor;
-                }
-                else if (Entry.Disabled)
-                {
-                    Terminal.ForegroundColor = this.DisabledForegroundColor;
-                    Terminal.BackgroundColor = _backgroundColor;
-                    Terminal.Write("  ");
+                    Terminal.Write(_leftPadStr);
+                    Terminal.BackgroundColor = TerminalColor.CliMenuCursorBackground;
+                    Terminal.ForegroundColor = TerminalColor.CliMenuCursorArrow;
+                    Terminal.Write(">");
+                    if (this.MultiSelect == true)
+                        Terminal.Write(multiSelectChcekbox);
+                    Terminal.ForegroundColor = TerminalColor.CliMenuCursorForeground;
+                    Terminal.Write($" {entry.Name}");
+                    Terminal.ResetColor();
                 }
                 else
                 {
-                    Terminal.BackgroundColor = _backgroundColor;
-                    Terminal.Write("  ");
+                    if (entry.ForegroundColor != TerminalColor.DefaultForeground)
+                        Terminal.ForegroundColor = entry.ForegroundColor;
+
+                    Terminal.Write($"{_leftPadStr} ");  
+
+                    if (this.MultiSelect == true)
+                        Terminal.Write(multiSelectChcekbox);
+
+                    Terminal.Write($" {entry.Name}");
+
+                    if (entry.ForegroundColor != TerminalColor.DefaultForeground)
+                        Terminal.ResetColor();
                 }
             }
-
-            if (this.MultiSelect == true)
-            {
-                Terminal.Write("[");
-
-                if (Entry.Selected == true)
-                    Terminal.Write("X");
-                else
-                    Terminal.Write(" ");
-
-                Terminal.Write("] ");
-            }
-
-
-            if (Entry.Header && Entry.Name != null)
-                Terminal.Write($"----- {Entry.Name} -----");
-            else
-            {
-                if (!Entry.Disabled)
-                    Terminal.ForegroundColor = Entry.ForegroundColor;
-
-                char[] letters = (Entry.Name != null ? Entry.Name.ToCharArray() : new char[0]);
-
-                ConsoleColor defaultForeground = Terminal.ForegroundColor;
-
-                for (int i = 0; i < letters.Length; i++)
-                {
-                    char letter = letters[i];
-
-                    if (letter == '`' && i < letters.Length)
-                    {
-                        char nextLetter = letters[i + 1];
-                        bool setColor = false;
-
-                        switch (nextLetter)
-                        {
-                            case 'R':
-                                Terminal.ForegroundColor = ConsoleColor.Red;
-                                setColor = true;
-                                break;
-
-                            case 'G':
-                                Terminal.ForegroundColor = ConsoleColor.Green;
-                                setColor = true;
-                                break;
-
-                            case 'B':
-                                Terminal.ForegroundColor = ConsoleColor.Blue;
-                                setColor = true;
-                                break;
-
-                            case 'C':
-                                Terminal.ForegroundColor = ConsoleColor.Cyan;
-                                setColor = true;
-                                break;
-
-                            case 'N':
-                                Terminal.ForegroundColor = defaultForeground;
-                                setColor = true;
-                                break;
-                        }
-
-                        if (setColor)
-                        {
-                            i++;
-                            continue;
-                        }
-                    }
-
-                    Terminal.Write(letter);
-                }
-            }
-
-            Terminal.SetCursorPosition(0, Terminal.Top);
-
-            Terminal.ForegroundColor = _foregroundColor;
-            Terminal.BackgroundColor = _backgroundColor;
         }
         #endregion Private Methods
     }
