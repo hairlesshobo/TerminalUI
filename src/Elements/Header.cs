@@ -61,8 +61,8 @@ namespace TerminalUI.Elements
 
             if (hl == null)
                 hl = new HorizontalLine(TerminalColor.DefaultForeground, LineType.Thin);
-            else
-                hl.Redraw();
+
+            hl.Show();
 
             Terminal.ResetBackground();
             prevPoint.MoveTo();

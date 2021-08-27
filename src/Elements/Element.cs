@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace TerminalUI.Elements
 {
@@ -6,17 +7,63 @@ namespace TerminalUI.Elements
     {
         public int Width { get; private protected set; }
         public int Height { get; private protected set; }
+        public bool Visible { get; private protected set; } = false;
         
         public TerminalPoint TopLeftPoint { get; private protected set; }
         public TerminalPoint TopRightPoint { get; private protected set; }
         public TerminalPoint BottomLeftPoint { get; private protected set; } = null;
         public TerminalPoint BottomRightPoint { get; private protected set; } = null;
 
+        public virtual void RedrawAll()
+            => Redraw();
+
         public abstract void Redraw();
 
         public void Erase()
         {
-            throw new NotImplementedException();
+            if (this.TopLeftPoint == null)
+                throw new ArgumentNullException(nameof(this.TopLeftPoint));
+
+            if (this.TopRightPoint == null)
+                throw new ArgumentNullException(nameof(this.TopRightPoint));
+
+            TerminalPoint prevPoint = TerminalPoint.GetCurrent();
+
+            int width = this.TopRightPoint.Left - this.TopLeftPoint.Left;
+            int lines = (this.BottomLeftPoint == null ? 1 : this.BottomLeftPoint.Top - this.TopLeftPoint.Top);
+            
+            StringBuilder sb = new StringBuilder();
+            
+            for (int i = 0; i < width; i++)
+                sb.Append(' ');
+
+            string wideBlank = sb.ToString();
+
+            for (int i = 0; i < lines; i++)
+            {
+                this.TopLeftPoint.AddY(i).MoveTo();
+                Terminal.Write(wideBlank);
+            }
+
+            prevPoint.MoveTo();
+        }
+
+        public void Hide()
+        {
+            if (this.Visible == false)
+                return;
+
+            this.Visible = false;
+            this.Erase();
+        }
+
+        public void Show()
+        {
+            if (this.Visible == true)
+                return;
+
+            this.Visible = true;
+            this.RedrawAll();
         }
     }
 }

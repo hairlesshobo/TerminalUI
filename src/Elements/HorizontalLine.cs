@@ -24,8 +24,17 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
-            for (int i = 0; i < this.Width; i++)
-                Terminal.WriteColor(color, (char)lineType);
+            if (this.Visible)
+            {
+                TerminalPoint prevPoint = TerminalPoint.GetCurrent();
+                
+                this.TopLeftPoint.MoveTo();
+
+                for (int i = 0; i < this.Width; i++)
+                    Terminal.WriteColor(color, (char)lineType);
+
+                prevPoint.MoveTo();
+            }
         }
     }
 }

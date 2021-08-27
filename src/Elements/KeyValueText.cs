@@ -5,53 +5,71 @@ namespace TerminalUI.Elements
     public class KeyValueText : Element
     {
         private TerminalPoint kvtRightPoint;
+        private int leftWidth = 0;
         private int prevRightWidth = 0;
-        private string rightText = String.Empty;
+        private string keyName = String.Empty;
+        private string valueText = String.Empty;
 
-        public KeyValueText(string keyName, string valueText, int leftWidth = 0)
+        public KeyValueText(string keyName, string valueText = null, int leftWidth = 0)
         {
             this.TopLeftPoint = TerminalPoint.GetCurrent();
+            this.keyName = keyName;
+            this.leftWidth = (leftWidth != 0 ? Math.Abs(leftWidth) : keyName.Length) + 2;
+            this.kvtRightPoint = this.TopLeftPoint.AddX(this.leftWidth);
+            this.valueText = valueText;
 
             if (leftWidth < 0)
-                keyName = keyName.PadLeft(leftWidth * -1);
+                this.keyName = this.keyName.PadLeft(leftWidth * -1);
             else if (leftWidth > 0)
-                keyName = keyName.PadRight(leftWidth);
-            
-            Terminal.Write($"{keyName}: ");
+                this.keyName = this.keyName.PadRight(leftWidth);
+        }
 
-            kvtRightPoint = TerminalPoint.GetCurrent();
+        public override void RedrawAll()
+        {
+            if (this.Visible)
+            {
+                TerminalPoint prevPoint = TerminalPoint.GetCurrent();
+                this.TopLeftPoint.MoveTo();
 
-            this.UpdateValue(valueText);
+                Terminal.Write($"{keyName}: ");
+
+                this.Redraw();
+
+                prevPoint.MoveTo();
+            }
         }
 
         public override void Redraw()
         {
-            TerminalPoint previousPoint = TerminalPoint.GetCurrent();
-            kvtRightPoint.MoveTo();
-
-            if (this.rightText == null)
-                this.rightText = String.Empty;
-
-            Console.Write(this.rightText);
-            
-            if (this.rightText.Length < prevRightWidth)
+            if (this.Visible)
             {
-                int spacesToClear = prevRightWidth - this.rightText.Length;
+                TerminalPoint previousPoint = TerminalPoint.GetCurrent();
+                kvtRightPoint.MoveTo();
 
-                for (int i = 0; i < spacesToClear; i++)
-                    Console.Write(' ');
+                if (this.valueText == null)
+                    this.valueText = String.Empty;
+
+                Console.Write(this.valueText);
+                
+                if (this.valueText.Length < prevRightWidth)
+                {
+                    int spacesToClear = prevRightWidth - this.valueText.Length;
+
+                    for (int i = 0; i < spacesToClear; i++)
+                        Console.Write(' ');
+                }
+
+                prevRightWidth = this.valueText.Length;
+
+                this.TopRightPoint = TerminalPoint.GetCurrent();
+
+                previousPoint.MoveTo();
             }
-
-            prevRightWidth = this.rightText.Length;
-
-            this.TopRightPoint = TerminalPoint.GetCurrent();
-
-            previousPoint.MoveTo();
         }
 
         public void UpdateValue(string newText)
         {
-            this.rightText = newText;
+            this.valueText = newText;
 
             this.Redraw();
         }

@@ -38,36 +38,39 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
-            TerminalPoint previousPoint = TerminalPoint.GetCurrent();
-            this.TopLeftPoint.MoveTo();
+            if (this.Visible)
+            {
+                TerminalPoint previousPoint = TerminalPoint.GetCurrent();
+                this.TopLeftPoint.MoveTo();
 
-            if (currentPercent > 1)
-                currentPercent /= 100.0;
+                if (currentPercent > 1)
+                    currentPercent /= 100.0;
 
-            int filled = (int)Math.Round(this.barWidth * currentPercent);
-            int unfilled = this.barWidth - filled;
+                int filled = (int)Math.Round(this.barWidth * currentPercent);
+                int unfilled = this.barWidth - filled;
 
-            string pctString = String.Format("{0,3:N0}%", (currentPercent * 100.0));
+                string pctString = String.Format("{0,3:N0}%", (currentPercent * 100.0));
 
-            if (display == ProgressDisplay.Left)
-                Terminal.Write(String.Format("{0,5}", pctString));
+                if (display == ProgressDisplay.Left)
+                    Terminal.Write(String.Format("{0,5}", pctString));
 
-            Terminal.ForegroundColor = TerminalColor.ProgressBarFilled;
+                Terminal.ForegroundColor = TerminalColor.ProgressBarFilled;
 
-            for (int i = 0; i <= filled; i++)
-                Terminal.Write((char)BlockChars.Solid);
-            
-            Terminal.ForegroundColor = TerminalColor.ProgressBarUnfilled;
+                for (int i = 0; i < filled; i++)
+                    Terminal.Write((char)BlockChars.Solid);
+                
+                Terminal.ForegroundColor = TerminalColor.ProgressBarUnfilled;
 
-            for (int i = filled; i < this.barWidth; i++)
-                Terminal.Write((char)BlockChars.MediumShade);
+                for (int i = filled; i < this.barWidth; i++)
+                    Terminal.Write((char)BlockChars.MediumShade);
 
-            Terminal.ResetForeground();
+                Terminal.ResetForeground();
 
-            if (display == ProgressDisplay.Right)
-                Terminal.Write(String.Format("{0,-5}", pctString));
+                if (display == ProgressDisplay.Right)
+                    Terminal.Write(String.Format("{0,-5}", pctString));
 
-            previousPoint.MoveTo();
+                previousPoint.MoveTo();
+            }
         }
 
         public void UpdateProgress(double newPercent)

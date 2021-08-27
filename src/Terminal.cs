@@ -18,6 +18,7 @@ namespace TerminalUI
         public static int Height => Console.WindowHeight;
         public static int Left => Console.CursorLeft;
         public static int Top => Console.CursorTop;
+        public static int UsableBottomn => Console.WindowHeight - 1 - (StatusBar == null ? 0 : 1);
 
         public static ConsoleColor BackgroundColor
         {

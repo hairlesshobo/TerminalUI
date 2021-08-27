@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace TerminalUI.Elements
@@ -36,7 +37,7 @@ namespace TerminalUI.Elements
         public bool MultiSelect { get; private set; } = false;
         public List<TKey> SelectedValues => _entries.Where(x => x.Selected).Select(x => x.SelectedValue).ToList();
         public IReadOnlyList<TKey> SelectedEntries => (IReadOnlyList<TKey>)_entries;
-        public int MaxLines => Terminal.UsableHeight - 1;
+        public int MaxLines { get; private set; } // => Terminal.UsableHeight - 1;
         public int LeftPad { 
             get => _leftPad; 
             set 
@@ -56,8 +57,6 @@ namespace TerminalUI.Elements
 
         #region Private Fields
         private List<CliMenuEntry<TKey>> _entries;
-        private ConsoleColor _foregroundColor;
-        private ConsoleColor _backgroundColor;
         private int _cursorIndex = -1;
         private bool _canceled = false;
         private List<TKey> _choosenItems = null;
@@ -80,6 +79,14 @@ namespace TerminalUI.Elements
         {
             this.MultiSelect = multiSelect;
 
+            this.TopLeftPoint = TerminalPoint.GetCurrent();
+            this.TopRightPoint = this.TopLeftPoint.AddX(Terminal.UsableWidth);
+
+            this.BottomLeftPoint = new TerminalPoint(this.TopLeftPoint.Left, Terminal.UsableBottomn);
+            this.BottomRightPoint = this.BottomLeftPoint.AddX(Terminal.UsableWidth);
+
+            this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
+
             SetMenuItems(entries);
         }
         #endregion Constructors
@@ -90,7 +97,7 @@ namespace TerminalUI.Elements
             _entries = entries;
             _cursorIndex = 0;
 
-            if (_entries != null)
+            if (_entries != null && _entries.Count > 0)
             {
                 _cursorIndex = _entries.IndexOf(_entries.First(x => !x.Disabled && !x.Header));
 
@@ -111,15 +118,15 @@ namespace TerminalUI.Elements
             _choosenItems = null;
 
             Terminal.CursorVisible = false;
-            _foregroundColor = Terminal.ForegroundColor;
-            _backgroundColor = Terminal.BackgroundColor;
 
-            Terminal.Clear();
+            // Terminal.Clear();
 
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
-            this.TopRightPoint = this.TopLeftPoint.AddX(Terminal.UsableWidth);
-            this.BottomLeftPoint = this.TopLeftPoint.AddY(Terminal.UsableHeight);
-            this.BottomRightPoint = this.BottomLeftPoint.AddX(Terminal.UsableWidth);
+            // this.TopLeftPoint = TerminalPoint.GetCurrent();
+            // this.TopRightPoint = this.TopLeftPoint.AddX(Terminal.UsableWidth);
+            // this.BottomLeftPoint = this.TopLeftPoint.AddY(Terminal.UsableHeight);
+            // this.BottomRightPoint = this.BottomLeftPoint.AddX(Terminal.UsableWidth);
+
+            this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
 
             this.Redraw();
 
@@ -157,10 +164,30 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
-            Terminal.Clear();
+            this.Clear();
 
             foreach (CliMenuEntry<TKey> entry in _entries.Skip(_entryOffset).Take(MaxLines))
                 WriteMenuEntry(entry);
+        }
+
+        private void Clear()
+        {
+            this.TopLeftPoint.MoveTo();
+            
+            StringBuilder sb = new StringBuilder();
+                
+            for (int w = 0; w < Width; w++)
+                sb.Append(' ');
+
+            string wideString = sb.ToString();
+
+            for (int h = 0; h < this.MaxLines; h++)
+            {
+                Console.CursorLeft = 0;
+                Terminal.Write(wideString);
+            }
+
+            this.TopLeftPoint.MoveTo();
         }
 
         private void SetupStatusBar()
@@ -199,7 +226,7 @@ namespace TerminalUI.Elements
                     {
                         CliMenuEntry<TKey> finalEntry = _entries.First(x => x.Selected);
 
-                        Terminal.Clear();
+                        this.Clear();
 
                         if (finalEntry != null && finalEntry.Task != null)
                             await finalEntry.Task();
