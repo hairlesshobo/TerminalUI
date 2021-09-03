@@ -51,6 +51,17 @@ namespace TerminalUI.Elements
         {
             this.Height = 1;
             this.Width = Terminal.Width;
+
+            // OK so i'm not sure why this behaves differently on windows than it does on windows
+            // and to be honest, i didn't feel like spending more than 30 seconds addressing it.
+            // Basically, if you write all the way to the last character of the line, the console
+            // moves down one line (i assume it's just word wrap).. the side effect of this on windows
+            // is that, when the status bar is drawn on the very last line, to the very last column.. it 
+            // pushes the entire window up one line and therefore cuts off the first header line of the
+            // terminal. This behavior doesn't happen on linux, so for now.. we just subtract one from the 
+            // status bar width on windows and call it a quick fix instead of a lazy hack
+            if (OperatingSystem.IsWindows())
+                this.Width -= 1;
             
             this.TopLeftPoint = new TerminalPoint(0, Terminal.Height-1);
             this.TopRightPoint = new TerminalPoint(Terminal.Width, Terminal.Height-1);
