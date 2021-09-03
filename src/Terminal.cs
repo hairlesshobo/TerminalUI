@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using TerminalUI.Elements;
 
 namespace TerminalUI
@@ -57,6 +58,7 @@ namespace TerminalUI
         /// </summary>
         /// <param name="input">String to write to the terminal</param>
         public static void Write(string input) => Console.Write(input);
+
 
         /// <summary>
         ///     Parses a string for color control codes and then writes the string to the terminal
@@ -193,7 +195,13 @@ namespace TerminalUI
         public static void SetCursorPosition(int left, int top)
             => Console.SetCursorPosition(left, top);
 
-        public static void Start()
+        public static Task Start()
             => KeyInput.StartLoop();
+
+        public static void Stop()
+            => KeyInput.StopListening();
+
+        public static void WaitForStop()
+            => KeyInput.WaitForStop();
     }
 }

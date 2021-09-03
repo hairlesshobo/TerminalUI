@@ -12,7 +12,7 @@ namespace TerminalUI
         private static Task<string> _readStringTask = null;
         private static CancellationTokenSource _cts;
         private static volatile bool _listening;
-        private static Thread _thread;
+        private static Task _listenTask;
         private static List<char> _buffer = new List<char>();
         private static volatile bool _echoChar = false;
         private static volatile bool _bufferChars = false;
@@ -46,36 +46,26 @@ namespace TerminalUI
             return true;
         }
 
-        public static void StartLoop()
+        public static Task StartLoop()
         {
             if (_started)
-                return;
+                return Task.CompletedTask;
 
             _cts = new CancellationTokenSource();
 
-            DoListen();
-
-            // _thread = new Thread(DoListen);
-            // _thread.Start();
-
-            // return true;
+            return (_listenTask = Task.Run(DoListen));
         }
 
         public static void ClearAllKeys()
             => _registeredKeys.Clear();
 
-        public static void StopListening()
-        {
-            // if (!_listening)
-            //     return;
+        internal static void StopListening()
+            => _cts.Cancel();
 
-            // Action cancelAction = () => _cts.Cancel();
-            _cts.Cancel();
+        internal static void WaitForStop()
+            => Task.WaitAll(_listenTask);
 
-            _thread.Join();
-        }
-
-        private static void DoListen()
+        private static async Task DoListen()
         {
             _listening = true;
 
@@ -90,7 +80,7 @@ namespace TerminalUI
                     Terminal.WriteDebugLine($"KeyInput: {key.ToString()}");
 
                     if (_registeredKeys.ContainsKey(key))
-                        _registeredKeys[key](key);
+                        _ = _registeredKeys[key](key);
                     else if (_bufferChars == true)
                     {
                         if (keyInfo.Key == ConsoleKey.Enter)
@@ -103,7 +93,7 @@ namespace TerminalUI
                         
                 }
                 else
-                    Task.Delay(10, _cts.Token);
+                    await Task.Delay(10, _cts.Token);
             }
 
             _listening = false;
