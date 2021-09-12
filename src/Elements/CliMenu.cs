@@ -219,7 +219,7 @@ namespace TerminalUI.Elements
                     "Cancel",
                     async (key) => {
                         this.AbortMenu();
-                        await Task.Delay(0);
+                        await Task.CompletedTask;
                     },
                     Key.MakeKey(ConsoleKey.C, ConsoleModifiers.Control)
                 ));
@@ -231,7 +231,7 @@ namespace TerminalUI.Elements
                     (key) => 
                     {
                         Environment.Exit(0);
-                        return Task.Delay(0);
+                        return Task.CompletedTask;
                     },
                     Key.MakeKey(ConsoleKey.Q)
                 ));
@@ -301,7 +301,7 @@ namespace TerminalUI.Elements
                         }
                     }
 
-                    return Task.Delay(0);
+                    return Task.CompletedTask;
                 },
                 Key.MakeKey(ConsoleKey.UpArrow),
                 Key.MakeKey(ConsoleKey.DownArrow)
@@ -311,36 +311,38 @@ namespace TerminalUI.Elements
             {
                 statusBarItems.Add(new StatusBarItem(
                     "Mark Item",
-                    async (key) => {
+                    (key) => {
                         if (key.RootKey == ConsoleKey.Spacebar)
                         {
                             CliMenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
                 
                             selectedEntry.Selected = !selectedEntry.Selected;
                             WriteMenuEntry(selectedEntry);
-
-                            await Task.Delay(0);
                         }
+
+                        return Task.CompletedTask;
                     },
                     Key.MakeKey(ConsoleKey.Spacebar)
                 ));
 
                 statusBarItems.Add(new StatusBarItem(
                     "Select All",
-                    async (key) => {
+                    (key) => {
                         _entries.ForEach(x => x.Selected = true);
                         this.Redraw();
-                        await Task.Delay(0);
+
+                        return Task.CompletedTask;
                     },
                     Key.MakeKey(ConsoleKey.A, ConsoleModifiers.Control)
                 ));
 
                 statusBarItems.Add(new StatusBarItem(
                     "Deselect All",
-                    async (key) => {
+                    (key) => {
                         _entries.ForEach(x => x.Selected = false);
                         this.Redraw();
-                        await Task.Delay(0);
+
+                        return Task.CompletedTask;
                     },
                     Key.MakeKey(ConsoleKey.D, ConsoleModifiers.Control)
                 ));

@@ -58,18 +58,16 @@ namespace TerminalUI.Elements
         #endregion Public Properties
 
         #region Private Fields
-        private object _consoleLock = new object();
-        
         private List<string> _lines;
         private int _topLineIndexPointer = 0;
 
         private int _totalLines = 0;
         private volatile bool _drawn = false;
 
-        private Thread _thread;
-        private volatile bool _abort = false;
         private bool _deferDraw = true;
         private volatile bool _started = false;
+        private TaskCompletionSource _tcs = null;
+
         #endregion Private Fields
 
         #region Constructor
@@ -85,12 +83,31 @@ namespace TerminalUI.Elements
             this.FirstTextLinePoint = new TerminalPoint(0, this.TopLeftPoint.Top+1);
         }
 
-        public void Start()
+        public Task RunAsync()
         {
-            _thread = new Thread(Run);
-            _thread.Start();
+            if (_tcs != null)
+                return Task.CompletedTask;
 
-            _started = true;
+            _tcs = new TaskCompletionSource();
+            
+            Setup();
+
+            if (!_drawn)
+                Redraw();
+
+            return _tcs.Task;
+        }
+
+        public void Stop()
+            => _tcs?.TrySetResult();
+
+        public void Start()
+            => RunAsync();
+
+        public async Task Wait()
+        {
+            if (_tcs != null)
+                await _tcs.Task;
         }
         #endregion Constructor
 
@@ -244,117 +261,55 @@ namespace TerminalUI.Elements
         //     }
         // }
 
-        public void WaitForExit()
-        {
-            if (!_drawn)
-                Redraw();
-
-            _thread.Join();
-        }
-
         public void Dispose()
-        {
-            if (!_abort)
-                _abort = true;
-
-            WaitForExit();
-        }
-
+            => Cleanup();
 
         #region Private Methods
-        private void Run()
-        {
-            Setup();
-            MainLoop();
-            Cleanup();
-        }
-
         private void Setup()
         {
-            lock (_consoleLock)
-            {
-                Terminal.CursorVisible = false;
+            Terminal.CursorVisible = false;
 
-                Terminal.InitStatusBar(
-                    new StatusBarItem(
-                        "Main Menu",
-                        (key) => {
-                            _abort = true;
-                            return Task.Delay(0);
-                        },
-                        Key.MakeKey(ConsoleKey.Q)
-                    ),
-                    new StatusBarItem(
-                        "Navigate",
-                        (key) => {
-                            if (key.RootKey == ConsoleKey.DownArrow)
-                                DownLine();
-                            else if (key.RootKey == ConsoleKey.UpArrow)
-                                UpLine();
-                            else if (key.RootKey == ConsoleKey.PageDown)
-                                DownPage();
-                            else if (key.RootKey == ConsoleKey.PageUp)
-                                UpPage();
-                            else if (key.RootKey == ConsoleKey.Home)
-                                ScrollToTop();
-                            else if (key.RootKey == ConsoleKey.End)
-                                ScrollToBottom();
+            Terminal.InitStatusBar(
+                new StatusBarItem(
+                    "Main Menu",
+                    (key) => {
+                        _tcs.TrySetResult();
+                        return Task.CompletedTask;
+                    },
+                    Key.MakeKey(ConsoleKey.Q)
+                ),
+                new StatusBarItem(
+                    "Navigate",
+                    (key) => {
+                        if (key.RootKey == ConsoleKey.DownArrow)
+                            DownLine();
+                        else if (key.RootKey == ConsoleKey.UpArrow)
+                            UpLine();
+                        else if (key.RootKey == ConsoleKey.PageDown)
+                            DownPage();
+                        else if (key.RootKey == ConsoleKey.PageUp)
+                            UpPage();
+                        else if (key.RootKey == ConsoleKey.Home)
+                            ScrollToTop();
+                        else if (key.RootKey == ConsoleKey.End)
+                            ScrollToBottom();
 
-                            return Task.Delay(0);
-                        },
-                        Key.MakeKey(ConsoleKey.DownArrow),
-                        Key.MakeKey(ConsoleKey.UpArrow),
-                        Key.MakeKey(ConsoleKey.PageUp),
-                        Key.MakeKey(ConsoleKey.PageDown),
-                        Key.MakeKey(ConsoleKey.Home),
-                        Key.MakeKey(ConsoleKey.End)
-                    )
-                );
-
-                // if (!_deferDraw)
-                //     WriteStatusBar();
-
-                // Console.CancelKeyPress += (sender, e) => {
-                //     _abort = true;
-                // };
-            }
-        }
-
-        private void MainLoop()
-        {
-            while (!_abort)
-            {
-                Thread.Sleep(10);
-                // ConsoleKeyInfo key = Console.ReadKey(true);
-
-                // if (key.Key == ConsoleKey.Q || key.Key == ConsoleKey.Escape || (key.Key == ConsoleKey.C && key.Modifiers == ConsoleModifiers.Control))
-                //     _abort = true;
-                // else if (key.Key == ConsoleKey.DownArrow)
-                //     DownLine();
-                // else if (key.Key == ConsoleKey.UpArrow)
-                //     UpLine();
-                // else if (key.Key == ConsoleKey.PageDown)
-                //     DownPage();
-                // else if (key.Key == ConsoleKey.PageUp)
-                //     UpPage();
-                // else if (key.Key == ConsoleKey.Home)
-                //     ScrollToTop();
-                // else if (key.Key == ConsoleKey.End)
-                //     ScrollToBottom();
-                // else if (key.Key == ConsoleKey.S && key.Modifiers == ConsoleModifiers.Control)
-                //     SaveFile();
-            }
+                        return Task.CompletedTask;
+                    },
+                    Key.MakeKey(ConsoleKey.DownArrow),
+                    Key.MakeKey(ConsoleKey.UpArrow),
+                    Key.MakeKey(ConsoleKey.PageUp),
+                    Key.MakeKey(ConsoleKey.PageDown),
+                    Key.MakeKey(ConsoleKey.Home),
+                    Key.MakeKey(ConsoleKey.End)
+                )
+            );
         }
 
         private void Cleanup()
         {
-            lock (_consoleLock)
-            {
-                Terminal.Clear();
-                // Terminal.SetCursorPosition(0, 0);
-                // Terminal.CursorVisible = true;
-                Terminal.ResetColor();
-            }
+            Terminal.Clear();
+            Terminal.ResetColor();
 
             _lines.Clear();
             GC.Collect();
@@ -363,58 +318,51 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
-            if (!_abort)
+            _drawn = true;
+
+            WriteHeader();
+
+            IEnumerable<string> linesToShow = _lines.Skip(_topLineIndexPointer).Take(this.MaxLines);
+            int i = 0;
+
+            foreach (string line in linesToShow)
             {
-                _drawn = true;
+                Terminal.SetCursorPosition(0, this.FirstLine + i);
 
-                WriteHeader();
-                // WriteStatusBar();
-
-                IEnumerable<string> linesToShow = _lines.Skip(_topLineIndexPointer).Take(this.MaxLines);
-                int i = 0;
-
-                foreach (string line in linesToShow)
+                if (ShowLineNumbers == true)
                 {
-                    lock (_consoleLock)
+                    Terminal.BackgroundColor = ConsoleColor.DarkBlue;
+                    Terminal.Write((_topLineIndexPointer + i + 1).ToString().PadLeft(this.LineNumberWidth));
+                    Terminal.ResetColor();
+                    Terminal.Write(" ");
+                }
+
+                int lineWidth = (line.Length > this.MaxWidth ? this.MaxWidth : line.Length);
+
+                if (this.Highlight == true && this.HighlightText != null)
+                {
+                    for (int s = 0; s < lineWidth; s++)
                     {
-                        Terminal.SetCursorPosition(0, this.FirstLine + i);
-
-                        if (ShowLineNumbers == true)
+                        if (line.Substring(s).ToLower().StartsWith(this.HighlightText.ToLower()))
                         {
-                            Terminal.BackgroundColor = ConsoleColor.DarkBlue;
-                            Terminal.Write((_topLineIndexPointer + i + 1).ToString().PadLeft(this.LineNumberWidth));
+                            Terminal.ForegroundColor = this.HighlightColor;
+                            Terminal.Write(line.Substring(s, this.HighlightText.Length));
                             Terminal.ResetColor();
-                            Terminal.Write(" ");
-                        }
 
-                        int lineWidth = (line.Length > this.MaxWidth ? this.MaxWidth : line.Length);
-
-                        if (this.Highlight == true && this.HighlightText != null)
-                        {
-                            for (int s = 0; s < lineWidth; s++)
-                            {
-                                if (line.Substring(s).ToLower().StartsWith(this.HighlightText.ToLower()))
-                                {
-                                    Terminal.ForegroundColor = this.HighlightColor;
-                                    Terminal.Write(line.Substring(s, this.HighlightText.Length));
-                                    Terminal.ResetColor();
-
-                                    s += this.HighlightText.Length-1;
-                                }
-                                else
-                                    Terminal.Write(line[s]);
-                            }
-
-                            // erase the rest of the line
-                            if (line.Length < this.MaxWidth)
-                                Terminal.Write(String.Empty.PadRight(this.MaxWidth - line.Length));
+                            s += this.HighlightText.Length-1;
                         }
                         else
-                            Terminal.Write(line.Substring(0, lineWidth).PadRight(this.MaxWidth));
+                            Terminal.Write(line[s]);
                     }
 
-                    i++;
+                    // erase the rest of the line
+                    if (line.Length < this.MaxWidth)
+                        Terminal.Write(String.Empty.PadRight(this.MaxWidth - line.Length));
                 }
+                else
+                    Terminal.Write(line.Substring(0, lineWidth).PadRight(this.MaxWidth));
+
+                i++;
             }
         }
 
@@ -427,13 +375,10 @@ namespace TerminalUI.Elements
                 if (line == null)
                     line = String.Empty;
 
-                lock (_consoleLock)
-                {
-                    Terminal.SetCursorPosition(0, this.StartLine);
-                    Terminal.BackgroundColor = ConsoleColor.DarkBlue;
-                    Terminal.Write(line.PadRight(this.MaxWidth));
-                    Terminal.ResetColor();
-                }
+                Terminal.SetCursorPosition(0, this.StartLine);
+                Terminal.BackgroundColor = ConsoleColor.DarkBlue;
+                Terminal.Write(line.PadRight(this.MaxWidth));
+                Terminal.ResetColor();
             }
         }
 
@@ -452,13 +397,10 @@ namespace TerminalUI.Elements
 
             int leftPad = this.WindowWidth - lineIndex.Length;
 
-            lock (_consoleLock)
-            {
-                Terminal.SetCursorPosition(0, this.BottomLine);
-                Terminal.BackgroundColor = ConsoleColor.DarkBlue;
-                Terminal.Write(line.PadRight(leftPad) + lineIndex);
-                Terminal.ResetColor();
-            }
+            Terminal.SetCursorPosition(0, this.BottomLine);
+            Terminal.BackgroundColor = ConsoleColor.DarkBlue;
+            Terminal.Write(line.PadRight(leftPad) + lineIndex);
+            Terminal.ResetColor();
         }
 
         #endregion Private Methods
