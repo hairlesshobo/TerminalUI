@@ -1,3 +1,22 @@
+/**
+ *  TerminalUI - Simple terminal widgets for C#
+ * 
+ *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published by
+ *  the Free Software Foundation; either version 2.1 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -12,7 +31,7 @@ namespace TerminalUI
         private static Task<string> _readStringTask = null;
         private static CancellationTokenSource _cts;
         private static volatile bool _listening;
-        private static Thread _thread;
+        private static Task _listenTask;
         private static List<char> _buffer = new List<char>();
         private static volatile bool _echoChar = false;
         private static volatile bool _bufferChars = false;
@@ -46,36 +65,26 @@ namespace TerminalUI
             return true;
         }
 
-        public static void StartLoop()
+        public static Task StartLoop()
         {
             if (_started)
-                return;
+                return Task.CompletedTask;
 
             _cts = new CancellationTokenSource();
 
-            DoListen();
-
-            // _thread = new Thread(DoListen);
-            // _thread.Start();
-
-            // return true;
+            return (_listenTask = Task.Run(DoListen));
         }
 
         public static void ClearAllKeys()
             => _registeredKeys.Clear();
 
-        public static void StopListening()
-        {
-            // if (!_listening)
-            //     return;
+        internal static void StopListening()
+            => _cts.Cancel();
 
-            // Action cancelAction = () => _cts.Cancel();
-            _cts.Cancel();
+        internal static void WaitForStop()
+            => Task.WaitAll(_listenTask);
 
-            _thread.Join();
-        }
-
-        private static void DoListen()
+        private static async Task DoListen()
         {
             _listening = true;
 
@@ -90,7 +99,7 @@ namespace TerminalUI
                     Terminal.WriteDebugLine($"KeyInput: {key.ToString()}");
 
                     if (_registeredKeys.ContainsKey(key))
-                        _registeredKeys[key](key);
+                        _ = _registeredKeys[key](key);
                     else if (_bufferChars == true)
                     {
                         if (keyInfo.Key == ConsoleKey.Enter)
@@ -103,7 +112,7 @@ namespace TerminalUI
                         
                 }
                 else
-                    Task.Delay(10, _cts.Token);
+                    await Task.Delay(10, _cts.Token);
             }
 
             _listening = false;
