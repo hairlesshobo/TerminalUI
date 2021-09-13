@@ -38,7 +38,7 @@ namespace TerminalUI.Elements
 
         public abstract void Redraw();
 
-        public void Erase()
+        public virtual void Erase()
         {
             if (this.TopLeftPoint == null)
                 throw new ArgumentNullException(nameof(this.TopLeftPoint));
@@ -67,7 +67,7 @@ namespace TerminalUI.Elements
             prevPoint.MoveTo();
         }
 
-        public void Hide()
+        public virtual void Hide()
         {
             if (this.Visible == false)
                 return;
@@ -76,7 +76,7 @@ namespace TerminalUI.Elements
             this.Erase();
         }
 
-        public void Show()
+        public virtual void Show()
         {
             if (this.Visible == true)
                 return;

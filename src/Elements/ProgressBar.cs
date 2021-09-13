@@ -169,7 +169,7 @@ namespace TerminalUI.Elements
         {
             if (calcWidth)
             {
-                int newWidth = new int[] { this.value.ToString().Length, this.divisor.ToString().Length }.Max();
+                int newWidth = new int[] { value.ToString().Length, divisor.ToString().Length }.Max();
 
                 SetExplicitWidth(newWidth);
             }

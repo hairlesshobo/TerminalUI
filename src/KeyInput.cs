@@ -35,6 +35,7 @@ namespace TerminalUI
         private static List<char> _buffer = new List<char>();
         private static volatile bool _echoChar = false;
         private static volatile bool _bufferChars = false;
+        private static TerminalPoint _bufferStartPoint = null;
         private static Action<string> _stringCallback = (_) => { };
 
         public static bool Listening => _listening;
@@ -92,7 +93,7 @@ namespace TerminalUI
             {
                 if (Console.KeyAvailable && _listening)
                 {
-                    ConsoleKeyInfo keyInfo = Console.ReadKey(!_echoChar);
+                    ConsoleKeyInfo keyInfo = Console.ReadKey(true);
 
                     Key key = Key.FromConsoleKeyInfo(keyInfo);
 
@@ -105,9 +106,22 @@ namespace TerminalUI
                         if (keyInfo.Key == ConsoleKey.Enter)
                             _bufferChars = false;
                         else if (keyInfo.Key == ConsoleKey.Backspace)
-                            _buffer.RemoveAt(_buffer.Count-1);
+                        {
+                            int bufferLength = _buffer.Count;
+
+                            if (bufferLength > 0)
+                            {
+                                Console.CursorLeft -= 1;
+                                Console.Write(' ');
+                                Console.CursorLeft -= 1;
+                                _buffer.RemoveAt(bufferLength-1);
+                            }
+                        }
                         else
+                        {
                             _buffer.Add(keyInfo.KeyChar);
+                            Console.Write(keyInfo.KeyChar);
+                        }
                     }
                         
                 }
@@ -122,6 +136,7 @@ namespace TerminalUI
         {
             _echoChar = true;
             _bufferChars = true;
+            _bufferStartPoint = TerminalPoint.GetCurrent();
             _buffer.Clear();
 
             string result = await Task.Run(() => 
