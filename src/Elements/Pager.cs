@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -38,10 +39,27 @@ namespace TerminalUI.Elements
         public bool AutoScroll { get; set; } = false;
         public bool ShowLineNumbers { get; set; } = false;
         public bool ShowHeader { get; set; } = false;
-        public string HeaderText { get; set; } = String.Empty;
-        public string HighlightText { get; set; } = null;
+        public string HeaderText 
+        { 
+            get => _headerText;
+            set
+            {
+                this.ShowHeader = !String.IsNullOrWhiteSpace(value);
+                _headerText = value;
+            }
+        }
+        public string HighlightText 
+        { 
+            get => _highlightText;
+            set
+            {
+                this.Highlight = !String.IsNullOrWhiteSpace(value);
+                _highlightText = value;
+            }
+        }
+
         public bool Highlight { get; set; } = false;
-        public ConsoleColor HighlightColor { get; set; } = ConsoleColor.DarkYellow;
+        public ConsoleColor HighlightColor { get; set; } = TerminalColor.PagerHighlightColorForeground;
         public int StartLine { get; set; } = 2;
 
         public int FirstLine => this.StartLine + (this.ShowHeader ? 1 : 0);
@@ -53,11 +71,14 @@ namespace TerminalUI.Elements
         public bool DeferDraw => _deferDraw;
         public int BottomLine => Terminal.Height - 1;
         public bool Started => _started;
+        public CancellationToken CancellationToken => _cts.Token;
 
         public TerminalPoint FirstTextLinePoint { get; private set; }
         #endregion Public Properties
 
         #region Private Fields
+        private string _headerText = String.Empty;
+        private string _highlightText = null;
         private List<string> _lines;
         private int _topLineIndexPointer = 0;
 
@@ -67,6 +88,7 @@ namespace TerminalUI.Elements
         private bool _deferDraw = true;
         private bool _started = false;
         private TaskCompletionSource _tcs = null;
+        private CancellationTokenSource _cts = null;
 
         #endregion Private Fields
 
@@ -74,6 +96,7 @@ namespace TerminalUI.Elements
         public Pager()
         {
             _lines = new List<string>();
+            _cts = new CancellationTokenSource();
 
             this.TopLeftPoint = new TerminalPoint(0, 2);
             this.TopRightPoint = new TerminalPoint(Terminal.Width, 2);
@@ -104,8 +127,9 @@ namespace TerminalUI.Elements
 
         public void Start()
         {
-            _deferDraw = false;
+            _deferDraw = false;            
             RunAsync();
+            WriteHeader();
         }
 
         public static Pager StartNew()
@@ -152,8 +176,19 @@ namespace TerminalUI.Elements
                     }
                     else
                     {
-                        if (_totalLines - _topLineIndexPointer <= this.MaxLines)
+                        // we haven't filled the screen yet, so instead of redrawing the whole thing, 
+                        // lets just append the line. this should prove to be immensely faster than a 
+                        // complete redraw each time
+                        if (_totalLines <= this.MaxLines)
+                        {
+                            DrawLine(_totalLines-1, line);
+                            // this.FirstTextLinePoint.AddY(_totalLines).MoveTo();
+
+                        }
+                        else if (_totalLines - _topLineIndexPointer <= this.MaxLines)
                             Redraw();
+                        // here we only update the status bar because the line that is being added is
+                        // below the visible point on the screen
                         // else
                         //     WriteStatusBar();
                     }
@@ -288,6 +323,7 @@ namespace TerminalUI.Elements
                 new StatusBarItem(
                     "Main Menu",
                     (key) => {
+                        _cts.Cancel();
                         _tcs.TrySetResult();
                         return Task.CompletedTask;
                     },
@@ -342,43 +378,48 @@ namespace TerminalUI.Elements
 
             foreach (string line in linesToShow)
             {
-                Terminal.SetCursorPosition(0, this.FirstLine + i);
-
-                if (ShowLineNumbers == true)
-                {
-                    Terminal.BackgroundColor = ConsoleColor.DarkBlue;
-                    Terminal.Write((_topLineIndexPointer + i + 1).ToString().PadLeft(this.LineNumberWidth));
-                    Terminal.ResetColor();
-                    Terminal.Write(" ");
-                }
-
-                int lineWidth = (line.Length > this.MaxWidth ? this.MaxWidth : line.Length);
-
-                if (this.Highlight == true && this.HighlightText != null)
-                {
-                    for (int s = 0; s < lineWidth; s++)
-                    {
-                        if (line.Substring(s).ToLower().StartsWith(this.HighlightText.ToLower()))
-                        {
-                            Terminal.ForegroundColor = this.HighlightColor;
-                            Terminal.Write(line.Substring(s, this.HighlightText.Length));
-                            Terminal.ResetColor();
-
-                            s += this.HighlightText.Length-1;
-                        }
-                        else
-                            Terminal.Write(line[s]);
-                    }
-
-                    // erase the rest of the line
-                    if (line.Length < this.MaxWidth)
-                        Terminal.Write(String.Empty.PadRight(this.MaxWidth - line.Length));
-                }
-                else
-                    Terminal.Write(line.Substring(0, lineWidth).PadRight(this.MaxWidth));
+                DrawLine(i, line);
 
                 i++;
             }
+        }
+
+        private void DrawLine(int index, string line)
+        {
+            Terminal.SetCursorPosition(0, this.FirstLine + index);
+
+            if (ShowLineNumbers == true)
+            {
+                Terminal.BackgroundColor = ConsoleColor.DarkBlue;
+                Terminal.Write((_topLineIndexPointer + index + 1).ToString().PadLeft(this.LineNumberWidth));
+                Terminal.ResetColor();
+                Terminal.Write(" ");
+            }
+
+            int lineWidth = (line.Length > this.MaxWidth ? this.MaxWidth : line.Length);
+
+            if (this.Highlight == true && this.HighlightText != null)
+            {
+                for (int s = 0; s < lineWidth; s++)
+                {
+                    if (line.Substring(s).ToLower().StartsWith(this.HighlightText.ToLower()))
+                    {
+                        Terminal.ForegroundColor = this.HighlightColor;
+                        Terminal.Write(line.Substring(s, this.HighlightText.Length));
+                        Terminal.ResetColor();
+
+                        s += this.HighlightText.Length-1;
+                    }
+                    else
+                        Terminal.Write(line[s]);
+                }
+
+                // erase the rest of the line
+                if (line.Length < this.MaxWidth)
+                    Terminal.Write(String.Empty.PadRight(this.MaxWidth - line.Length));
+            }
+            else
+                Terminal.Write(line.Substring(0, lineWidth).PadRight(this.MaxWidth));
         }
 
         private void WriteHeader()
