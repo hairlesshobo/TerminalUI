@@ -62,10 +62,10 @@ namespace TerminalUI.Elements
         private int _topLineIndexPointer = 0;
 
         private int _totalLines = 0;
-        private volatile bool _drawn = false;
+        private bool _drawn = false;
 
         private bool _deferDraw = true;
-        private volatile bool _started = false;
+        private bool _started = false;
         private TaskCompletionSource _tcs = null;
 
         #endregion Private Fields
@@ -89,6 +89,7 @@ namespace TerminalUI.Elements
                 return Task.CompletedTask;
 
             _tcs = new TaskCompletionSource();
+            _started = true;
             
             Setup();
 
@@ -102,9 +103,20 @@ namespace TerminalUI.Elements
             => _tcs?.TrySetResult();
 
         public void Start()
-            => RunAsync();
+        {
+            _deferDraw = false;
+            RunAsync();
+        }
 
-        public async Task Wait()
+        public static Pager StartNew()
+        {
+            Pager pager = new Pager();
+            pager.Start();
+
+            return pager;
+        }
+
+        public async Task WaitForQuitAsync()
         {
             if (_tcs != null)
                 await _tcs.Task;
@@ -114,9 +126,12 @@ namespace TerminalUI.Elements
         public void AppendLine()
             => AppendLine(string.Empty);
 
-        public void AppendLine(string Line)
+        public void AppendLine(string line)
         {
-            _lines.Add(Line);
+            if (line == null)
+                line = String.Empty;
+                
+            _lines.Add(line);
             _totalLines++;
 
             if (_started)
