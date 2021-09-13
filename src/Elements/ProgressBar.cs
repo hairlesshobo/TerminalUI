@@ -18,41 +18,75 @@
  */
 
 using System;
+using System.Linq;
 
 namespace TerminalUI.Elements
 {
     public class ProgressBar : Element
     {
-        private ProgressDisplay display;
-        private ProgressOptions options;
-        private int barWidth;
-        private double currentPercent;
+        public ProgressDisplay Display { get; private set; }
+        public ProgressMode Mode { get; private set; }
+        public double CurrentPercent { get; private set; }
+        public int ExplicitWidth { get; private set; }
+
+        private long value;
+        private long divisor;
 
         public ProgressBar(
             int width = 0,
             ProgressDisplay display = ProgressDisplay.Right,
-            ProgressOptions options = ProgressOptions.None,
-            double startPercent = 0.0
+            ProgressMode mode = ProgressMode.Default,
+            double startPercent = 0.0,
+            int explicitWidth = 0
             )
         {
+           Init(width, display, mode, startPercent, explicitWidth);
+        }
+
+        public ProgressBar(ProgressMode mode)
+        {
+            Init(mode: mode);
+        }
+
+        private void Init(
+            int width = 0,
+            ProgressDisplay display = ProgressDisplay.Right,
+            ProgressMode mode = ProgressMode.Default,
+            double startPercent = 0.0,
+            int explicitWidth = 0
+            )
+        {
+            if (width < 0)
+                throw new ArgumentOutOfRangeException(nameof(width), "Value cannot be less than 0");
+
+            this.SetExplicitWidth(explicitWidth);
+
+            if (startPercent < 0)
+                startPercent = 0;
+
             this.Height = width;
             this.Width = Terminal.Width;
             
             this.TopLeftPoint = TerminalPoint.GetCurrent();
             this.TopRightPoint = new TerminalPoint(this.TopLeftPoint.Left + this.Width, this.TopLeftPoint.Top);
 
-            this.display = display;
-            this.options = options;
+            this.Display = display;
+            this.Mode = mode;
 
             if (this.Width == 0)
                 this.Width = Terminal.Width;
 
-            this.barWidth = this.Width;
+            this.CurrentPercent = startPercent;
 
-            if (this.display != ProgressDisplay.NoPercent)
-                this.barWidth = this.Width - 5;
+            // this.UpdateProgress(startPercent);
+        }
 
-            this.UpdateProgress(startPercent);
+        public void SetExplicitWidth(int width)
+        {
+            if (width < 0)
+                throw new ArgumentOutOfRangeException(nameof(width), "Value cannot be less than 0");
+
+            this.ExplicitWidth = width;
         }
 
         public override void Redraw()
@@ -62,16 +96,23 @@ namespace TerminalUI.Elements
                 TerminalPoint previousPoint = TerminalPoint.GetCurrent();
                 this.TopLeftPoint.MoveTo();
 
-                if (currentPercent > 1)
-                    currentPercent /= 100.0;
+                if (CurrentPercent > 1)
+                    CurrentPercent /= 100.0;
 
-                int filled = (int)Math.Round(this.barWidth * currentPercent);
-                int unfilled = this.barWidth - filled;
+                int barWidth = this.GetBarWidth();
 
-                string pctString = String.Format("{0,3:N0}%", (currentPercent * 100.0));
+                int filled = (int)Math.Round(barWidth * CurrentPercent);
+                int unfilled = barWidth - filled;
 
-                if (display == ProgressDisplay.Left)
-                    Terminal.Write(String.Format("{0,5}", pctString));
+                string pctString = String.Format("{0,3:N0}%", (CurrentPercent * 100.0));
+                string explicitCountString = $"[ {this.value.ToString().PadLeft(this.ExplicitWidth)} / {this.divisor.ToString().PadLeft(this.ExplicitWidth)} ]";
+                int explicitCountWidth = explicitCountString.Length + 1;
+
+                if (this.Mode == ProgressMode.ExplicitCountLeft)
+                    Terminal.Write(String.Format("{0, -" + explicitCountWidth + "}", explicitCountString));
+
+                if (Display == ProgressDisplay.Left)
+                    Terminal.Write(String.Format("{0,-5}", pctString));
 
                 Terminal.ForegroundColor = TerminalColor.ProgressBarFilled;
 
@@ -80,13 +121,16 @@ namespace TerminalUI.Elements
                 
                 Terminal.ForegroundColor = TerminalColor.ProgressBarUnfilled;
 
-                for (int i = filled; i < this.barWidth; i++)
+                for (int i = filled; i < barWidth; i++)
                     Terminal.Write((char)BlockChars.MediumShade);
 
                 Terminal.ResetForeground();
 
-                if (display == ProgressDisplay.Right)
-                    Terminal.Write(String.Format("{0,-5}", pctString));
+                if (this.Mode == ProgressMode.ExplicitCountRight)
+                    Terminal.Write(String.Format("{0, " + explicitCountWidth + "}", explicitCountString));
+
+                if (Display == ProgressDisplay.Right)
+                    Terminal.Write(String.Format("{0,5}", pctString));
 
                 previousPoint.MoveTo();
             }
@@ -94,9 +138,64 @@ namespace TerminalUI.Elements
 
         public void UpdateProgress(double newPercent)
         {
-            this.currentPercent = newPercent;
+            this.CurrentPercent = newPercent;
 
+            this.Visible = true;
             this.Redraw();
+        }
+
+        public void UpdateProgress(long value, long divisor)
+        {
+            this.value = value;
+            this.divisor = divisor;
+
+            if (divisor == 0)
+            {
+                this.value = 0;
+                UpdateProgress(0);
+            }
+
+            UpdateProgress((double)value / (double)divisor);
+        }
+
+        public void UpdateProgress(long value, long divisor, int explicitWidth)
+        {
+            this.SetExplicitWidth(explicitWidth);
+
+            UpdateProgress(value, divisor);
+        }
+
+        public void UpdateProgress(long value, long divisor, bool calcWidth)
+        {
+            if (calcWidth)
+            {
+                int newWidth = new int[] { this.value.ToString().Length, this.divisor.ToString().Length }.Max();
+
+                SetExplicitWidth(newWidth);
+            }
+
+            UpdateProgress(value, divisor);
+        }
+
+        private int GetBarWidth()
+        {
+            int barWidth = this.Width;
+
+            // if we are showing a percentage, we need to account for the width of that text
+            if (this.Display != ProgressDisplay.NoPercent)
+                barWidth -= 5;
+
+            if (this.Mode != ProgressMode.Default)
+            {
+                int neededChars = 8;
+
+                neededChars += this.value.ToString().PadLeft(this.ExplicitWidth).Length;
+                neededChars += this.divisor.ToString().PadLeft(this.ExplicitWidth).Length;
+
+                barWidth -= neededChars;
+            }
+
+            return barWidth;
         }
     }
 }
