@@ -23,6 +23,9 @@ namespace TerminalUI.Elements
 {
     public class KeyValueText : Element
     {
+        public ConsoleColor KeyColor { get; set; } = TerminalColor.KeyValueTextKeyColor;
+        public ConsoleColor ValueColor { get; set; } = TerminalColor.KeyValueTextValueColor;
+
         private TerminalPoint kvtRightPoint;
         private int leftWidth = 0;
         private int prevRightWidth = 0;
@@ -50,7 +53,10 @@ namespace TerminalUI.Elements
                 TerminalPoint prevPoint = TerminalPoint.GetCurrent();
                 this.TopLeftPoint.MoveTo();
 
-                Terminal.Write($"{keyName}: ");
+                if (this.KeyColor != TerminalColor.DefaultForeground)
+                    Terminal.WriteColor(this.KeyColor, $"{keyName}: ");
+                else
+                    Terminal.Write($"{keyName}: ");
 
                 this.Redraw();
 
@@ -68,7 +74,10 @@ namespace TerminalUI.Elements
                 if (this.valueText == null)
                     this.valueText = String.Empty;
 
-                Console.Write(this.valueText);
+                if (this.ValueColor != TerminalColor.DefaultForeground)
+                    Terminal.WriteColor(this.ValueColor, $"{keyName}: ");
+                else
+                    Console.Write(this.valueText);
                 
                 if (this.valueText.Length < prevRightWidth)
                 {

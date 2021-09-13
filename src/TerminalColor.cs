@@ -34,6 +34,9 @@ namespace TerminalUI
         public static ConsoleColor HeaderRight { get; set; } = ConsoleColor.White;
         public static ConsoleColor HeaderBackground { get; set; } = ConsoleColor.Black;
 
+        public static ConsoleColor KeyValueTextKeyColor { get; set; } = ConsoleColor.Blue;
+        public static ConsoleColor KeyValueTextValueColor { get; set; } = ConsoleColor.White;
+
         public static ConsoleColor CliMenuCursorBackground { get; set; } = ConsoleColor.DarkGray;
         public static ConsoleColor CliMenuCursorForeground { get; set; } = ConsoleColor.DarkGreen;
         public static ConsoleColor CliMenuCursorArrow { get; set; } = ConsoleColor.Green;
