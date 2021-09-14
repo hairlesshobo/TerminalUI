@@ -27,24 +27,20 @@ namespace TerminalUI.Elements
         private string text = String.Empty;
         private ConsoleColor? color;
 
-        public Text()
-            => Init(null);
-
-        public Text(string valueText)
-            => Init(valueText);
-
-        public Text(ConsoleColor color, string valueText)
+        public Text(string valueText, Area area = Area.Default)
+            : base (area)
         {
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
-
-            this.UpdateValue(color, valueText);
-        }
-
-        private void Init(string valueText)
-        {
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
+            this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
 
             this.UpdateValue(valueText);
+        }
+
+        public Text(ConsoleColor color, string valueText, Area area = Area.Default)
+            : base (area)
+        {
+            this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
+
+            this.UpdateValue(color, valueText);
         }
 
         public override void Redraw()

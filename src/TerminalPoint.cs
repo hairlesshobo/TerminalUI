@@ -41,13 +41,27 @@ namespace TerminalUI
         public TerminalPoint Add(int amountX, int amountY)
             => new TerminalPoint(this.Left + amountX, this.Top + amountY);
 
+        public static TerminalPoint GetLeftPoint(Area area)
+        {
+            TerminalPoint point = TerminalPoint.GetCurrent();
+
+            if (area == Area.LeftHalf)
+                point.Left = 0;
+            else if (area == Area.RightHalf)
+                point.Left = Terminal.UsableWidth / 2;
+
+            return point;
+        }
+
         public static TerminalPoint GetCurrent()
             => new TerminalPoint(Console.CursorLeft, Console.CursorTop);
 
-        public void MoveTo()
+        public TerminalPoint MoveTo()
         {
             Console.CursorLeft = this.Left;
             Console.CursorTop = this.Top;
+
+            return this;
         }
     }
 }

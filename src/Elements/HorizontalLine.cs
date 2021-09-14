@@ -26,16 +26,19 @@ namespace TerminalUI.Elements
         private LineType lineType;
         private ConsoleColor color;
 
-        public HorizontalLine(ConsoleColor color = ConsoleColor.White, LineType lineType = LineType.Thin, int width = 0)
+        public HorizontalLine(ConsoleColor color = ConsoleColor.White, LineType lineType = LineType.Thin, int width = 0, Area area = Area.Default)
+            : base (area)
         {
             this.lineType = lineType;
             this.color = color;
             this.Width = width;
 
-            if (this.Width <= 0)
-                this.Width = Console.WindowWidth;
+            if (this.Width == 0)
+                this.Width = this.MaxWidth;
+            else if (this.Width < 0)
+                this.Width = this.MaxWidth + this.Width;
 
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
+            this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
             this.TopRightPoint = new TerminalPoint(this.TopLeftPoint.Left + this.Width, this.TopLeftPoint.Top);
 
             this.Redraw();

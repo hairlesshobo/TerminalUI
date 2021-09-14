@@ -32,9 +32,10 @@ namespace TerminalUI.Elements
         private string keyName = String.Empty;
         private string valueText = String.Empty;
 
-        public KeyValueText(string keyName, string valueText = null, int leftWidth = 0)
+        public KeyValueText(string keyName, string valueText = null, int leftWidth = 0, Area area = Area.Default)
+            : base (area)
         {
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
+            this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
             this.keyName = keyName;
             this.leftWidth = (leftWidth != 0 ? Math.Abs(leftWidth) : keyName.Length) + 2;
             this.kvtRightPoint = this.TopLeftPoint.AddX(this.leftWidth);
@@ -66,6 +67,7 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
+            // TODO: if total length > this.MaxWidth.. truncate the text
             if (this.Visible)
             {
                 TerminalPoint previousPoint = TerminalPoint.GetCurrent();

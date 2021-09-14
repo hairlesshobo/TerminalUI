@@ -26,12 +26,28 @@ namespace TerminalUI.Elements
     {
         public int Width { get; private protected set; }
         public int Height { get; private protected set; }
+        public int MaxWidth { get; private set; }
         public bool Visible { get; private protected set; } = false;
         
         public TerminalPoint TopLeftPoint { get; private protected set; }
         public TerminalPoint TopRightPoint { get; private protected set; }
         public TerminalPoint BottomLeftPoint { get; private protected set; } = null;
         public TerminalPoint BottomRightPoint { get; private protected set; } = null;
+
+        public Area Area { get; private protected set; } = Area.Default;
+
+        public Element()
+        { 
+            this.MaxWidth = Terminal.UsableWidth;
+        }
+
+        public Element(Area area)
+        {
+            if (area == Area.LeftHalf || area == Area.RightHalf)
+                this.MaxWidth = Terminal.UsableWidth / 2;
+            else if (area == Area.Default)
+                this.MaxWidth = Terminal.UsableWidth;
+        }
 
         public virtual void RedrawAll()
             => Redraw();

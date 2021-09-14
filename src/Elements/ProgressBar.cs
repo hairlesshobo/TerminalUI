@@ -28,9 +28,8 @@ namespace TerminalUI.Elements
         public ProgressMode Mode { get; private set; }
         public double CurrentPercent { get; private set; }
         public int ExplicitWidth { get; private set; }
-
-        private long value;
-        private long divisor;
+        public long Numerator { get; private set; }
+        public long Divisor { get; private set; }
 
         public ProgressBar(
             int width = 0,
@@ -105,7 +104,7 @@ namespace TerminalUI.Elements
                 int unfilled = barWidth - filled;
 
                 string pctString = String.Format("{0,3:N0}%", (CurrentPercent * 100.0));
-                string explicitCountString = $"[ {this.value.ToString().PadLeft(this.ExplicitWidth)} / {this.divisor.ToString().PadLeft(this.ExplicitWidth)} ]";
+                string explicitCountString = $"[ {this.Numerator.ToString().PadLeft(this.ExplicitWidth)} / {this.Divisor.ToString().PadLeft(this.ExplicitWidth)} ]";
                 int explicitCountWidth = explicitCountString.Length + 1;
 
                 if (this.Mode == ProgressMode.ExplicitCountLeft)
@@ -144,37 +143,45 @@ namespace TerminalUI.Elements
             this.Redraw();
         }
 
-        public void UpdateProgress(long value, long divisor)
+        public void UpdateProgress(long numerator, long divisor)
         {
-            this.value = value;
-            this.divisor = divisor;
+            this.Numerator = numerator;
+            this.Divisor = divisor;
 
             if (divisor == 0)
             {
-                this.value = 0;
+                this.Numerator = 0;
                 UpdateProgress(0);
             }
 
-            UpdateProgress((double)value / (double)divisor);
+            UpdateProgress((double)numerator / (double)divisor);
         }
 
-        public void UpdateProgress(long value, long divisor, int explicitWidth)
+        /// <summary>
+        ///     Update the progress. The provided currentPercent value is used for the progress bar
+        ///     and the value and divisor are only updated for display purposes
+        /// </summary>
+        /// <param name="numerator">The top value of the fraction</param>
+        /// <param name="divisor">The bottom value of the fraction</param>
+        /// <param name="currentPercent">The progress current percentage</param>
+        public void UpdateProgress(long numerator, long divisor, double currentPercent)
         {
-            this.SetExplicitWidth(explicitWidth);
+            this.Numerator = numerator;
+            this.Divisor = divisor;
 
-            UpdateProgress(value, divisor);
+            UpdateProgress(currentPercent);
         }
 
-        public void UpdateProgress(long value, long divisor, bool calcWidth)
+        public void UpdateProgress(long numerator, long divisor, bool calcWidth)
         {
             if (calcWidth)
             {
-                int newWidth = new int[] { value.ToString().Length, divisor.ToString().Length }.Max();
+                int newWidth = new int[] { numerator.ToString().Length, divisor.ToString().Length }.Max();
 
                 SetExplicitWidth(newWidth);
             }
 
-            UpdateProgress(value, divisor);
+            UpdateProgress(numerator, divisor);
         }
 
         private int GetBarWidth()
@@ -189,8 +196,8 @@ namespace TerminalUI.Elements
             {
                 int neededChars = 8;
 
-                neededChars += this.value.ToString().PadLeft(this.ExplicitWidth).Length;
-                neededChars += this.divisor.ToString().PadLeft(this.ExplicitWidth).Length;
+                neededChars += this.Numerator.ToString().PadLeft(this.ExplicitWidth).Length;
+                neededChars += this.Divisor.ToString().PadLeft(this.ExplicitWidth).Length;
 
                 barWidth -= neededChars;
             }

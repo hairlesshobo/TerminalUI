@@ -142,6 +142,9 @@ namespace TerminalUI
             ResetBackground();
         }
 
+        public static TerminalPoint MoveX(int x)
+            => TerminalPoint.GetCurrent().AddX(x).MoveTo();
+
         public static void ResetForeground()
             => Console.ForegroundColor = TerminalColor.DefaultForeground;
 
