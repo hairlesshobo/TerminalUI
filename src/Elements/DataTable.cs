@@ -85,15 +85,14 @@ namespace TerminalUI.Elements
 
     public class DataTable : Element
     {
-        // TODO:
-        // -- Add ability to define columns and format as a table view
-        // -- Add ability to edit entries in table mode 
+        // TODO: Add ability to define columns and format as a table view
+        // TODO: Add ability to edit entries in table mode 
         #region Public Properties
         public List<DataTableColumn> Columns { get; set; } = null;
         public IList DataStore { get; set; } = null;
         public DataTableSelectType SelectType { get; private set; }
         public int MaxLines { get; private set; }
-        public int MaxWidth => this.TopRightPoint.Left - this.TopLeftPoint.Left;
+        public int TableWidth => this.TopRightPoint.Left - this.TopLeftPoint.Left;
         public TerminalPoint HeaderPoint { get; private set; } = null;
         public TerminalPoint DataPoint { get; private set; } = null;
         public bool ShowHeader 
@@ -209,7 +208,7 @@ namespace TerminalUI.Elements
                 TerminalPoint prevPt = TerminalPoint.GetCurrent();
                 this.HeaderPoint.MoveTo();
 
-                int remainingChars = this.MaxWidth;
+                int remainingChars = this.TableWidth;
 
                 for (int i = 0; i < this.Columns.Count; i++)
                 {
@@ -225,7 +224,7 @@ namespace TerminalUI.Elements
 
                 Terminal.NextLine();
                 if (_headerLine == null)
-                    _headerLine = new HorizontalLine(ConsoleColor.White, LineType.ThinTripleDash, this.MaxWidth);
+                    _headerLine = new HorizontalLine(ConsoleColor.White, LineType.ThinTripleDash, this.TableWidth);
 
                 _headerLine.Show();
 

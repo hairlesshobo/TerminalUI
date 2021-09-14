@@ -66,7 +66,7 @@ namespace TerminalUI.Elements
         public int WindowHeight => (Terminal.Height - this.StartLine - (this.ShowHeader ? 1 : 0));
         public int WindowWidth => Terminal.Width;
         public int LineNumberWidth => (this.ShowLineNumbers ? (_topLineIndexPointer + this.MaxLines).ToString().Length : 0);
-        public int MaxWidth => (this.ShowLineNumbers ? this.WindowWidth - this.LineNumberWidth : this.WindowWidth);
+        public int PagerWidth => (this.ShowLineNumbers ? this.WindowWidth - this.LineNumberWidth : this.WindowWidth);
         public int MaxLines => this.WindowHeight - 1;
         public bool DeferDraw => _deferDraw;
         public int BottomLine => Terminal.Height - 1;
@@ -396,7 +396,7 @@ namespace TerminalUI.Elements
                 Terminal.Write(" ");
             }
 
-            int lineWidth = (line.Length > this.MaxWidth ? this.MaxWidth : line.Length);
+            int lineWidth = (line.Length > this.PagerWidth ? this.PagerWidth : line.Length);
 
             if (this.Highlight == true && this.HighlightText != null)
             {
@@ -415,11 +415,11 @@ namespace TerminalUI.Elements
                 }
 
                 // erase the rest of the line
-                if (line.Length < this.MaxWidth)
-                    Terminal.Write(String.Empty.PadRight(this.MaxWidth - line.Length));
+                if (line.Length < this.PagerWidth)
+                    Terminal.Write(String.Empty.PadRight(this.PagerWidth - line.Length));
             }
             else
-                Terminal.Write(line.Substring(0, lineWidth).PadRight(this.MaxWidth));
+                Terminal.Write(line.Substring(0, lineWidth).PadRight(this.PagerWidth));
         }
 
         private void WriteHeader()
@@ -433,7 +433,7 @@ namespace TerminalUI.Elements
 
                 Terminal.SetCursorPosition(0, this.StartLine);
                 Terminal.BackgroundColor = ConsoleColor.DarkBlue;
-                Terminal.Write(line.PadRight(this.MaxWidth));
+                Terminal.Write(line.PadRight(this.PagerWidth));
                 Terminal.ResetColor();
             }
         }
