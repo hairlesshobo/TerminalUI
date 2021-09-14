@@ -73,6 +73,8 @@ namespace TerminalUI.Elements
             TerminalPoint textInputPoint = TerminalPoint.GetCurrent();
             int prevLength = 0;
 
+            bool? responseVal = null;
+
             while (!cToken.IsCancellationRequested)
             {
                 textInputPoint.MoveTo();
@@ -91,21 +93,28 @@ namespace TerminalUI.Elements
                 this.TopRightPoint = TerminalPoint.GetCurrent();
 
                 if (response == null)
-                    return null;
+                    break;
 
                 prevLength = response.Length;
 
                 response = response.Trim().ToLower();
 
-                if (response == String.Empty || response.StartsWith("n"))
-                    return false;
-                
-                if (response == "yes")
-                    return true;
+                if (response == String.Empty || response == "no")
+                {
+                    responseVal = false;
+                    break;
+                }
+                else if (response == "yes")
+                {
+                    responseVal = true;
+                    break;
+                }
             }
     
+            previousPoint.MoveTo();
+
             // If we get here, that means it was canceled via token
-            return null;
+            return responseVal;
         }
 
         public override void Show()
