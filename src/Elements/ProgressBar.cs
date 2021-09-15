@@ -60,9 +60,10 @@ namespace TerminalUI.Elements
 
             this.SetExplicitWidth(explicitWidth);
 
-            if (startPercent < 0)
-                startPercent = 0;
+            if (startPercent < 0 || startPercent > 1)
+                throw new ArgumentOutOfRangeException(nameof(startPercent), startPercent, "Provided percentage must be a decimal value between 0 and 1");
 
+            this.CurrentPercent = startPercent;
             this.Height = width;
             this.Width = Terminal.Width;
             
@@ -74,10 +75,6 @@ namespace TerminalUI.Elements
 
             if (this.Width == 0)
                 this.Width = Terminal.Width;
-
-            this.CurrentPercent = startPercent;
-
-            // this.UpdateProgress(startPercent);
         }
 
         public void SetExplicitWidth(int width)
@@ -88,15 +85,15 @@ namespace TerminalUI.Elements
             this.ExplicitWidth = width;
         }
 
+        public void SetMode(ProgressMode mode)
+            => this.Mode = mode;
+
         public override void Redraw()
         {
             if (this.Visible)
             {
                 TerminalPoint previousPoint = TerminalPoint.GetCurrent();
                 this.TopLeftPoint.MoveTo();
-
-                if (CurrentPercent > 1)
-                    CurrentPercent /= 100.0;
 
                 int barWidth = this.GetBarWidth();
 
@@ -137,8 +134,10 @@ namespace TerminalUI.Elements
 
         public void UpdateProgress(double newPercent)
         {
-            this.CurrentPercent = newPercent;
+            if (newPercent < 0 || newPercent > 1)
+                throw new ArgumentOutOfRangeException(nameof(newPercent), newPercent, "Provided percentage must be a decimal value between 0 and 1");
 
+            this.CurrentPercent = newPercent;
             this.Visible = true;
             this.Redraw();
         }
@@ -163,13 +162,13 @@ namespace TerminalUI.Elements
         /// </summary>
         /// <param name="numerator">The top value of the fraction</param>
         /// <param name="divisor">The bottom value of the fraction</param>
-        /// <param name="currentPercent">The progress current percentage</param>
-        public void UpdateProgress(long numerator, long divisor, double currentPercent)
+        /// <param name="newPercent">The progress current percentage</param>
+        public void UpdateProgress(long numerator, long divisor, double newPercent)
         {
             this.Numerator = numerator;
             this.Divisor = divisor;
 
-            UpdateProgress(currentPercent);
+            UpdateProgress(newPercent);
         }
 
         public void UpdateProgress(long numerator, long divisor, bool calcWidth)
