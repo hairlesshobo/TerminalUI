@@ -19,12 +19,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TerminalUI;
 
 namespace TerminalUI.Elements
 {
@@ -404,8 +401,15 @@ namespace TerminalUI.Elements
                 {
                     if (line.Substring(s).ToLower().StartsWith(this.HighlightText.ToLower()))
                     {
+                        int remainingChars = lineWidth - s;
+
+                        int substringLength = this.HighlightText.Length;
+
+                        if (remainingChars < substringLength)
+                            substringLength = remainingChars;
+
                         Terminal.ForegroundColor = this.HighlightColor;
-                        Terminal.Write(line.Substring(s, this.HighlightText.Length));
+                        Terminal.Write(line.Substring(s, substringLength));
                         Terminal.ResetColor();
 
                         s += this.HighlightText.Length-1;
