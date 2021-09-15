@@ -21,26 +21,63 @@ using System;
 
 namespace TerminalUI
 {
+    /// <summary>
+    ///     Class used to make interacting with terminal positioning much easier
+    /// </summary>
     public class TerminalPoint
     {
+        /// <summary>
+        ///     Left index of cursor
+        /// </summary>
         public int Left { get; private set; }
+
+        /// <summary>
+        ///     Top index of cursor
+        /// </summary>
         public int Top { get; private set; }
 
+        /// <summary>
+        ///     Construct a new TerminalPoint from the provided left and top coordinates
+        /// </summary>
+        /// <param name="left">left index</param>
+        /// <param name="top">top index</param>
         public TerminalPoint(int left, int top)
         {
             Top = top;
             Left = left;
         }
 
+        /// <summary>
+        ///     Create a copy of the current terminal point and add the specified number of columns to it
+        /// </summary>
+        /// <param name="amount">Number of columns to move</param>
+        /// <returns>New TerminalPoint object</returns>
         public TerminalPoint AddX(int amount)
             => new TerminalPoint(this.Left + amount, this.Top);
 
+        /// <summary>
+        ///     Create a copy of the current terminal point and add the specified number of row to it
+        /// </summary>
+        /// <param name="amount">Number of rows to move</param>
+        /// <returns>New TerminalPoint object</returns>
         public TerminalPoint AddY(int amount)
             => new TerminalPoint(this.Left, this.Top + amount);
 
+                /// <summary>
+        ///     Create a copy of the current terminal point and add the specified number of columns to it
+        /// </summary>
+        /// <param name="amountX">Number of columns to move</param>
+        /// <param name="amountY">Number of rows to move</param>
+        /// <returns>New TerminalPoint object</returns>
         public TerminalPoint Add(int amountX, int amountY)
             => new TerminalPoint(this.Left + amountX, this.Top + amountY);
 
+        /// <summary>
+        ///     Get the left-most index of the specified terminal area while staying
+        ///     on the same line
+        /// </summary>
+        /// <param name="area">Terminal area to calculate left point for</param>
+        /// <returns>New terminal point that is all the way to the left of the current area and on the same line</returns>
         public static TerminalPoint GetLeftPoint(Area area)
         {
             TerminalPoint point = TerminalPoint.GetCurrent();
@@ -53,9 +90,17 @@ namespace TerminalUI
             return point;
         }
 
+        /// <summary>
+        ///     Get the current cursor positoin as a new TerminalPoint
+        /// </summary>
+        /// <returns>New terminal point representing current cursor position</returns>
         public static TerminalPoint GetCurrent()
             => new TerminalPoint(Console.CursorLeft, Console.CursorTop);
 
+        /// <summary>
+        ///     Move to the terminal point described by the current object
+        /// </summary>
+        /// <returns>Current terminal point</returns>
         public TerminalPoint MoveTo()
         {
             Console.CursorLeft = this.Left;
