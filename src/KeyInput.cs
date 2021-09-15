@@ -28,12 +28,12 @@ namespace TerminalUI
     {
         private static volatile bool _started = false;
         private static Dictionary<Key, Func<Key, Task>> _registeredKeys;
-        private static Task<string> _readStringTask = null;
+        // private static Task<string> _readStringTask = null;
         private static CancellationTokenSource _cts;
         private static volatile bool _listening;
         private static Task _listenTask;
         private static List<char> _buffer = new List<char>();
-        private static volatile bool _echoChar = false;
+        // private static volatile bool _echoChar = false;
         private static volatile bool _bufferChars = false;
         private static TerminalPoint _bufferStartPoint = null;
         private static Action<string> _stringCallback = (_) => { };
@@ -134,7 +134,7 @@ namespace TerminalUI
 
         public async static Task<string> ReadStringAsync(CancellationToken cToken)
         {
-            _echoChar = true;
+            // _echoChar = true;
             _bufferChars = true;
             _bufferStartPoint = TerminalPoint.GetCurrent();
             _buffer.Clear();
@@ -150,7 +150,7 @@ namespace TerminalUI
                 return new string(_buffer.ToArray());
             }, cToken);
 
-            _echoChar = false;
+            // _echoChar = false;
             _bufferChars = false;
             _buffer.Clear();
 

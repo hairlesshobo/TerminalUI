@@ -19,6 +19,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using TerminalUI.Elements;
@@ -52,10 +53,12 @@ namespace TerminalUI
             set => Console.ForegroundColor = value;
         }
 
+        private static bool _cursorVisible = true;
+
         public static bool CursorVisible
         {
-            get => Console.CursorVisible;
-            set => Console.CursorVisible = value;
+            get => (OperatingSystem.IsWindows() ? Console.CursorVisible : _cursorVisible);
+            set => Console.CursorVisible = _cursorVisible = value;
         }
 
         static Terminal()
