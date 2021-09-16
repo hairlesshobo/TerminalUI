@@ -20,7 +20,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace TerminalUI
+namespace TerminalUI.Types
 {
     public class StatusBarItem
     {

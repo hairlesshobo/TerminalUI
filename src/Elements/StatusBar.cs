@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
@@ -66,8 +67,7 @@ namespace TerminalUI.Elements
         public void ShowItems(params StatusBarItem[] items)
         {
             // stash the current items so that, during redraw, we can remove any key bindings we have
-            // TODO: make sure this functionality works
-            _prevItems = _items ?? _defaultItems;
+            _prevItems = _items;
 
             _items = items.ToList();
 
@@ -96,6 +96,8 @@ namespace TerminalUI.Elements
                 items = _defaultItems;
                 isDefaultList = true;
             }
+            else
+                this.RemoveDefaultKeyBindings();
 
             for (int i = 0; i < items.Count; i++)
             {
@@ -152,6 +154,22 @@ namespace TerminalUI.Elements
             prevPoint.MoveTo();
         }
 
+        private void RemoveDefaultKeyBindings()
+        {
+            if (_defaultItems == null)
+                return;
+
+            foreach (StatusBarItem defaultItem in _defaultItems)
+            {
+                if (defaultItem.Keys != null)
+                {
+                    foreach (Key key in defaultItem.Keys)
+                        KeyInput.UnregisterKey(key);
+                }
+            }
+
+            _prevItems.Clear();
+        }
         private void RemovePreviousKeyBindings()
         {
             foreach (StatusBarItem prevItem in _prevItems)

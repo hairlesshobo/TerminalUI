@@ -21,7 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
@@ -35,8 +37,10 @@ namespace TerminalUI.Elements
         public string MenuLabel { get; set; } = null;
         public bool EnableCancel { get; set; } = false;
         public bool MultiSelect { get; private set; } = false;
+        public Func<Task> QuitCallback { get; set; } = null;
         public List<TKey> SelectedValues => _entries.Where(x => x.Selected).Select(x => x.SelectedValue).ToList();
         public IReadOnlyList<TKey> SelectedEntries => (IReadOnlyList<TKey>)_entries;
+        TaskCompletionSource<List<TKey>> _tcs;
         public int MaxLines { get; private set; } // => Terminal.UsableHeight - 1;
         public int LeftPad { 
             get => _leftPad; 
@@ -58,8 +62,6 @@ namespace TerminalUI.Elements
         #region Private Fields
         private List<CliMenuEntry<TKey>> _entries;
         private int _cursorIndex = -1;
-        private bool _canceled = false;
-        private List<TKey> _choosenItems = null;
         private string _leftPadStr = "    ";
         private int _leftPad = 4;
         private int _entryOffset = 0;
@@ -113,9 +115,14 @@ namespace TerminalUI.Elements
             }
         }
 
-        public async Task<List<TKey>> ShowAsync(bool clearScreen = true)
+        private CancellationToken _cToken = default;
+        private CancellationTokenSource _watchdogCts = null;
+
+        // TODO: remove clearScreen
+        public Task<List<TKey>> ShowAsync(bool clearScreen = true, CancellationToken cToken = default)
         {
-            _choosenItems = null;
+            _cToken = cToken;
+            _tcs = new TaskCompletionSource<List<TKey>>();
 
             Terminal.CursorVisible = false;
 
@@ -129,8 +136,6 @@ namespace TerminalUI.Elements
             this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
 
             this.Redraw();
-
-            // Terminal.SetCursorPosition(0, _startLine + _entries.Count());
 
             // string message = "to select item";
 
@@ -149,17 +154,31 @@ namespace TerminalUI.Elements
 
             this.SetupStatusBar();
 
-            return await Task.Run(async () => 
-            {
-                // delay until the user does something
-                while (_choosenItems == null && _canceled == false)
-                    await Task.Delay(10);
+            _watchdogCts = CancellationTokenSource.CreateLinkedTokenSource(cToken);
 
-                if (_canceled)
-                    return null;
+            // this is used like a watchdog to sit and wait for a cancel request.
+            // if it happens, it'll cancel out of the menu
+            Task.Run(async () => {
+                try
+                {
+                    while (!_watchdogCts.Token.IsCancellationRequested)
+                        await Task.Delay(100000, _watchdogCts.Token);
+                }
+                catch
+                {
+                    if (cToken.IsCancellationRequested)
+                        return true;
+                    else
+                        return false;
+                }
 
-                return _choosenItems;
+                return false;
+            }).ContinueWith((task) => {
+                if (task.Result == true)
+                    this.AbortMenu();
             });
+
+            return _tcs.Task;
         }
 
         public override void Redraw()
@@ -207,12 +226,15 @@ namespace TerminalUI.Elements
             } 
             else
             {
+                // TOOD: add callback here for quit that will allow me to use the global TCS to close out the application
                 statusBarItems.Add(new StatusBarItem(
                     "Quit Application",
-                    (key) => 
+                    async (key) => 
                     {
-                        Environment.Exit(0);
-                        return Task.CompletedTask;
+                        if (this.QuitCallback != null)
+                            await this.QuitCallback();
+                        else
+                            Environment.Exit(0);
                     },
                     Key.MakeKey(ConsoleKey.Q)
                 ));
@@ -222,21 +244,30 @@ namespace TerminalUI.Elements
                 "Accept",
                 async (key) =>
                 {
-                    if (this.MultiSelect == false)
+                    _watchdogCts?.Cancel();
+
+                    if ( this.MultiSelect == false)
                     {
                         CliMenuEntry<TKey> finalEntry = _entries.First(x => x.Selected);
 
                         this.Clear();
 
-                        if (finalEntry != null && finalEntry.Task != null)
-                            await finalEntry.Task();
+                        try
+                        {
+                            if (finalEntry != null && finalEntry.Task != null)
+                                await finalEntry.Task(_cToken);
 
-                        _choosenItems = new List<TKey>() {
-                            finalEntry.SelectedValue
-                        };
+                            _tcs.SetResult(new List<TKey>() {
+                                finalEntry.SelectedValue
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            _tcs.SetException(e);
+                        }
                     }
                     else
-                        _choosenItems = this.SelectedValues;
+                        _tcs.SetResult(this.SelectedValues);
                 },
                 Key.MakeKey(ConsoleKey.Enter)
             ));
@@ -333,7 +364,10 @@ namespace TerminalUI.Elements
         }
 
         public void AbortMenu()
-            => _canceled = true;
+        {
+            _watchdogCts?.Cancel();
+            _tcs.TrySetResult(null);
+        }
 
         #endregion Public Methods
 

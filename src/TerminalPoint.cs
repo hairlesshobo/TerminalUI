@@ -18,6 +18,7 @@
  */
 
 using System;
+using TerminalUI.Types;
 
 namespace TerminalUI
 {

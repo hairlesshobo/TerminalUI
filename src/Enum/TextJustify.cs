@@ -17,7 +17,7 @@
  *  along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
  
-namespace TerminalUI
+namespace TerminalUI.Types
 {
     /// <summary>
     ///     Enum that specifies how text is positioned on the line

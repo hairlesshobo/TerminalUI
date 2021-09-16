@@ -19,6 +19,7 @@
 
 using System;
 using System.Linq;
+using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {

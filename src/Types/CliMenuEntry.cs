@@ -17,7 +17,7 @@
 *  along with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace TerminalUI
+namespace TerminalUI.Types 
 {
     public class CliMenuEntry : CliMenuEntry<string>
     {

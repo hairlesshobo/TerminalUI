@@ -20,7 +20,7 @@
 using System;
 using System.Text;
 
-namespace TerminalUI.Elements
+namespace TerminalUI.Types
 {
     /// <summary>
     ///     Abstract class that defines all terminal elements

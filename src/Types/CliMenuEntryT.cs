@@ -18,14 +18,15 @@
 */
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace TerminalUI
+namespace TerminalUI.Types
 {
     public class CliMenuEntry<TKey>
     {
         public string Name { get; set; }
-        public Func<Task> Task { get; set; }
+        public Func<CancellationToken, Task> Task { get; set; }
         public bool Disabled { get; set; } = false;
         public bool Header { get; set; } = false;
         public TKey SelectedValue { get; set; }

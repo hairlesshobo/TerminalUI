@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TerminalUI.Elements;
+using TerminalUI.Types;
 
 namespace TerminalUI
 {
@@ -425,7 +426,44 @@ namespace TerminalUI
 
             Initialize(headerLeft, headerRight);
 
-            Task main = mainEntryPoint(_cts);
+            Task main = Task.Run(async () => {
+                try
+                {
+                    await mainEntryPoint(_cts);
+                }
+                catch (Exception ex)
+                {
+                    Terminal.Clear(true);
+
+                    Terminal.WriteLineColor(ConsoleColor.Red, $"Unhandled exception"); // occurred: {ex.Message}");
+                    new HorizontalLine(ConsoleColor.Red, show: true);
+                    Terminal.WriteLine();
+                    Terminal.WriteLine();
+                    Terminal.WriteLineColor(ConsoleColor.Red, ex.Message);
+                    Terminal.WriteLine();
+                    Terminal.WriteLine();
+                    if (ex.InnerException != null)
+                    {
+                        Terminal.WriteLineColor(ConsoleColor.Red, $"Inner Exception: {ex.InnerException.ToString()}");
+                        Terminal.WriteLine();
+                    }
+                    Terminal.WriteLineColor(ConsoleColor.Red, ex.StackTrace);
+                    Terminal.WriteLine();
+                    new HorizontalLine(ConsoleColor.Red, show: true);
+                    Terminal.WriteLine();
+                    // SysInfo.WriteSystemInfo();
+                    Terminal.WriteLine();
+                    Terminal.WriteLine();
+
+                    Terminal.Write("Press ");
+                    Terminal.WriteColor(ConsoleColor.DarkYellow, "<any key>");
+                    Terminal.WriteLine(" to terminate application");
+
+                    _cts.Cancel();
+                    // todo: port this?
+                    Console.ReadKey(true);
+                }
+            });
             Task listen = StartAsync(_cts);
 
             Task.WaitAll(main, listen);

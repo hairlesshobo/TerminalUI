@@ -19,7 +19,7 @@
 
 using System;
 
-namespace TerminalUI
+namespace TerminalUI.Types
 {
     public class DataTableColumn
     {
