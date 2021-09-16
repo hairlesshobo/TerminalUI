@@ -27,62 +27,6 @@ using System.Threading.Tasks;
 
 namespace TerminalUI.Elements
 {
-    public class DataTableColumn
-    {
-        private string label = null;
-        private int width = 0;
-
-        public string Name { get; set; } = null;
-        public string Label 
-        { 
-            get => (label == null ? (this.Name == null ? String.Empty : this.Name) : label);
-            set => label = value;
-        }
-        public string LabelFormatted {
-            get
-            {
-                if (width < 0)
-                    return this.Label.PadLeft(width * -1);
-                else if (width > 0)
-                    return this.Label.PadRight(width);
-
-                return this.Label;
-            }
-        }
-
-        public int Width { 
-            get => (width == 0 ? this.Label.Length : width);
-            set => width = value;
-        }
-        public bool AllowEdit { get; set; }
-        public ConsoleColor ForegroundColor { get; set; } = Terminal.ForegroundColor;
-        public ConsoleColor BackgroundColor { get; set; } = Terminal.BackgroundColor;
-        public Func<object, string> Format = null;
-
-        public DataTableColumn()
-        { }
-
-        public DataTableColumn(string name, string label, int width = 0)
-        {
-            this.Name = name;
-            this.Label = label;
-            this.width = width;
-        }
-
-        public DataTableColumn(string label, int width = 0)
-        {
-            this.Label = label;
-            this.width = width;
-        }
-    }
-
-    public enum DataTableSelectType
-    {
-        None = 0,
-        Single = 1,
-        Multiple = 2
-    }
-
     public class DataTable : Element
     {
         // TODO: Add ability to define columns and format as a table view

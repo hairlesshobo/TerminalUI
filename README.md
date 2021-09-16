@@ -15,8 +15,41 @@ ProgressBar progressBar = new ProgressBar();
 progressBar.UpdateProgress(0.42);
 ```
 
+# Element list
+  * CliMenu
+  * DataTable
+  * HorizontalLine
+  * KeyValueText
+  * NotificationBox
+  * Pager
+  * ProgressBar
+  * QueryYesNo
+  * SplitLine
+  * Text
+
+  * Header **
+  * StatusBar **
+
 
 # To-do list
+* Add "area" parameter to all elements
+  * CliMenu
+  * DataTable
+  * Header
+  * NotificationBox
+  * Pager
+  * ProgressBar
+  * QueryYesNo
+  * SplitLine
+  * StatusBar
+* Add "show" parameter to all elements
+  * CliMenu
+  * DataTable
+  * HorizontalLine
+  * NotificationBox
+  * Pager
+  * ProgressBar
+  * QueryYesNo
 * Add ability for elements to register themselves with the terminal class
 * During a Termianl.Clear().. all elements will be unregistered
 * Add a "RecalcAndDraw()" method to the Element abstract class that 

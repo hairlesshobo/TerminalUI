@@ -26,8 +26,13 @@ namespace TerminalUI.Elements
         private LineType lineType;
         private ConsoleColor color;
 
-        public HorizontalLine(ConsoleColor color = ConsoleColor.White, LineType lineType = LineType.Thin, int width = 0, TerminalArea area = TerminalArea.Default)
-            : base (area)
+        public HorizontalLine(
+            ConsoleColor color = ConsoleColor.White, 
+            LineType lineType = LineType.Thin, 
+            int width = 0, 
+            TerminalArea area = TerminalArea.Default,
+            bool show = false)
+            : base (area, show)
         {
             this.lineType = lineType;
             this.color = color;

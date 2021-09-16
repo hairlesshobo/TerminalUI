@@ -64,12 +64,12 @@ namespace TerminalUI
             return true;
         }
 
-        public static Task StartLoop()
+        public static Task StartLoop(CancellationTokenSource cts = null)
         {
             if (_started)
                 return Task.CompletedTask;
 
-            _cts = new CancellationTokenSource();
+            _cts = cts ?? new CancellationTokenSource();
 
             return (_listenTask = Task.Run(DoListen));
         }

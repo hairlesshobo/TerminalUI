@@ -89,12 +89,15 @@ namespace TerminalUI.Elements
         /// <summary>
         ///     Constructor used by all elements when specifing a TerminalArea
         /// </summary>
-        protected Element(TerminalArea area)
+        protected Element(TerminalArea area, bool show = false)
         {
             if (area == TerminalArea.LeftHalf || area == TerminalArea.RightHalf)
                 this.MaxWidth = Terminal.UsableWidth / 2;
             else if (area == TerminalArea.Default)
                 this.MaxWidth = Terminal.UsableWidth;
+            
+            if (show == true)
+                this.Visible = true;
         }
 
         /// <summary>

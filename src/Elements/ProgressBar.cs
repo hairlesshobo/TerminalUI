@@ -90,11 +90,11 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
-            if (this.Visible)
-            {
-                TerminalPoint previousPoint = TerminalPoint.GetCurrent();
-                this.TopLeftPoint.MoveTo();
+            if (!this.Visible)
+                return;
 
+            using (this.TopLeftPoint.GetMove())
+            {
                 int barWidth = this.GetBarWidth();
 
                 int filled = (int)Math.Round(barWidth * CurrentPercent);
@@ -127,8 +127,6 @@ namespace TerminalUI.Elements
 
                 if (Display == ProgressDisplay.Right)
                     Terminal.Write(String.Format("{0,5}", pctString));
-
-                previousPoint.MoveTo();
             }
         }
 

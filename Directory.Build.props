@@ -1,0 +1,9 @@
+<Project>
+    <PropertyGroup>
+        <Version>2.0.0</Version>
+        <Product>TerminalUI</Product>
+        <Description>Simple terminal widgets for C#</Description>
+        <Authors>Steve Cross</Authors>
+        <Copyright>Copyright (c) 2021 Steve Cross &lt;flip@foxhollow.cc&gt;</Copyright>
+    </PropertyGroup>
+</Project>

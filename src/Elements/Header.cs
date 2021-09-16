@@ -17,8 +17,6 @@
  *  along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
-
 namespace TerminalUI.Elements
 {
     public class Header : Element
@@ -29,7 +27,11 @@ namespace TerminalUI.Elements
         private SplitLine splText = null;
         private HorizontalLine hl = null;
 
-        public Header(string left, string right)
+        public Header(
+            string left, 
+            string right,
+            bool show = false
+            ) : base (TerminalArea.Default, show)
         {
             this.Height = 1;
             this.Width = Terminal.Width;
@@ -66,25 +68,41 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
-            TerminalPoint prevPoint = TerminalPoint.GetCurrent();
+            if (!this.Visible)
+                return;
 
-            this.TopLeftPoint.MoveTo();
-            Terminal.BackgroundColor = TerminalColor.HeaderBackground;
+            using (this.TopLeftPoint.GetMove())
+            {
+                Terminal.BackgroundColor = TerminalColor.HeaderBackground;
 
-            if (splText == null)
-                splText = new SplitLine(this.Left, this.Right);
-            else
-                splText.Update(this.Left, this.Right);
+                if (splText == null)
+                    splText = new SplitLine(this.Left, this.Right, show: true);
+                else
+                    splText.Update(this.Left, this.Right);
 
-            this.BottomLeftPoint.MoveTo();
+                this.BottomLeftPoint.MoveTo();
 
-            if (hl == null)
-                hl = new HorizontalLine(TerminalColor.DefaultForeground, LineType.Thin);
+                if (hl == null)
+                    hl = new HorizontalLine(TerminalColor.DefaultForeground, LineType.Thin, show: true);
 
-            hl.Show();
+                Terminal.ResetBackground();
+            }
+        }
 
-            Terminal.ResetBackground();
-            prevPoint.MoveTo();
+        public override void Show()
+        {
+            this.splText?.Show();
+            this.hl?.Show();
+
+            base.Show();
+        }
+
+        public override void Hide()
+        {
+            this.splText?.Hide();
+            this.hl?.Hide();
+
+            base.Hide();
         }
     }
 }

@@ -25,25 +25,6 @@ using System.Threading.Tasks;
 
 namespace TerminalUI.Elements
 {
-    public class CliMenuEntry : CliMenuEntry<string>
-    {
-        public CliMenuEntry() : base()
-        { }
-    }
-
-    public class CliMenuEntry<TKey>
-    {
-        public string Name { get; set; }
-        public Func<Task> Task { get; set; }
-        public bool Disabled { get; set; } = false;
-        public bool Header { get; set; } = false;
-        public TKey SelectedValue { get; set; }
-        public ConsoleKey ShortcutKey { get; set; }
-        public ConsoleColor ForegroundColor { get; set; } = Terminal.ForegroundColor;
-        public ConsoleColor BackgroundColor { get; set; } = Terminal.BackgroundColor;
-        public bool Selected { get; internal set; }
-    }
-
     public class CliMenu<TKey> : Element
     {
         // TODO:

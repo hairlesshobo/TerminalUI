@@ -47,8 +47,8 @@ namespace TerminalUI.Elements
         /// </summary>
         /// <param name="valueText">Initial text to display</param>
         /// <param name="area">Terminal area to constrain the element to</param>
-        public Text(string valueText, TerminalArea area = TerminalArea.Default)
-            : base (area)
+        public Text(string valueText, TerminalArea area = TerminalArea.Default, bool show = false)
+            : base (area, show)
         {
             this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
 

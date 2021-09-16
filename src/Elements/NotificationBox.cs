@@ -40,8 +40,11 @@ namespace TerminalUI.Elements
             textColor = new Nullable<ConsoleColor>[this.TextLines];
             textJustify = new TextJustify[this.TextLines];
 
-            Array.Fill(text, String.Empty);
-            Array.Fill(textJustify, TextJustify.Left);
+            for (int i = 0; i < this.TextLines; i++)
+            {
+                text[i] = String.Empty;
+                textJustify[i] = TextJustify.Left;
+            }
 
             if (this.Width == 0)
                 this.Width = (int)Math.Round((double)Terminal.Width * 0.80, 0);

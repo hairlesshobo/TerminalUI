@@ -61,8 +61,13 @@ namespace TerminalUI.Elements
         ///       with a fixed width using the absolutely width as provided
         /// </param>
         /// <param name="area">TerminalArea the element should be constrainted to</param>
-        public KeyValueText(string keyText, string valueText = null, int leftWidth = 0, TerminalArea area = TerminalArea.Default)
-            : base (area)
+        public KeyValueText(
+            string keyText, 
+            string valueText = null, 
+            int leftWidth = 0, 
+            TerminalArea area = TerminalArea.Default,
+            bool show = false)
+            : base (area, show)
         {
             this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
             this.keyName = keyText;
@@ -74,6 +79,8 @@ namespace TerminalUI.Elements
                 this.keyName = this.keyName.PadLeft(leftWidth * -1);
             else if (leftWidth > 0)
                 this.keyName = this.keyName.PadRight(leftWidth);
+
+            this.RedrawAll();
         }
 
         /// <summary>
@@ -81,19 +88,17 @@ namespace TerminalUI.Elements
         /// </summary>
         public override void RedrawAll()
         {
-            if (this.Visible)
+            if (!this.Visible)
+                return;
+            
+            using (this.TopLeftPoint.GetMove())
             {
-                TerminalPoint prevPoint = TerminalPoint.GetCurrent();
-                this.TopLeftPoint.MoveTo();
-
                 if (this.KeyColor != TerminalColor.DefaultForeground)
                     Terminal.WriteColor(this.KeyColor, $"{keyName}: ");
                 else
                     Terminal.Write($"{keyName}: ");
 
                 this.Redraw();
-
-                prevPoint.MoveTo();
             }
         }
 
@@ -102,10 +107,12 @@ namespace TerminalUI.Elements
         /// </summary>
         public override void Redraw()
         {
-            // TODO: if total length > this.MaxWidth.. truncate the text
-            if (this.Visible)
+            if (!this.Visible)
+                return;
+
+            using (this.kvtRightPoint.GetMove())
             {
-                TerminalPoint previousPoint = kvtRightPoint.MoveToWithCurrent();
+                // TODO: if total length > this.MaxWidth.. truncate the text
 
                 if (this.valueText == null)
                     this.valueText = String.Empty;
@@ -113,21 +120,19 @@ namespace TerminalUI.Elements
                 if (this.ValueColor != TerminalColor.DefaultForeground)
                     Terminal.WriteColor(this.ValueColor, $"{keyName}: ");
                 else
-                    Console.Write(this.valueText);
+                    Terminal.Write(this.valueText);
                 
                 if (this.valueText.Length < prevRightWidth)
                 {
                     int spacesToClear = prevRightWidth - this.valueText.Length;
 
                     for (int i = 0; i < spacesToClear; i++)
-                        Console.Write(' ');
+                        Terminal.Write(' ');
                 }
 
                 prevRightWidth = this.valueText.Length;
 
                 this.TopRightPoint = TerminalPoint.GetCurrent();
-
-                previousPoint.MoveTo();
             }
         }
 

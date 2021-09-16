@@ -20,7 +20,9 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TerminalUI.Elements;
 
@@ -129,7 +131,8 @@ namespace TerminalUI
         /// </summary>
         public static bool CursorVisible
         {
-            get => (OperatingSystem.IsWindows() ? Console.CursorVisible : _cursorVisible);
+            // get => (OperatingSystem.IsWindows() ? Console.CursorVisible : _cursorVisible);
+            get => (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Console.CursorVisible : _cursorVisible);
             set => Console.CursorVisible = _cursorVisible = value;
         }
         private static bool _cursorVisible = true;
@@ -308,6 +311,46 @@ namespace TerminalUI
             }
         }
 
+        private static CancellationTokenSource _cts;
+        private static bool _initialized = false;
+
+        public static void Initialize()
+            => Initialize(null, null);
+
+        public static void Initialize(string headerLeft, string headerRight)
+        {
+            if (_initialized)
+                return;
+
+            _cts = new CancellationTokenSource();
+
+            Console.OutputEncoding = Encoding.UTF8;
+            Console.CancelKeyPress += (sender, e) => e.Cancel = true;
+            Console.TreatControlCAsInput = true;
+
+            Terminal.ResetColor();
+            Terminal.Clear(true);
+
+            Console.CursorVisible = false;
+
+            if (headerLeft != null || headerRight != null)
+                Terminal.InitHeader(headerLeft, headerRight);
+
+            Terminal.InitStatusBar();
+            Terminal.StatusBar.SetDefaultItems(new StatusBarItem(
+                "Quit Application",
+                (key) => {
+                    _cts.Cancel();
+                    return Task.CompletedTask;
+                },
+                Key.MakeKey(ConsoleKey.Q)
+            ));
+            Terminal.StatusBar.RedrawAll();
+            Terminal.RootPoint.MoveTo();
+
+            _initialized = true;
+        }
+
         /// <summary>
         ///     Initialize the header
         /// </summary>
@@ -318,7 +361,7 @@ namespace TerminalUI
         {
             if (Header == null)
             {
-                Header = new Header(left, right);
+                Header = new Header(left, right, show: true);
                 RootPoint = new TerminalPoint(0, 2);
             }
             else
@@ -335,7 +378,10 @@ namespace TerminalUI
         public static StatusBar InitStatusBar(params StatusBarItem[] items)
         {
             if (StatusBar == null)
+            {
                 StatusBar = new StatusBar(items);
+                StatusBar.Show();
+            }
             else
                 StatusBar.ShowItems(items);
 
@@ -354,8 +400,8 @@ namespace TerminalUI
         ///     Start the main loop.. this starts listening for input keys
         /// </summary>
         /// <returns>Task</returns>
-        public static Task StartAsync()
-            => KeyInput.StartLoop();
+        public static Task StartAsync(CancellationTokenSource cts = null)
+            => KeyInput.StartLoop(cts ?? _cts);
 
         /// <summary>
         ///     Shut down the main loop
@@ -368,5 +414,21 @@ namespace TerminalUI
         /// </summary>
         public static void WaitForStop()
             => KeyInput.WaitForStop();
+
+        public static void Run(Func<CancellationTokenSource, Task> mainEntryPoint)
+            => Run(null, null, mainEntryPoint);
+
+        public static void Run(string headerLeft, string headerRight, Func<CancellationTokenSource, Task> mainEntryPoint)
+        {
+            if (mainEntryPoint is null)
+                throw new ArgumentNullException(nameof(mainEntryPoint));
+
+            Initialize(headerLeft, headerRight);
+
+            Task main = mainEntryPoint(_cts);
+            Task listen = StartAsync(_cts);
+
+            Task.WaitAll(main, listen);
+        }
     }
 }

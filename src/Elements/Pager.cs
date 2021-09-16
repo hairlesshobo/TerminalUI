@@ -84,7 +84,7 @@ namespace TerminalUI.Elements
 
         private bool _deferDraw = true;
         private bool _started = false;
-        private TaskCompletionSource _tcs = null;
+        private TaskCompletionSource<bool> _tcs = null;
         private CancellationTokenSource _cts = null;
 
         #endregion Private Fields
@@ -108,7 +108,7 @@ namespace TerminalUI.Elements
             if (_tcs != null)
                 return Task.CompletedTask;
 
-            _tcs = new TaskCompletionSource();
+            _tcs = new TaskCompletionSource<bool>();
             _started = true;
             
             Setup();
@@ -120,7 +120,7 @@ namespace TerminalUI.Elements
         }
 
         public void Stop()
-            => _tcs?.TrySetResult();
+            => _tcs?.TrySetResult(true);
 
         public void Start()
         {
@@ -321,7 +321,7 @@ namespace TerminalUI.Elements
                     "Main Menu",
                     (key) => {
                         _cts.Cancel();
-                        _tcs.TrySetResult();
+                        _tcs.TrySetResult(true);
                         return Task.CompletedTask;
                     },
                     Key.MakeKey(ConsoleKey.Q)

@@ -20,51 +20,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace TerminalUI.Elements
 {
-    public class StatusBarItem
-    {
-        public string Name { get; set; }
-        public Key[] Keys { get; set; }
-        public Func<Key, Task> Task { get; set; }
-        public bool ShowKey { get; set; } = true;
-
-        private Action removeCallback = () => { };
-
-        public StatusBarItem()
-        {
-
-        }
-
-        public StatusBarItem(string name)
-        {
-            this.Name = name;
-        }
-
-        public StatusBarItem(string name, Func<Key, Task> task, params Key[] keys)
-        {
-            this.Name = name;
-            this.Task = task;
-            this.Keys = keys;
-        }
-
-        public void Remove()
-            => removeCallback();
-
-        internal void AddRemoveCallback(Action callback)
-            => removeCallback = callback;
-    }
-
     public class StatusBar : Element
     {
         private List<StatusBarItem> _items = new List<StatusBarItem>();
         private List<StatusBarItem> _prevItems = new List<StatusBarItem>();
         private static StatusBar _instance;
 
-        public StatusBar(params StatusBarItem[] items) => Init(items);
-        public StatusBar() => Init(new StatusBarItem[]{ });
+        private List<StatusBarItem> _defaultItems = new List<StatusBarItem>();
+
+        internal StatusBar(params StatusBarItem[] items) => Init(items);
+        internal StatusBar() => Init(new StatusBarItem[]{ });
 
         private void Init(StatusBarItem[] items)
         {
@@ -79,7 +48,8 @@ namespace TerminalUI.Elements
             // pushes the entire window up one line and therefore cuts off the first header line of the
             // terminal. This behavior doesn't happen on linux, so for now.. we just subtract one from the 
             // status bar width on windows and call it a quick fix instead of a lazy hack
-            if (OperatingSystem.IsWindows())
+            // if (OperatingSystem.IsWindows())
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 this.Width -= 1;
             
             this.TopLeftPoint = new TerminalPoint(0, Terminal.Height-1);
@@ -90,10 +60,14 @@ namespace TerminalUI.Elements
             ShowItems(items);
         }
 
+        internal void SetDefaultItems(params StatusBarItem[] items)
+            => _defaultItems = items.ToList();
+
         public void ShowItems(params StatusBarItem[] items)
         {
             // stash the current items so that, during redraw, we can remove any key bindings we have
-            _prevItems = _items;
+            // TODO: make sure this functionality works
+            _prevItems = _items ?? _defaultItems;
 
             _items = items.ToList();
 
@@ -102,8 +76,11 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
+            if (!this.Visible)
+                return;
+                
             this.RemovePreviousKeyBindings();
-            
+
             TerminalPoint prevPoint = TerminalPoint.GetCurrent();
             ConsoleColor prevBackgroundColor = Console.BackgroundColor;
 
@@ -111,9 +88,18 @@ namespace TerminalUI.Elements
 
             Console.BackgroundColor = ConsoleColor.DarkBlue;
 
-            for (int i = 0; i < _items.Count; i++)
+            List<StatusBarItem> items = _items;
+            bool isDefaultList = false;
+            
+            if (items == null || items.Count == 0) 
             {
-                StatusBarItem item = _items[i];
+                items = _defaultItems;
+                isDefaultList = true;
+            }
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                StatusBarItem item = items[i];
 
                 Terminal.Write(' ');
 
@@ -147,12 +133,13 @@ namespace TerminalUI.Elements
                             KeyInput.UnregisterKey(key);
                     }
 
-                    _items.Remove(item);
+                    if (!isDefaultList)
+                        _items.Remove(item);
 
                     this.Redraw();
                 });
 
-                if (i < (_items.Count-1))
+                if (i < (items.Count-1))
                     Terminal.Write((char)BoxChars.ThinVertical);
             }
 

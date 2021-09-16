@@ -33,7 +33,13 @@ namespace TerminalUI.Elements
         private string rightText;
 
 
-        public SplitLine(string leftText, string rightText, ConsoleColor? leftColor = null, ConsoleColor? rightColor = null)
+        public SplitLine(
+            string leftText, 
+            string rightText, 
+            ConsoleColor? leftColor = null, 
+            ConsoleColor? rightColor = null, 
+            bool show = false
+            ) : base(TerminalArea.Default, show)
         {
             this._leftColor = leftColor;
             this._rightColor = rightColor;
@@ -51,19 +57,20 @@ namespace TerminalUI.Elements
 
         public override void Redraw()
         {
-            Terminal.WriteColor(this.LeftColor, leftText);
+            if (!this.Visible)
+                return;
 
-            int splitChars = this.Width - leftText.Length - rightText.Length;
-
-            if (splitChars > 0)
+            using (this.TopLeftPoint.GetMove())
             {
+                Terminal.WriteColor(this.LeftColor, leftText);
+
+                int splitChars = this.Width - leftText.Length - rightText.Length;
+
                 for (int i = 0; i < splitChars; i++)
                     Terminal.Write(' ');
+
+                Terminal.WriteColor(this.RightColor, rightText);
             }
-
-            Terminal.WriteColor(this.RightColor, rightText);
-
-            this.TopLeftPoint.MoveTo();
         }
 
         public void Update(string left, string right)

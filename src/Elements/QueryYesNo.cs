@@ -53,68 +53,65 @@ namespace TerminalUI.Elements
         {
             this.Visible = true;
 
-            TerminalPoint previousPoint = TerminalPoint.GetCurrent();
-            TopLeftPoint.MoveTo();
-
-            if (this.text == null)
-                this.text = String.Empty;
-
-            int queryLength = this.text.Length + 7;
-
-            if (this.color != TerminalColor.DefaultForeground)
-                Terminal.WriteColor(this.color, this.text);
-            else
-                Terminal.Write(this.text);
-            
-            Terminal.Write(" (yes/");
-            Terminal.WriteColor(TerminalColor.PagerHighlightColorForeground, "NO");
-            Terminal.Write(") ");
-
-            TerminalPoint textInputPoint = TerminalPoint.GetCurrent();
-            int prevLength = 0;
-
-            bool? responseVal = null;
-
-            while (!cToken.IsCancellationRequested)
+            using (this.TopLeftPoint.GetMove())
             {
-                textInputPoint.MoveTo();
+                if (this.text == null)
+                    this.text = String.Empty;
 
-                // erase any previous characters that were entered, if any exist
-                if (prevLength > 0)
+                int queryLength = this.text.Length + 7;
+
+                if (this.color != TerminalColor.DefaultForeground)
+                    Terminal.WriteColor(this.color, this.text);
+                else
+                    Terminal.Write(this.text);
+                
+                Terminal.Write(" (yes/");
+                Terminal.WriteColor(TerminalColor.PagerHighlightColorForeground, "NO");
+                Terminal.Write(") ");
+
+                TerminalPoint textInputPoint = TerminalPoint.GetCurrent();
+                int prevLength = 0;
+
+                bool? responseVal = null;
+
+                while (!cToken.IsCancellationRequested)
                 {
-                    for (int i = 0; i < prevLength; i++)
-                        Terminal.Write(' ');
-
                     textInputPoint.MoveTo();
+
+                    // erase any previous characters that were entered, if any exist
+                    if (prevLength > 0)
+                    {
+                        for (int i = 0; i < prevLength; i++)
+                            Terminal.Write(' ');
+
+                        textInputPoint.MoveTo();
+                    }
+
+                    string response = await KeyInput.ReadStringAsync(cToken);
+
+                    this.TopRightPoint = TerminalPoint.GetCurrent();
+
+                    if (response == null)
+                        break;
+
+                    prevLength = response.Length;
+
+                    response = response.Trim().ToLower();
+
+                    if (response == String.Empty || response == "no")
+                    {
+                        responseVal = false;
+                        break;
+                    }
+                    else if (response == "yes")
+                    {
+                        responseVal = true;
+                        break;
+                    }
                 }
 
-                string response = await KeyInput.ReadStringAsync(cToken);
-
-                this.TopRightPoint = TerminalPoint.GetCurrent();
-
-                if (response == null)
-                    break;
-
-                prevLength = response.Length;
-
-                response = response.Trim().ToLower();
-
-                if (response == String.Empty || response == "no")
-                {
-                    responseVal = false;
-                    break;
-                }
-                else if (response == "yes")
-                {
-                    responseVal = true;
-                    break;
-                }
-            }
-    
-            previousPoint.MoveTo();
-
-            // If we get here, that means it was canceled via token
-            return responseVal;
+                return responseVal;
+            }    
         }
 
         public override void Show()
@@ -127,7 +124,7 @@ namespace TerminalUI.Elements
 
             this.text = newText.Trim();
 
-            if (!text.EndsWith('?'))
+            if (!text.EndsWith("?"))
                 text += "?";
 
             if (color != null)
