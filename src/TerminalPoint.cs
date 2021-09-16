@@ -98,15 +98,32 @@ namespace TerminalUI
             => new TerminalPoint(Console.CursorLeft, Console.CursorTop);
 
         /// <summary>
-        ///     Move to the terminal point described by the current object
+        ///     Move to the terminal point described by the the TerminalPoint object
         /// </summary>
-        /// <returns>Current terminal point</returns>
+        /// <returns>itself</returns>
         public TerminalPoint MoveTo()
         {
             Console.CursorLeft = this.Left;
             Console.CursorTop = this.Top;
 
             return this;
+        }
+
+        public TerminalPointMove GetMove()
+            => new TerminalPointMove(this);
+
+        /// <summary>
+        ///     Move to the terminal point described by the the TerminalPoint object
+        /// </summary>
+        /// <returns>Current terminal point, prior to the move</returns>
+        public TerminalPoint MoveToWithCurrent()
+        {
+            TerminalPoint currentPoint = TerminalPoint.GetCurrent();
+
+            Console.CursorLeft = this.Left;
+            Console.CursorTop = this.Top;
+
+            return currentPoint;
         }
     }
 }

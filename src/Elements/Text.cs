@@ -27,9 +27,19 @@ namespace TerminalUI.Elements
     /// </summary>
     public class Text : Element
     {
-        private int prevWidth = 0;
-        private string text = String.Empty;
-        private ConsoleColor? color;
+        private int _prevWidth = 0;
+
+        /// <summary>
+        ///     Current foreground color in use by the text element. Null if the default
+        ///     terminal foreground color should be used, as defined in
+        ///     <see cref="TerminalColor.DefaultForeground" />
+        /// </summary>
+        public ConsoleColor? ForegroundColor { get; private set; } = null;
+
+        /// <summary>
+        ///     Current text value being displayed by the text element
+        /// </summary>
+        public string TextValue { get; private set; } = String.Empty;
 
         /// <summary>
         ///     Construct a new Text element, using the provided text as the initial 
@@ -60,59 +70,80 @@ namespace TerminalUI.Elements
             this.UpdateValue(foregroundColor, valueText);
         }
 
+        /// <summary>
+        ///     If visible, redraw the text element
+        /// </summary>
         public override void Redraw()
         {
-            if (this.Visible)
+            if (!this.Visible)
+                return;
+             
+            using (this.TopLeftPoint.GetMove())
             {
-                TerminalPoint previousPoint = TerminalPoint.GetCurrent();
-                TopLeftPoint.MoveTo();
+                if (this.TextValue == null)
+                    this.TextValue = String.Empty;
 
-                if (this.text == null)
-                    this.text = String.Empty;
+                if (this.ForegroundColor != null)
+                    Terminal.ForegroundColor = this.ForegroundColor.Value;
 
-                if (this.color != null)
-                    Terminal.ForegroundColor = this.color.Value;
-
-                Terminal.Write(this.text);
+                Terminal.Write(this.TextValue);
                 
-                if (this.text.Length < prevWidth)
+                if (this.TextValue.Length < _prevWidth)
                 {
-                    int spacesToClear = prevWidth - this.text.Length;
+                    int spacesToClear = _prevWidth - this.TextValue.Length;
 
                     for (int i = 0; i < spacesToClear; i++)
                         Terminal.Write(' ');
                 }
 
-                if (this.color != null)
+                if (this.ForegroundColor != null)
                     Terminal.ResetForeground();
 
-                prevWidth = this.text.Length;
+                _prevWidth = this.TextValue.Length;
 
                 this.TopRightPoint = TerminalPoint.GetCurrent();
-
-                previousPoint.MoveTo();
             }
         }
 
-        public void SetForegroundColor(ConsoleColor color)
+        /// <summary>
+        ///     Set the foreground color of the text element
+        /// </summary>
+        /// <param name="foregroundColor">
+        ///     Foreground color, null if the element should use the default foreground color
+        /// </param>
+        public void SetForegroundColor(ConsoleColor? foregroundColor)
         {
-            this.color = color;
+            this.ForegroundColor = foregroundColor;
 
             this.Redraw();
         }
 
-        public void UpdateValue(ConsoleColor color, string newText)
-            => UpdateValue(newText, color);
+        /// <summary>
+        ///     Update the text value and foreground color then redraw the text element
+        /// </summary>
+        /// <param name="foregroundColor">New foreground color to use</param>
+        /// <param name="newText">New text to display</param>
+        public void UpdateValue(ConsoleColor foregroundColor, string newText)
+            => UpdateValue(newText, foregroundColor);
 
+        /// <summary>
+        ///     Update the text value and redraw the text element
+        /// </summary>
+        /// <param name="newText">New text to display</param>
         public void UpdateValue(string newText)
             => UpdateValue(newText, null);
 
+        /// <summary>
+        ///     Private: Update the text value and optionally the color, then redraw the text element
+        /// </summary>
+        /// <param name="newText">New text to display</param>
+        /// <param name="color">Optional color to update to</param>
         private void UpdateValue(string newText, ConsoleColor? color = null)
         {
-            this.text = newText;
+            this.TextValue = newText;
 
             if (color != null)
-                this.color = color;
+                this.ForegroundColor = color;
 
             this.Redraw();
         }

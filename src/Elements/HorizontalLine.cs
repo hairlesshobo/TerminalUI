@@ -48,9 +48,7 @@ namespace TerminalUI.Elements
         {
             if (this.Visible)
             {
-                TerminalPoint prevPoint = TerminalPoint.GetCurrent();
-                
-                this.TopLeftPoint.MoveTo();
+                TerminalPoint prevPoint = this.TopLeftPoint.MoveToWithCurrent();
 
                 for (int i = 0; i < this.Width; i++)
                     Terminal.WriteColor(color, (char)lineType);

@@ -21,23 +21,52 @@ using System;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     A class to display a KeyValue textual item. A KeyValueText element
+    ///     consists of two pieces of text.. a "Key", which is a "static" string,
+    ///     and a "Value" which is a dynamic and frequently changing string
+    /// </summary>
     public class KeyValueText : Element
     {
-        public ConsoleColor KeyColor { get; set; } = TerminalColor.KeyValueTextKeyColor;
-        public ConsoleColor ValueColor { get; set; } = TerminalColor.KeyValueTextValueColor;
-
         private TerminalPoint kvtRightPoint;
         private int leftWidth = 0;
         private int prevRightWidth = 0;
         private string keyName = String.Empty;
         private string valueText = String.Empty;
 
-        public KeyValueText(string keyName, string valueText = null, int leftWidth = 0, TerminalArea area = TerminalArea.Default)
+        /// <summary>
+        ///     Foreground color to use for the "Key" string
+        /// </summary>
+        public ConsoleColor KeyColor { get; set; } = TerminalColor.KeyValueTextKeyColor;
+
+        /// <summary>
+        ///     Foreground color to use for the "Value" string
+        /// </summary>
+        /// <value></value>
+        public ConsoleColor ValueColor { get; set; } = TerminalColor.KeyValueTextValueColor;
+
+        
+        /// <summary>
+        ///     Construct a new KeyValueText element
+        /// </summary>
+        /// <param name="keyText">Text to use for the "key"</param>
+        /// <param name="valueText">Text to use for the "value"</param>
+        /// <param name="leftWidth">
+        ///     The optional fixed width to use for the "key" side of the element.
+        /// 
+        ///     - If the provided value is 0, no padding and therefore no fixed width is applied
+        ///     - If the provided value is less than 0, the value text is to be right-justified 
+        ///       with a fixed width using the absolute width as provided
+        ///     - If the provided value is greater than 0, the value text is to be left-justified
+        ///       with a fixed width using the absolutely width as provided
+        /// </param>
+        /// <param name="area">TerminalArea the element should be constrainted to</param>
+        public KeyValueText(string keyText, string valueText = null, int leftWidth = 0, TerminalArea area = TerminalArea.Default)
             : base (area)
         {
             this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
-            this.keyName = keyName;
-            this.leftWidth = (leftWidth != 0 ? Math.Abs(leftWidth) : keyName.Length) + 2;
+            this.keyName = keyText;
+            this.leftWidth = (leftWidth != 0 ? Math.Abs(leftWidth) : keyText.Length) + 2;
             this.kvtRightPoint = this.TopLeftPoint.AddX(this.leftWidth);
             this.valueText = valueText;
 
@@ -47,6 +76,9 @@ namespace TerminalUI.Elements
                 this.keyName = this.keyName.PadRight(leftWidth);
         }
 
+        /// <summary>
+        ///     Redraw the entire element, both the static "Key" and the dynamic "Value" strings
+        /// </summary>
         public override void RedrawAll()
         {
             if (this.Visible)
@@ -65,13 +97,15 @@ namespace TerminalUI.Elements
             }
         }
 
+        /// <summary>
+        ///     Redraw only the "value" side of the element
+        /// </summary>
         public override void Redraw()
         {
             // TODO: if total length > this.MaxWidth.. truncate the text
             if (this.Visible)
             {
-                TerminalPoint previousPoint = TerminalPoint.GetCurrent();
-                kvtRightPoint.MoveTo();
+                TerminalPoint previousPoint = kvtRightPoint.MoveToWithCurrent();
 
                 if (this.valueText == null)
                     this.valueText = String.Empty;
