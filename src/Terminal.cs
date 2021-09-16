@@ -318,6 +318,14 @@ namespace TerminalUI
         public static void Initialize()
             => Initialize(null, null);
 
+        /// <summary>
+        ///     Initialize the Terminal UI application. Does NOT need to be called
+        ///     if using either <see cref="Terminal.Run(Func{CancellationTokenSource, Task})" />
+        ///     or <see cref="Terminal.Run(string, string, Func{CancellationTokenSource, Task})" />
+        ///     to start the terminal application
+        /// </summary>
+        /// <param name="headerLeft">Text to display on the left of the header</param>
+        /// <param name="headerRight">Text to display on the right of the header</param>
         public static void Initialize(string headerLeft, string headerRight)
         {
             if (_initialized)
@@ -416,9 +424,20 @@ namespace TerminalUI
         public static void WaitForStop()
             => KeyInput.WaitForStop();
 
+        /// <summary>
+        ///     Run the terminal application with the provided main entry point
+        /// </summary>
+        /// <param name="mainEntryPoint">Main entry point of the entire application</param>
         public static void Run(Func<CancellationTokenSource, Task> mainEntryPoint)
             => Run(null, null, mainEntryPoint);
 
+        /// <summary>
+        ///     Run the terminal applicatoin with the provided main entry point and setup the
+        ///     header using the provided strings
+        /// </summary>
+        /// <param name="headerLeft">Text to show on the left side of the header</param>
+        /// <param name="headerRight">Text to show on the right side of the header</param>
+        /// <param name="mainEntryPoint">Main entry point of the entire application</param>
         public static void Run(string headerLeft, string headerRight, Func<CancellationTokenSource, Task> mainEntryPoint)
         {
             if (mainEntryPoint is null)

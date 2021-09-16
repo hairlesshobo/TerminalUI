@@ -35,12 +35,33 @@ namespace TerminalUI.Types
         // This may be not necessary, but it ensures that the dictionary lookup will always match
         private static Dictionary<string, Key> keyCache = new Dictionary<string, Key>();
 
+        /// <summary>
+        ///     Key (without modifier) that this key represents
+        /// </summary>
         public ConsoleKey RootKey { get; private set; }
+
+        /// <summary>
+        ///     Modifiers (ctrl, shift, alt, etc...) that this key requires
+        /// </summary>
         public ConsoleModifiers? Modifiers { get; private set; } = null;
+
+        /// <summary>
+        ///     Character to be displayed on the status bar
+        /// </summary>
+        /// <returns></returns>
         public string Character => GetRootKeyCharacter();
 
+        /// <summary>
+        ///     Private constructor
+        /// </summary>
         private Key() { }
 
+        /// <summary>
+        ///     Create a new key from the provided root key and modifier(s)
+        /// </summary>
+        /// <param name="rootKey">root key to use</param>
+        /// <param name="modifiers">one or more modifier keys to use</param>
+        /// <returns>new key object</returns>
         public static Key MakeKey(ConsoleKey rootKey, ConsoleModifiers? modifiers = null)
         {
             Key key = new Key();
@@ -58,6 +79,11 @@ namespace TerminalUI.Types
             return key;
         }
 
+        /// <summary>
+        ///     Create new key from ConsoleKeyInfo object
+        /// </summary>
+        /// <param name="keyInfo">KeyInfo object to create key from</param>
+        /// <returns>new key object</returns>
         public static Key FromConsoleKeyInfo(ConsoleKeyInfo keyInfo)
         {
             Key key = Key.MakeKey(keyInfo.Key, keyInfo.Modifiers);
@@ -70,6 +96,10 @@ namespace TerminalUI.Types
             return key;
         }
 
+        /// <summary>
+        ///     Convert the key to a string representation
+        /// </summary>
+        /// <returns>String</returns>
         public override string ToString()
         {
             StringBuilder builder = new StringBuilder();
