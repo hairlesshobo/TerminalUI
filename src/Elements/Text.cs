@@ -21,13 +21,23 @@ using System;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     Text element
+    ///     This is a very simple element that just displays text by itself
+    /// </summary>
     public class Text : Element
     {
         private int prevWidth = 0;
         private string text = String.Empty;
         private ConsoleColor? color;
 
-        public Text(string valueText, Area area = Area.Default)
+        /// <summary>
+        ///     Construct a new Text element, using the provided text as the initial 
+        ///     text to be displayed
+        /// </summary>
+        /// <param name="valueText">Initial text to display</param>
+        /// <param name="area">Terminal area to constrain the element to</param>
+        public Text(string valueText, TerminalArea area = TerminalArea.Default)
             : base (area)
         {
             this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
@@ -35,12 +45,19 @@ namespace TerminalUI.Elements
             this.UpdateValue(valueText);
         }
 
-        public Text(ConsoleColor color, string valueText, Area area = Area.Default)
+        /// <summary>
+        ///     Construct a new Text element, using the provided text and foreground color
+        ///     as the initial text to be displayed
+        /// </summary>
+        /// <param name="foregroundColor">Color to use drawing the text element</param>
+        /// <param name="valueText">Initial text to display</param>
+        /// <param name="area">Terminal area to constrain the element to</param>
+        public Text(ConsoleColor foregroundColor, string valueText, TerminalArea area = TerminalArea.Default)
             : base (area)
         {
             this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
 
-            this.UpdateValue(color, valueText);
+            this.UpdateValue(foregroundColor, valueText);
         }
 
         public override void Redraw()

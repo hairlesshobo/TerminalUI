@@ -17,10 +17,11 @@
  *  along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
-
 namespace TerminalUI
 {
+    /// <summary>
+    ///     Characters used for drawing lines
+    /// </summary>
     public enum LineType
     {
         Thin = '\u2500',

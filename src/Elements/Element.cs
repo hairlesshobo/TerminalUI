@@ -22,38 +22,97 @@ using System.Text;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     Abstract class that defines all terminal elements
+    /// </summary>
     public abstract class Element
     {
+        /// <summary>
+        ///     Width of the element
+        /// </summary>
         public int Width { get; private protected set; }
+
+        /// <summary>
+        ///     Height of the element
+        /// </summary>
         public int Height { get; private protected set; }
+
+        /// <summary>
+        ///     Maximum width that the element may used, optionally constrained by the
+        ///     specified TerminalArea
+        /// </summary>
         public int MaxWidth { get; private set; }
+
+        /// <summary>
+        ///     Flag indicating whether the element is currently visible
+        /// </summary>
         public bool Visible { get; private protected set; } = false;
         
+        /// <summary>
+        ///     TerminalPoint that represents the top-left-most point of the current element
+        /// </summary>
         public TerminalPoint TopLeftPoint { get; private protected set; }
+
+        /// <summary>
+        ///     TerminalPoint that represents the top-right-most point of the current element
+        /// </summary>
         public TerminalPoint TopRightPoint { get; private protected set; }
+
+        /// <summary>
+        ///     If the element spans multiple lines, this will be a TerminalPoint that represents 
+        ///     the bottom-left-most point of the current element. If the element is a single line
+        ///     element, this value will be null
+        /// </summary>
         public TerminalPoint BottomLeftPoint { get; private protected set; } = null;
+
+        /// <summary>
+        ///     If the element spans multiple lines, this will be a TerminalPoint that represents 
+        ///     the bottom-right-most point of the current element. If the element is a single line
+        ///     element, this value will be null
+        /// </summary>
         public TerminalPoint BottomRightPoint { get; private protected set; } = null;
 
-        public Area Area { get; private protected set; } = Area.Default;
+        /// <summary>
+        ///     TerminalArea that this element is constrainted to
+        /// </summary>
+        /// <value></value>
+        public TerminalArea Area { get; private protected set; } = TerminalArea.Default;
 
-        public Element()
+        /// <summary>
+        ///     Default constructor used by all elements
+        /// </summary>
+        protected Element()
         { 
             this.MaxWidth = Terminal.UsableWidth;
         }
 
-        public Element(Area area)
+        /// <summary>
+        ///     Constructor used by all elements when specifing a TerminalArea
+        /// </summary>
+        protected Element(TerminalArea area)
         {
-            if (area == Area.LeftHalf || area == Area.RightHalf)
+            if (area == TerminalArea.LeftHalf || area == TerminalArea.RightHalf)
                 this.MaxWidth = Terminal.UsableWidth / 2;
-            else if (area == Area.Default)
+            else if (area == TerminalArea.Default)
                 this.MaxWidth = Terminal.UsableWidth;
         }
 
+        /// <summary>
+        ///     Redraw the entire element. For most elements, this is the same as calling
+        ///     Redraw(), but some elements have "static" content that would only need
+        ///     to be redrawn on certain occasions
+        /// </summary>
         public virtual void RedrawAll()
             => Redraw();
 
+        /// <summary>
+        ///     Redraw the "dynamic" portion of the element
+        /// </summary>
         public abstract void Redraw();
 
+        /// <summary>
+        ///     Erase the element from the terminal. 
+        /// </summary>
         public virtual void Erase()
         {
             if (this.TopLeftPoint == null)
@@ -83,6 +142,9 @@ namespace TerminalUI.Elements
             prevPoint.MoveTo();
         }
 
+        /// <summary>
+        ///     Erase the element and mark it as not visible
+        /// </summary>
         public virtual void Hide()
         {
             if (this.Visible == false)
@@ -92,6 +154,9 @@ namespace TerminalUI.Elements
             this.Erase();
         }
 
+        /// <summary>
+        ///     Mark the element as visible and immediately draw it on the terminal
+        /// </summary>
         public virtual void Show()
         {
             if (this.Visible == true)

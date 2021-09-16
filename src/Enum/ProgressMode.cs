@@ -17,14 +17,26 @@
  *  along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
-
 namespace TerminalUI
 {
+    /// <summary>
+    ///     Enum used to configure additional modes for the progress bar
+    /// </summary>
     public enum ProgressMode
     {
+        /// <summary>
+        ///     No additional text is displayed
+        /// </summary>
         Default = 0,
+
+        /// <summary>
+        ///     The explicit count values are shown to the left of the progress bar
+        /// </summary>
         ExplicitCountLeft = 1,
+
+        /// <summary>
+        ///     The explicit count values are shown to the right of the progress bar
+        /// </summary>
         ExplicitCountRight = 2
     }
 }

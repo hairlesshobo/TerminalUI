@@ -78,13 +78,13 @@ namespace TerminalUI
         /// </summary>
         /// <param name="area">Terminal area to calculate left point for</param>
         /// <returns>New terminal point that is all the way to the left of the current area and on the same line</returns>
-        public static TerminalPoint GetLeftPoint(Area area)
+        public static TerminalPoint GetLeftPoint(TerminalArea area)
         {
             TerminalPoint point = TerminalPoint.GetCurrent();
 
-            if (area == Area.LeftHalf)
+            if (area == TerminalArea.LeftHalf)
                 point.Left = 0;
-            else if (area == Area.RightHalf)
+            else if (area == TerminalArea.RightHalf)
                 point.Left = Terminal.UsableWidth / 2;
 
             return point;

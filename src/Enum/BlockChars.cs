@@ -19,7 +19,10 @@
 
 namespace TerminalUI
 {
-    public enum BlockChars
+    /// <summary>
+    ///     Characters used for displaying blocks
+    /// </summary>
+    internal enum BlockChars
     {
         Solid = '\u2588',
         LightShade = '\u2591',

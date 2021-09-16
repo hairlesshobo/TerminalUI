@@ -32,7 +32,7 @@ namespace TerminalUI.Elements
         private string keyName = String.Empty;
         private string valueText = String.Empty;
 
-        public KeyValueText(string keyName, string valueText = null, int leftWidth = 0, Area area = Area.Default)
+        public KeyValueText(string keyName, string valueText = null, int leftWidth = 0, TerminalArea area = TerminalArea.Default)
             : base (area)
         {
             this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);

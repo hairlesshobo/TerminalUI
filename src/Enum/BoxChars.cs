@@ -19,6 +19,9 @@
 
 namespace TerminalUI
 {
+    /// <summary>
+    ///     Characters used for producing boxes
+    /// </summary>
     public enum BoxChars
     {
         ThinTopLeft = '\u250C',

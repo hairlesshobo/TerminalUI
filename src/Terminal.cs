@@ -238,7 +238,7 @@ namespace TerminalUI
         ///     of the specified area
         /// </summary>
         /// <param name="area">area to use for determining left position</param>
-        public static void NextLine(Area area)
+        public static void NextLine(TerminalArea area)
             => throw new NotImplementedException();
 
         /// <summary>

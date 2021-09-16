@@ -20,24 +20,33 @@
 namespace TerminalUI
 {
     /// <summary>
-    ///     Enum used to configure if and where the textual representation of percentage 
-    ///     is to be displayed
+    ///     Enum that allows specifying which "area" an element should reside in
+    ///     For example, if "RightHalf" is specified, that will have the left side
+    ///     of the element be placed at the center of the terminal
     /// </summary>
-    public enum ProgressDisplay
+    public enum TerminalArea
     {
         /// <summary>
-        ///     Percentage is not displayed at all
+        ///     No special constraints are placed on the element and the 
+        ///     current cursor position is used
         /// </summary>
-        NoPercent = 0,
+        Default,
 
         /// <summary>
-        ///     Percentage is displayed to the left of the progress bar
+        ///     The entire terminal is available for use and, for most elements,
+        ///     the cursor will be returned to the left-most position of the line
+        ///     during positioning
         /// </summary>
-        Left = 1,
+        EntireTerminal,
 
         /// <summary>
-        ///        Percentage is displayed to the right of the progress bar
+        ///     Right half of terminal is available for use
         /// </summary>
-        Right = 2
+        LeftHalf,
+        
+        /// <summary>
+        ///     Left half of terminal is available for use
+        /// </summary>
+        RightHalf
     }
 }

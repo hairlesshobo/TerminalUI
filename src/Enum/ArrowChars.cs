@@ -19,7 +19,10 @@
 
 namespace TerminalUI
 {
-    public enum ArrowChars
+    /// <summary>
+    ///     Characters used to indicate direction
+    /// </summary>
+    internal enum ArrowChars
     {
         Left = '\u2190',
         Up = '\u2191',

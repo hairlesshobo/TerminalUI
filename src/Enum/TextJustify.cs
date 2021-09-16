@@ -16,15 +16,27 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
-
-using System;
-
+ 
 namespace TerminalUI
 {
+    /// <summary>
+    ///     Enum that specifies how text is positioned on the line
+    /// </summary>
     public enum TextJustify
     {
+        /// <summary>
+        ///     Text is positioned to the left side of the line
+        /// </summary>
         Left = 0,
+
+        /// <summary>
+        ///     Text is positioned in the center portion of the line
+        /// </summary>
         Center = 1,
+
+        /// <summary>
+        ///     Text is positioned to the right side of the line
+        /// </summary>
         Right = 2
     }
 }
