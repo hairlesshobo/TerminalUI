@@ -18,55 +18,103 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     Simple element that is used to await a yes/no answer from the user
+    /// </summary>
     public class QueryYesNo : Element
     {
-        private string text = String.Empty;
-        private ConsoleColor color = TerminalColor.DefaultForeground;
+        /// <summary>
+        ///     Text to display to end user
+        /// </summary>
+        public string QueryText { get; private set; } = String.Empty;
 
-        public QueryYesNo(string queryText, bool show = false)
-            : base(show) 
+
+        /// <summary>
+        ///     Foreground color to display the query as. Uses default terminal foreground 
+        ///     if no color is provided
+        /// </summary>
+        /// <value></value>
+        public Nullable<ConsoleColor> ForegroundColor
         {
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
+            get => _foregroundColor ?? TerminalColor.DefaultForeground;
+            private set => _foregroundColor = value;
+        }
+        private Nullable<ConsoleColor> _foregroundColor = null;
 
-            this.UpdateValue(queryText);
+        /// <summary>
+        ///     Construct a new isntance of the query element
+        /// </summary>
+        /// <param name="queryText">Text to show</param>
+        /// <param name="foregroundColor">Foreground color to use when drawing the message</param>
+        /// <param name="area">Area to constrain the query box to</param>
+        public QueryYesNo(string queryText, 
+                          Nullable<ConsoleColor> foregroundColor = null,
+                          TerminalArea area = TerminalArea.Default)
+            : base(area, false) 
+        {
+            this.SetQueryText(queryText);
+            this.ForegroundColor = foregroundColor;
+
+            this.RecalculateAndRedraw();
         }
 
-        public QueryYesNo(ConsoleColor color, string valueText, bool show = false)
-            : base(show) 
+        internal override void RecalculateAndRedraw()
         {
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
+            base.CalculateLayout();
 
-            this.UpdateValue(valueText, color);
+            using (this.OriginalPoint.GetMove())
+            {
+                this.TopLeftPoint = TerminalPoint.GetLeftPoint(this.Area);
+            }
+
+            // this.RedrawAll();
         }
 
+        /// <summary>
+        ///     Not supported by this element
+        /// </summary>
         public override void Redraw()
             => throw new NotSupportedException();
 
-        public void SetForegroundColor(ConsoleColor? color)
-            => this.color = (color == null ? TerminalColor.DefaultForeground : color.Value);
+        /// <summary>
+        ///     Set the foreground color
+        /// </summary>
+        /// <param name="foregroundColor">New color to use</param>
+        public void SetForegroundColor(ConsoleColor? foregroundColor)
+            => this.ForegroundColor = foregroundColor;
 
+        /// <summary>
+        ///     Asynchronously query the user for a response
+        /// </summary>
+        /// <param name="cToken">Token used to cancel the query</param>
+        /// <returns>
+        ///     The result of the task can be one of three states:
+        ///
+        ///     true  = user entered yes
+        ///     false = user entered no
+        ///     null  = query was canceled before a valid answer was provided
+        /// </returns>
         public async Task<Nullable<bool>> QueryAsync(CancellationToken cToken = default)
         {
             this.Visible = true;
 
             using (this.TopLeftPoint.GetMove())
             {
-                if (this.text == null)
-                    this.text = String.Empty;
+                if (this.QueryText == null)
+                    this.QueryText = String.Empty;
 
-                int queryLength = this.text.Length + 7;
+                int queryLength = this.QueryText.Length + 7;
 
-                if (this.color != TerminalColor.DefaultForeground)
-                    Terminal.WriteColor(this.color, this.text);
+                if (this.ForegroundColor != TerminalColor.DefaultForeground)
+                    Terminal.WriteColor(this.ForegroundColor.Value, this.QueryText);
                 else
-                    Terminal.Write(this.text);
+                    Terminal.Write(this.QueryText);
                 
                 Terminal.Write(" (yes/");
                 Terminal.WriteColor(TerminalColor.PagerHighlightColorForeground, "NO");
@@ -117,21 +165,25 @@ namespace TerminalUI.Elements
             }    
         }
 
+        /// <summary>
+        ///     Not supported
+        /// </summary>
         public override void Show()
             => throw new NotSupportedException();
 
-        private void UpdateValue(string newText, ConsoleColor? color = null)
+        /// <summary>
+        ///     Set query text to the provided text
+        /// </summary>
+        /// <param name="newText">text to use</param>
+        private void SetQueryText(string newText)
         {
             if (newText is null)
                 newText = String.Empty;
 
-            this.text = newText.Trim();
+            this.QueryText = newText.Trim();
 
-            if (!text.EndsWith("?"))
-                text += "?";
-
-            if (color != null)
-                this.color = color.Value;
+            if (!QueryText.EndsWith("?"))
+                QueryText += "?";
         }
     }
 }

@@ -28,18 +28,50 @@ using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     The data table element is meant for displaying data in a table format
+    /// 
+    ///     At some point in the future, it will also be able to be used for editing 
+    ///     data in a table, but we aren't there yet
+    /// </summary>
     public class DataTable : Element
     {
         // TODO: Add ability to define columns and format as a table view
         // TODO: Add ability to edit entries in table mode 
         #region Public Properties
-        public List<DataTableColumn> Columns { get; set; } = null;
-        public IList DataStore { get; set; } = null;
+        /// <summary>
+        ///     Columns that are to be visible in the table
+        /// </summary>
+        public List<DataTableColumn> Columns { get; private set; } = null;
+
+        /// <summary>
+        ///     Data store to populate the table with
+        /// </summary>
+        public IList DataStore { get; private set; } = null;
+
+        /// <summary>
+        ///     Row selection mode
+        /// </summary>
         public DataTableSelectType SelectType { get; private set; }
+
+        /// <summary>
+        ///     Maximum number of lines
+        /// </summary>
         public int MaxLines { get; private set; }
-        public int TableWidth => this.TopRightPoint.Left - this.TopLeftPoint.Left;
+
+        /// <summary>
+        ///     TerminalPoint that describes the header
+        /// </summary>
         public TerminalPoint HeaderPoint { get; private set; } = null;
+
+        /// <summary>
+        ///     Terminal point that describes where the data rows start
+        /// </summary>
         public TerminalPoint DataPoint { get; private set; } = null;
+
+        /// <summary>
+        ///     Flag indicating whether to show the header
+        /// </summary>
         public bool ShowHeader 
         { 
             get => _showHeader;
@@ -59,42 +91,99 @@ namespace TerminalUI.Elements
                 _showHeader = value;
             }
         }
+        private bool _showHeader = true;
+
 
         #endregion Public Properties
 
         #region Private Fields
-        private bool _showHeader = true;
-        // private bool _canceled = false;
-        private Dictionary<int, bool> _selectedIndexes = new Dictionary<int, bool>();
-        // private List<object> _choosenItems = null;
         private HorizontalLine _headerLine = null;
+        private int _configuredRows = 0;
+
+        // private Dictionary<int, bool> _selectedIndexes = new Dictionary<int, bool>();
+        // private bool _canceled = false;
+        // private List<object> _choosenItems = null;
         #endregion Private Fields
 
         #region Constructors
-        public DataTable(DataTableSelectType selectType, bool show = false)
-            : base(show) => Initalize(selectType);
-
-        public DataTable(bool show = false)
-            : base(show) => Initalize(null);
-
-        public void Initalize(DataTableSelectType? selectType = null)
+        /// <summary>
+        ///     Constuct a new instance of the data table element
+        /// </summary>
+        /// <param name="dataStore">Data store to pull from</param>
+        /// <param name="selectType">Row selection type to use</param>
+        /// <param name="showHeader">Flag indicating whether to display a header</param>
+        /// <param name="rows">
+        ///     Specifies how many terminal rows should be consumed by the data table
+        /// 
+        ///          0 = all remaining rows of the area
+        ///    above 0 = fixed number
+        ///    below 0 = reminaing rows - absolute value
+        /// </param>
+        /// <param name="area">Are to constrain the element to</param>
+        /// <param name="show">if true, immediately show the element upon creation</param>
+        public DataTable(IList dataStore,
+                         List<DataTableColumn> columns,
+                         DataTableSelectType selectType = DataTableSelectType.None, 
+                         bool showHeader = true,
+                         int rows = 0,
+                         TerminalArea area = TerminalArea.Default,
+                         bool show = false)
+            : base(area, show)
         {
-            if (selectType.HasValue)
-                this.SelectType = selectType.Value;
+            this.DataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
+            this.Columns = columns ?? throw new ArgumentNullException(nameof(columns));
+            this.SelectType = selectType;
+            this.ShowHeader = showHeader;
 
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
-            this.TopRightPoint = this.TopLeftPoint.AddX(Terminal.UsableWidth);
-
-            this.BottomLeftPoint = new TerminalPoint(this.TopLeftPoint.Left, Terminal.UsableBottomn);
-            this.BottomRightPoint = this.BottomLeftPoint.AddX(Terminal.UsableWidth);
-
-            this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 3;
-            this.ShowHeader = true;
+            _configuredRows = rows;
         }
         #endregion Constructors
 
+        /// <summary>
+        ///     Recalculate and redraw the entire element
+        /// </summary>
+        internal override void RecalculateAndRedraw()
+        {
+            base.CalculateLayout();
+
+            using (this.OriginalPoint.GetMove())
+            {
+                this.TopLeftPoint = TerminalPoint.GetLeftPoint(this.Area);
+                this.TopRightPoint = TerminalPoint.GetRightPoint(this.Area);
+                
+                TerminalPoint bottomPoint = TerminalPoint.GetBottomPoint(this.Area);
+                int maxRows = bottomPoint.Top - this.TopLeftPoint.Top;
+
+                this.Height = _configuredRows;
+
+                if (this.Height <= 0)
+                {
+                    this.Height = maxRows;
+
+                    if (_configuredRows < 0)
+                        this.Height += _configuredRows;
+                }
+                
+                if (this.Height > maxRows)
+                    this.Height = maxRows;
+
+                this.BottomLeftPoint = this.TopLeftPoint.AddY(this.Height);
+                this.BottomRightPoint = this.TopRightPoint.AddY(this.Height);
+
+                this.MaxLines = this.Height; // this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 3;
+                this.Width = this.TopRightPoint.Left - this.TopLeftPoint.Left;
+            }
+
+            this.RedrawAll();
+        }
+
         #region Public Methods
 
+        /// <summary>
+        ///     Not implemented yet
+        /// </summary>
+        /// <param name="clearScreen"></param>
+        /// <returns></returns>
         public Task<List<object>> ShowAsync(bool clearScreen = true)
         {
             throw new NotImplementedException();
@@ -121,6 +210,9 @@ namespace TerminalUI.Elements
             // });
         }
 
+        /// <summary>
+        ///     Redraw the entire data table
+        /// </summary>
         public override void RedrawAll()
         {
             if (!this.Visible)
@@ -133,7 +225,9 @@ namespace TerminalUI.Elements
         }
 
         
-
+        /// <summary>
+        ///     Redraw the data rows
+        /// </summary>
         public override void Redraw()
         {
             // TODO: Should we be calling this.Clear() instead?
@@ -144,6 +238,9 @@ namespace TerminalUI.Elements
             this.DrawRows();
         }
 
+        /// <summary>
+        ///     Not implemented yet
+        /// </summary>
         public void AbortMenu()
             => throw new NotImplementedException();
             // => _canceled = true;
@@ -151,6 +248,9 @@ namespace TerminalUI.Elements
         #endregion
 
         #region Private Methods
+        /// <summary>
+        ///     Draw the header
+        /// </summary>
         private void DrawHeader()
         {            
             if (!this.Visible | !this.ShowHeader)
@@ -159,7 +259,7 @@ namespace TerminalUI.Elements
             using (this.HeaderPoint.GetMove())
             {
 
-                int remainingChars = this.TableWidth;
+                int remainingChars = this.Width;
 
                 for (int i = 0; i < this.Columns.Count; i++)
                 {
@@ -175,13 +275,16 @@ namespace TerminalUI.Elements
 
                 Terminal.NextLine();
                 if (_headerLine == null)
-                    _headerLine = new HorizontalLine(ConsoleColor.White, LineType.ThinTripleDash, this.TableWidth);
+                    _headerLine = new HorizontalLine(ConsoleColor.White, LineType.ThinTripleDash, this.Width);
 
                 _headerLine.Show();
 
             }
         }
 
+        /// <summary>
+        ///     Draw all rows of the table
+        /// </summary>
         private void DrawRows()
         {
             if (!this.Visible)
@@ -219,6 +322,13 @@ namespace TerminalUI.Elements
             }
         }
 
+        /// <summary>
+        ///     Get a value for a single cell of the table
+        /// </summary>
+        /// <param name="dataType">Data type being fetched</param>
+        /// <param name="inObj">object to read the value from</param>
+        /// <param name="column">Column definition to use</param>
+        /// <returns>found value as a string</returns>
         private string GetValue(Type dataType, object inObj, DataTableColumn column)
         {
             if (inObj == null)
@@ -237,6 +347,9 @@ namespace TerminalUI.Elements
             return objValue.ToString();
         }
 
+        /// <summary>
+        ///     Clear all data table rows
+        /// </summary>
         private void Clear()
         {
             this.DataPoint.MoveTo();

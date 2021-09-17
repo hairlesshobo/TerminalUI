@@ -22,42 +22,80 @@ using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     Split-line element. This is used for displaying two pieces of text on a line, 
+    ///     one is left-justified and the other is right justified
+    /// </summary>
     public class SplitLine : Element
     {
+        /// <summary>
+        ///     Color used for the foreground of the left piece of text
+        /// </summary>
+        public Nullable<ConsoleColor> LeftForegroundColor
+        {
+            get => _leftColor ?? TerminalColor.HeaderLeft;
+            set => _leftColor = value;
+        }
         private ConsoleColor? _leftColor = null;
+        
+        /// <summary>
+        ///     Color used for the foreground of the right piece of text
+        /// </summary>
+        public Nullable<ConsoleColor> RightForegroundColor
+        {
+            get => _rightColor ?? TerminalColor.HeaderRight;
+            set => _rightColor = value;
+        }
+
         private ConsoleColor? _rightColor = null;
 
-        public ConsoleColor LeftColor => (_leftColor != null ? _leftColor.Value : TerminalColor.HeaderLeft);
-        public ConsoleColor RightColor => (_rightColor != null ? _rightColor.Value : TerminalColor.HeaderRight);
-
+        /// <summary>
+        ///     Text that is displayed on the left
+        /// </summary>
         public string LeftText { get; private set; }
+
+        /// <summary>
+        ///     Text that is displayed on the right
+        /// </summary>
         public string RightText { get; private set; }
 
 
-        public SplitLine(
-            string leftText, 
-            string rightText, 
-            ConsoleColor? leftColor = null, 
-            ConsoleColor? rightColor = null, 
-            bool show = false
-            ) : base(show)
+        /// <summary>
+        ///     Construct a new instance of the split-line element
+        /// </summary>
+        /// <param name="leftText">Text to show on the left</param>
+        /// <param name="rightText">Text to show on the right</param>
+        /// <param name="leftColor">Color to use for the left</param>
+        /// <param name="rightColor">Color to use for the right</param>
+        /// <param name="area">TerminalArea to be confined to</param>
+        /// <param name="show">if true, the element will be shown immediately</param>
+        public SplitLine(string leftText, 
+                         string rightText, 
+                         ConsoleColor? leftColor = null, 
+                         ConsoleColor? rightColor = null, 
+                         TerminalArea area = TerminalArea.Default,
+                         bool show = false) 
+            : base(area, show)
         {
-            this._leftColor = leftColor;
-            this._rightColor = rightColor;
+            this.LeftForegroundColor = leftColor;
+            this.RightForegroundColor = rightColor;
 
             this.Update(leftText, rightText, true);
 
             this.RecalculateAndRedraw();
         }
 
+        /// <summary>
+        ///     Recalculate the layout and redraw the entire element
+        /// </summary>
         internal override void RecalculateAndRedraw()
         {
             base.CalculateLayout();
 
             using (this.OriginalPoint.GetMove())
             {
-                this.TopLeftPoint = TerminalPoint.GetCurrent();
-                this.TopRightPoint = new TerminalPoint(Terminal.Width, this.TopLeftPoint.Top);
+                this.TopLeftPoint = TerminalPoint.GetLeftPoint(this.Area);
+                this.TopRightPoint = TerminalPoint.GetRightPoint(this.Area);
             }
 
             this.Height = 1;
@@ -66,6 +104,9 @@ namespace TerminalUI.Elements
             this.RedrawAll();
         }
 
+        /// <summary>
+        ///     Redraw the element
+        /// </summary>
         public override void Redraw()
         {
             if (!this.Visible)
@@ -73,37 +114,59 @@ namespace TerminalUI.Elements
 
             using (this.TopLeftPoint.GetMove())
             {
-                Terminal.WriteColor(this.LeftColor, LeftText);
+                if (this.LeftForegroundColor != TerminalColor.DefaultForeground)
+                    Terminal.WriteColor(this.LeftForegroundColor.Value, this.LeftText);
+                else
+                    Terminal.Write(this.LeftText);
 
                 int splitChars = this.Width - LeftText.Length - RightText.Length;
 
                 for (int i = 0; i < splitChars; i++)
                     Terminal.Write(' ');
 
-                Terminal.WriteColor(this.RightColor, RightText);
+                if (this.RightForegroundColor != TerminalColor.DefaultForeground)
+                    Terminal.WriteColor(this.RightForegroundColor.Value, this.RightText);
+                else
+                    Terminal.Write(this.RightText);
             }
         }
 
-        public void Update(string left, string right, bool noRedraw = false)
+        /// <summary>
+        ///     Update the left and right text and redraw the element
+        /// </summary>
+        /// <param name="leftText">Text to draw on the left</param>
+        /// <param name="rightText">Text to draw on the right</param>
+        /// <param name="noRedraw">If true, the element will not be redrawn</param>
+        public void Update(string leftText, string rightText, bool noRedraw = false)
         {
-            LeftText = left;
-            RightText = right;
+            this.LeftText = leftText;
+            this.RightText = rightText;
 
             if (!noRedraw)
                 this.Redraw();
         }
 
-        public void UpdateLeft(string text, bool noRedraw = false)
+        /// <summary>
+        ///     Update the left text and redraw the element
+        /// </summary>
+        /// <param name="leftText">Text to draw on the left</param>
+        /// <param name="noRedraw">If true, the element will not be redrawn</param>   
+        public void UpdateLeft(string leftText, bool noRedraw = false)
         {
-            LeftText = text;
+            this.LeftText = leftText;
 
             if (!noRedraw)
                 this.Redraw();
         }
 
-        public void UpdateRight(string text, bool noRedraw = false)
+        /// <summary>
+        ///     Update the right text and redraw the element
+        /// </summary>
+        /// <param name="rightText">Text to draw on the right</param>
+        /// <param name="noRedraw">If true, the element will not be redrawn</param>
+        public void UpdateRight(string rightText, bool noRedraw = false)
         {
-            RightText = text;
+            RightText = rightText;
 
             if (!noRedraw)
                 this.Redraw();

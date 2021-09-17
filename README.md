@@ -37,9 +37,7 @@ progressBar.UpdateProgress(0.42);
   * DataTable
   * Header
   * NotificationBox
-  * ProgressBar
   * QueryYesNo
-  * SplitLine
   * StatusBar
 * Add "show" parameter to all elements
   * CliMenu

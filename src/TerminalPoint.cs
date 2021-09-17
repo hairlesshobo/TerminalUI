@@ -92,6 +92,42 @@ namespace TerminalUI
         }
 
         /// <summary>
+        ///     Get the right-most index of the specified terminal area while staying
+        ///     on the same line
+        /// </summary>
+        /// <param name="area">Terminal area to calculate right point for</param>
+        /// <returns>New terminal point that is all the way to the right of the current area and on the same line</returns>
+        internal static TerminalPoint GetRightPoint(TerminalArea area)
+        {
+            TerminalPoint point = TerminalPoint.GetCurrent();
+
+            if (area == TerminalArea.LeftHalf)
+                point.Left = Terminal.UsableWidth / 2;
+            else if (area == TerminalArea.RightHalf)
+                point.Left = Terminal.UsableWidth;
+            else if (area == TerminalArea.Default)
+                point.Left = Terminal.UsableWidth;
+
+            return point;
+        }
+
+        /// <summary>
+        ///     Get the bottom-most index of the specified terminal area while staying
+        ///     on the same column
+        /// </summary>
+        /// <param name="area">Terminal area to calculate bottom point for</param>
+        /// <returns>New terminal point that is all the way to the bottom of the current area and on the same column</returns>
+        internal static TerminalPoint GetBottomPoint(TerminalArea area)
+        {
+            TerminalPoint point = TerminalPoint.GetCurrent();
+
+            // right now there is no non-full-height areas.. so nothing to do here
+            point.Top = Terminal.UsableBottomn;
+
+            return point;
+        }
+
+        /// <summary>
         ///     Get the four TerminalPoint objects that mark the outer bounds of a particular area
         /// </summary>
         /// <param name="area">Area to describe</param>

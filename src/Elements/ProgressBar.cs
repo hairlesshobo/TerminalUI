@@ -23,12 +23,29 @@ using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     Progress bar element is designed for quickly representing a progress
+    ///     as a percentage on a line bar
+    /// </summary>
     public class ProgressBar : Element
     {
         private int _configuredWidth = 0;
+
+        /// <summary>
+        ///     Where to display the progress percent as text
+        /// </summary>
         public ProgressDisplay Display { get; private set; }
+
+        /// <summary>
+        ///     Additional mode that the progress bar is operating in
+        /// </summary>
         public ProgressMode Mode { get; private set; }
         
+        /// <summary>
+        ///     Current percentage represented by the progress bar. 
+        /// 
+        ///     Note: value will be between 0 and 1 as a decimal
+        /// </summary>
         public double CurrentPercent 
         { 
             get => _currentPercent;
@@ -43,25 +60,62 @@ namespace TerminalUI.Elements
 
         private double _currentPercent = 0.0;
 
+        /// <summary>
+        ///     If specified, this will be the fixed width of the progress bar values 
+        ///     when operating in "explicit" mode
+        /// </summary>
         public int ExplicitWidth { get; private set; }
+
+        /// <summary>
+        ///     The numerator to use when operating in explicit mode
+        /// </summary>
         public long Numerator { get; private set; }
+
+        /// <summary>
+        ///     The divisor to use when operating in explicit mode
+        /// </summary>
+        /// <value></value>
         public long Divisor { get; private set; }
 
 
+        /// <summary>
+        ///     Obsolete
+        /// </summary>
+        /// <param name="mode"></param>
+        /// <param name="show"></param>
         [Obsolete]
         public ProgressBar(ProgressMode mode, bool show = false)
             : this(width: 0, mode: mode, show: show) 
         {
         }
 
-        public ProgressBar(
-            int width = 0,
-            ProgressDisplay display = ProgressDisplay.Right,
-            ProgressMode mode = ProgressMode.Default,
-            double startPercent = 0.0,
-            int explicitWidth = 0,
-            bool show = false
-            ) : base(show) 
+
+        /// <summary>
+        ///     Constuct a new instance of the progress bar element
+        /// </summary>
+        /// <param name="width">
+        ///     Width to use for the progress bar.
+        /// 
+        ///           0 = use max width available in the specified area
+        ///     below 0 = use max width minus the absolute value provided
+        ///     above 0 = set the entire element to a fixed width
+        /// </param>
+        /// <param name="display">
+        ///     An enum that specifies if and where to display the progress as text
+        /// </param>
+        /// <param name="mode">Additional mode to operate under</param>
+        /// <param name="startPercent">Initial percentage to use when first constructing the progress bar</param>
+        /// <param name="explicitWidth">Width to pad the explicit values to, if displayed</param>
+        /// <param name="area">Area to constrain the progress bar to</param>
+        /// <param name="show">If true, immediately show the progress bar upon creation</param>
+        public ProgressBar(int width = 0,
+                           ProgressDisplay display = ProgressDisplay.Right,
+                           ProgressMode mode = ProgressMode.Default,
+                           double startPercent = 0.0,
+                           int explicitWidth = 0,
+                           TerminalArea area = TerminalArea.Default,
+                           bool show = false) 
+            : base(area, show) 
         {
             this.SetExplicitWidth(explicitWidth);
 
@@ -70,10 +124,12 @@ namespace TerminalUI.Elements
             this.Mode = mode;
             _configuredWidth = width;
             
-
             this.RecalculateAndRedraw();
         }
 
+        /// <summary>
+        ///     Recalculate and redraw the entire element
+        /// </summary>
         internal override void RecalculateAndRedraw()
         {
             base.CalculateLayout();
@@ -92,13 +148,17 @@ namespace TerminalUI.Elements
                 else if (this.Width == 0)
                     this.Width = this.MaxWidth;
                 
-                this.TopLeftPoint = TerminalPoint.GetCurrent();
+                this.TopLeftPoint = TerminalPoint.GetLeftPoint(this.Area);
                 this.TopRightPoint = new TerminalPoint(this.TopLeftPoint.Left + this.Width, this.TopLeftPoint.Top);
             }
 
             this.RedrawAll();
         }
 
+        /// <summary>
+        ///     Set the fixed width of the explicit count display to the value provided
+        /// </summary>
+        /// <param name="width">Number of characters to pad explicit values to</param>
         public void SetExplicitWidth(int width)
         {
             if (width < 0)
@@ -107,9 +167,16 @@ namespace TerminalUI.Elements
             this.ExplicitWidth = width;
         }
 
+        /// <summary>
+        ///     Set the progress mode
+        /// </summary>
+        /// <param name="mode">new mode to use</param>
         public void SetMode(ProgressMode mode)
             => this.Mode = mode;
 
+        /// <summary>
+        ///     Redraw the progress bar
+        /// </summary>
         public override void Redraw()
         {
             if (!this.Visible)
@@ -152,6 +219,12 @@ namespace TerminalUI.Elements
             }
         }
 
+        /// <summary>
+        ///     Update the progress bar using the provided percentage.
+        /// 
+        ///     Note: The percentage must a decimal value between 0 and 1
+        /// </summary>
+        /// <param name="newPercent">Percentage value to be displayed</param>
         public void UpdateProgress(double newPercent)
         {
             this.CurrentPercent = newPercent;
@@ -159,6 +232,12 @@ namespace TerminalUI.Elements
             this.Redraw();
         }
 
+        /// <summary>
+        ///     Update the progress bar using the provided explicit values and automatically
+        ///     calculate the percentage
+        /// </summary>
+        /// <param name="numerator">Top number of the fraction</param>
+        /// <param name="divisor">Bottom number of the fraction</param>
         public void UpdateProgress(long numerator, long divisor)
         {
             this.Numerator = numerator;
@@ -188,11 +267,20 @@ namespace TerminalUI.Elements
             UpdateProgress(newPercent);
         }
 
+        /// <summary>
+        ///     Update the progress using the provided explicit values, and optionally
+        ///     recalculate the fixed-width of the explicit display
+        /// </summary>
+        /// <param name="numerator">Top value of the fraction</param>
+        /// <param name="divisor">Bottom number of the fraction</param>
+        /// <param name="calcWidth">
+        ///     If true, set the new fixed width to the length of the divisor
+        /// </param>
         public void UpdateProgress(long numerator, long divisor, bool calcWidth)
         {
             if (calcWidth)
             {
-                int newWidth = new int[] { numerator.ToString().Length, divisor.ToString().Length }.Max();
+                int newWidth = divisor.ToString().Length;
 
                 SetExplicitWidth(newWidth);
             }
@@ -200,6 +288,10 @@ namespace TerminalUI.Elements
             UpdateProgress(numerator, divisor);
         }
 
+        /// <summary>
+        ///     Calculate the width of the bar, taking into account any text that is 
+        ///     to be displayed on either side of the bar
+        /// </summary>
         private int GetBarWidth()
         {
             int barWidth = this.Width;
