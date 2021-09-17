@@ -269,48 +269,55 @@ namespace TerminalUI
         public static void ResetBackground()
             => Terminal.BackgroundColor = TerminalColor.DefaultBackground;
 
+        internal static void RawClear(bool preserveElements = false)
+        {
+            Console.Clear();
+
+            if (!preserveElements)
+                _elements.Clear();
+        }
+
         /// <summary>
         ///     Clear the terminal
         /// </summary>
         /// <param name="rawClear">if true, the entire console, header and status bar included, will be erased</param>
-        public static void Clear(bool rawClear = false)
+        public static void Clear(bool preserveElements = false)
         {
-            if (rawClear)
-                Console.Clear();
-            else
-            {
-                RootPoint.MoveTo();
+            // clear any registered elements
+            if (!preserveElements)
+                _elements.Clear();
+
+            RootPoint.MoveTo();
+            
+            int height = Height;
+
+            if (Header != null)
+                height -= 2;
+
+            if (StatusBar != null)
+                height -= 1;
+
+            StringBuilder sb = new StringBuilder();
                 
-                int height = Height;
+            for (int w = 0; w < Width; w++)
+                sb.Append(' ');
 
-                if (Header != null)
-                    height -= 2;
+            string wideString = sb.ToString();
 
-                if (StatusBar != null)
-                    height -= 1;
-
-                StringBuilder sb = new StringBuilder();
-                    
-                for (int w = 0; w < Width; w++)
-                    sb.Append(' ');
-
-                string wideString = sb.ToString();
-
-                for (int h = 0; h < height; h++)
-                {
-                    Console.CursorLeft = 0;
-                    Terminal.Write(wideString);
-                }
-
-                RootPoint.MoveTo();
-
-                // Console.Clear();
-
-                // Header?.Redraw();
-                // StatusBar?.Redraw();
-
-                // RootPoint.MoveTo();
+            for (int h = 0; h < height; h++)
+            {
+                Console.CursorLeft = 0;
+                Terminal.Write(wideString);
             }
+
+            RootPoint.MoveTo();
+
+            // Console.Clear();
+
+            // Header?.Redraw();
+            // StatusBar?.Redraw();
+
+            // RootPoint.MoveTo();
         }
 
         private static CancellationTokenSource _cts;
@@ -339,7 +346,7 @@ namespace TerminalUI
             Console.TreatControlCAsInput = true;
 
             Terminal.ResetColor();
-            Terminal.Clear(true);
+            Terminal.RawClear();
 
             Console.CursorVisible = false;
 
@@ -430,7 +437,7 @@ namespace TerminalUI
             => Run(null, null, mainEntryPoint);
 
         /// <summary>
-        ///     Run the terminal applicatoin with the provided main entry point and setup the
+        ///     Run the terminal application with the provided main entry point and setup the
         ///     header using the provided strings
         /// </summary>
         /// <param name="headerLeft">Text to show on the left side of the header</param>
@@ -450,7 +457,7 @@ namespace TerminalUI
                 }
                 catch (Exception ex)
                 {
-                    Terminal.Clear(true);
+                    Terminal.RawClear();
 
                     Terminal.WriteLineColor(ConsoleColor.Red, $"Unhandled exception"); // occurred: {ex.Message}");
                     new HorizontalLine(ConsoleColor.Red, show: true);
@@ -490,7 +497,7 @@ namespace TerminalUI
         {
             Debug.WriteLine("Notified of terminal size change");
 
-            Terminal.Clear();
+            Terminal.RawClear(true);
 
             foreach (Element element in _elements)
             {

@@ -79,7 +79,7 @@ namespace TerminalUI
         /// </summary>
         /// <param name="area">Terminal area to calculate left point for</param>
         /// <returns>New terminal point that is all the way to the left of the current area and on the same line</returns>
-        public static TerminalPoint GetLeftPoint(TerminalArea area)
+        internal static TerminalPoint GetLeftPoint(TerminalArea area)
         {
             TerminalPoint point = TerminalPoint.GetCurrent();
 
@@ -90,6 +90,48 @@ namespace TerminalUI
 
             return point;
         }
+
+        internal static (TerminalPoint, TerminalPoint, TerminalPoint, TerminalPoint) GetAreaBounds(TerminalArea area)
+        {
+            int usableHeight = Terminal.UsableHeight;
+            int usableWidth = Terminal.UsableWidth;
+
+            if (area == TerminalArea.Default)
+            {
+                return (Terminal.RootPoint, 
+                        Terminal.RootPoint.AddX(usableWidth), 
+                        Terminal.RootPoint.AddY(usableHeight), 
+                        Terminal.RootPoint.AddX(usableWidth).AddY(usableHeight)
+                    );
+            }
+
+            int halfWidth = usableWidth / 2;
+            int halfHeight = usableHeight / 2;
+
+            if (area == TerminalArea.LeftHalf)
+            {
+                return (Terminal.RootPoint, 
+                        Terminal.RootPoint.AddX(halfWidth), 
+                        Terminal.RootPoint.AddY(usableHeight), 
+                        Terminal.RootPoint.AddX(halfWidth).AddY(usableHeight)
+                    );
+            }
+
+            if (area == TerminalArea.RightHalf)
+            {
+                return (Terminal.RootPoint.AddX(halfWidth), 
+                        Terminal.RootPoint.AddX(usableWidth), 
+                        Terminal.RootPoint.AddY(usableHeight), 
+                        Terminal.RootPoint.AddX(usableWidth).AddY(usableHeight)
+                    );
+            }
+
+            throw new NotImplementedException();
+            
+        }
+
+        public TerminalPoint Clone()
+            => new TerminalPoint(this.Left, this.Top);
 
         /// <summary>
         ///     Get the current cursor positoin as a new TerminalPoint

@@ -65,10 +65,16 @@ namespace TerminalUI.Elements
         /// <param name="text">Initial text to display</param>
         /// <param name="maxLength">Maximum number of characters the text field may contain</param>
         /// <param name="area">Terminal area to constrain the element to</param>
-        public Text(string text, int maxLength = 0, TerminalArea area = TerminalArea.Default, bool show = false)
+        public Text(string text = null, 
+                    int maxLength = 0, 
+                    Nullable<ConsoleColor> foregroundColor = null, 
+                    TerminalArea area = TerminalArea.Default, 
+                    bool show = false)
             : base (area, show)
         {
             this.TextValue = text;
+            this.ForegroundColor = foregroundColor;
+
             _configuredMaxLength = maxLength;
 
             this.RecalculateAndRedraw();
@@ -82,20 +88,14 @@ namespace TerminalUI.Elements
         /// <param name="text">Initial text to display</param>
         /// <param name="maxLength">Maximum number of characters the text field may contain</param>
         /// <param name="area">Terminal area to constrain the element to</param>
+        [Obsolete]
         public Text(ConsoleColor foregroundColor, 
                     string text, 
                     int maxLength = 0, 
                     TerminalArea area = TerminalArea.Default, 
                     bool show = false) 
-            : base (area, show)
-        {
-            this.TextValue = text;
-            this.ForegroundColor = foregroundColor;
-
-            _configuredMaxLength = maxLength;
-
-            this.RecalculateAndRedraw();
-        }
+            : this(text, maxLength, foregroundColor, area, show)
+        { }
 
         /// <summary>
         ///     Recalculate the layout and redraw the entire element

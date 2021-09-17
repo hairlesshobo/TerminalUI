@@ -104,5 +104,20 @@ namespace TerminalUI
         ///     Foreground color of the highlighted text of a Pager
         /// </summary>
         public static ConsoleColor PagerHighlightColorForeground { get; set; } = ConsoleColor.DarkYellow;
+
+        /// <summary>
+        ///     Foreground color of the pager line numbers
+        /// </summary>
+        public static ConsoleColor PagerLineNumberForeground { get; set; } = ConsoleColor.White;
+
+        /// <summary>
+        ///     Background color of the pager line numbers
+        /// </summary>
+        public static ConsoleColor PagerLineNumberBackground { get; set; } = ConsoleColor.DarkBlue;
+
+        /// <summary>
+        ///     Background color of the pager header
+        /// </summary>
+        public static ConsoleColor PagerHeaderBackground { get; set; } = ConsoleColor.DarkBlue;
     }
 }

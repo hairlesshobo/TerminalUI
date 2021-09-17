@@ -38,10 +38,17 @@ namespace TerminalUI.Types
         public int Height { get; private protected set; }
 
         /// <summary>
-        ///     Maximum width that the element may used, optionally constrained by the
+        ///     Maximum width that the element may use, optionally constrained by the
         ///     specified TerminalArea
         /// </summary>
         public int MaxWidth { get; private set; }
+
+        /// <summary>
+        ///     Maximum height that the element may use, optionally constrained by the
+        ///     specified TerminalArea
+        /// </summary>
+        /// <value></value>
+        public int MaxHeight { get; private set; }
 
         /// <summary>
         ///     Flag indicating whether the element is currently visible
@@ -111,9 +118,15 @@ namespace TerminalUI.Types
         protected void CalculateLayout()
         {
             if (this.Area == TerminalArea.LeftHalf || this.Area == TerminalArea.RightHalf)
+            {
                 this.MaxWidth = Terminal.UsableWidth / 2;
+                this.MaxHeight = Terminal.UsableHeight;
+            }
             else if (this.Area == TerminalArea.Default)
+            {
                 this.MaxWidth = Terminal.UsableWidth;
+                this.MaxHeight = Terminal.UsableHeight;
+            }
         }
 
         /// <summary>

@@ -209,6 +209,9 @@ namespace TerminalUI.Elements
                 item.Remove();
         }
 
+        public void Reset()
+            => this.ShowItems();
+
         public static StatusBar GetInstance()
         {
             if (_instance == null)

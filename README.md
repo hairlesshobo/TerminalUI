@@ -37,7 +37,6 @@ progressBar.UpdateProgress(0.42);
   * DataTable
   * Header
   * NotificationBox
-  * Pager
   * ProgressBar
   * QueryYesNo
   * SplitLine
@@ -45,15 +44,5 @@ progressBar.UpdateProgress(0.42);
 * Add "show" parameter to all elements
   * CliMenu
   * DataTable
-  * HorizontalLine
   * NotificationBox
-  * Pager
-  * ProgressBar
   * QueryYesNo
-* Add ability for elements to register themselves with the terminal class
-* During a Termianl.Clear().. all elements will be unregistered
-* Add a "RecalcAndDraw()" method to the Element abstract class that 
-  recalculates positions and constraints based on the TerminalArea provided
-  during construction
-* if a terminal resize is detected, call "RecalcAndDraw()" on all registered 
-  elements. This should pave the way to support terminal resizing in the future

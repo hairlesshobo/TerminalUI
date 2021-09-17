@@ -28,55 +28,134 @@ namespace TerminalUI.Elements
 {
     public class Pager : Element, IDisposable
     {
-        #region Constants
-        private const string _statusLineLeft = "Navigate: <up>/<down> or <pageUp>/<pageDown>  Exit: q";
-        // private const string _statusLineLeft = "Navigate: <up>/<down> or <pageUp>/<pageDown>  Save To File: <ctrl>+s  Exit: q or <esc>";
-        #endregion Constants
-        
         #region Public Properties
+        /// <summary>
+        ///     If true, the display will automatically scroll to the bottom as new lines are added
+        ///
+        ///     Note: this only works when the pager has been started, otherwise scrolling must be done
+        ///           manually from outside the element
+        /// </summary>
         public bool AutoScroll { get; set; } = false;
+
+        /// <summary>
+        ///     If true, show line numbers for each line.
+        /// 
+        ///     Note: This will slow down rendering slightly if the background color is different from that
+        ///           of the default terminal background color
+        /// </summary>
         public bool ShowLineNumbers { get; set; } = false;
+
+        /// <summary>
+        ///     Background color to use for line numbers. If null, the default defined in
+        ///     <see cref="TerminalColor"/> will be used
+        /// </summary>
+        public Nullable<ConsoleColor> LineNumberBackground 
+        { 
+            get => _lineNumberBackground ?? TerminalColor.PagerLineNumberBackground;
+            set => _lineNumberBackground = value;
+        }
+        private Nullable<ConsoleColor> _lineNumberBackground = null;
+
+        /// <summary>
+        ///     Foreground color to use for line numbers. If null, the default defined in
+        ///     <see cref="TerminalColor"/> will be used
+        /// </summary>
+        public Nullable<ConsoleColor> LineNumberForeground 
+        { 
+            get => _lineNumberForeground ?? TerminalColor.PagerLineNumberForeground;
+            set => _lineNumberForeground = value;
+        }
+        private Nullable<ConsoleColor> _lineNumberForeground = null;
+
+        /// <summary>
+        ///     If true, the header provided in <see cref="HeaderText" /> will be displayed
+        /// </summary>
         public bool ShowHeader { get; set; } = false;
+
+        /// <summary>
+        ///     Header text to display, if <see cref="ShowHeader" /> is enabled
+        /// </summary>
         public string HeaderText 
         { 
             get => _headerText;
             set
             {
                 this.ShowHeader = !String.IsNullOrWhiteSpace(value);
-                _headerText = value;
+                _headerText = value ?? String.Empty;;
             }
         }
+        private string _headerText = String.Empty;
+
+
+        /// <summary>
+        ///     Text that is to be highlighted in the output
+        /// </summary>
         public string HighlightText 
         { 
             get => _highlightText;
             set
             {
                 this.Highlight = !String.IsNullOrWhiteSpace(value);
-                _highlightText = value;
+                _highlightText = value ?? string.Empty;
             }
         }
+        private string _highlightText = null;
 
+
+        /// <summary>
+        ///     Flag indicating whether to activate text highlighting
+        /// </summary>
         public bool Highlight { get; set; } = false;
-        public ConsoleColor HighlightColor { get; set; } = TerminalColor.PagerHighlightColorForeground;
-        public int StartLine { get; set; } = 2;
 
-        public int FirstLine => this.StartLine + (this.ShowHeader ? 1 : 0);
-        public int WindowHeight => (Terminal.Height - this.StartLine - (this.ShowHeader ? 1 : 0));
-        public int WindowWidth => Terminal.Width;
+
+        /// <summary>
+        ///     Foreground color to use when highlighting text
+        /// </summary>
+        public Nullable<ConsoleColor> HighlightForegroundColor 
+        { 
+            get => _highlightColor ?? TerminalColor.PagerHighlightColorForeground;
+            set => _highlightColor = value;
+        }
+        private Nullable<ConsoleColor> _highlightColor = null;
+
+
+        /// <summary>
+        ///     Width of the line number column (does NOT include the extra space between line number column and start of lines)
+        /// </summary>
         public int LineNumberWidth => (this.ShowLineNumbers ? (_topLineIndexPointer + this.MaxLines).ToString().Length : 0);
-        public int PagerWidth => (this.ShowLineNumbers ? this.WindowWidth - this.LineNumberWidth : this.WindowWidth);
-        public int MaxLines => this.WindowHeight - 1;
-        public bool DeferDraw => _deferDraw;
-        public int BottomLine => Terminal.Height - 1;
-        public bool Started => _started;
-        public CancellationToken CancellationToken => _cts.Token;
 
+        /// <summary>
+        ///     Total height of the pager
+        /// </summary>
+        public int PagerHeight => this.MaxHeight;
+
+        /// <summary>
+        ///     Total width of the pager
+        /// </summary>
+        public int PagerWidth => (this.ShowLineNumbers ? this.MaxWidth - (this.LineNumberWidth+1) : this.MaxWidth);
+
+        /// <summary>
+        ///     Maximum number of lines to display on the pager
+        /// </summary>
+        public int MaxLines => this.PagerHeight - (this.ShowHeader ? 1 : 0);
+
+        /// <summary>
+        ///     Defer drawing until all data is received
+        /// </summary>
+        public bool DeferDraw => _deferDraw;
+
+        /// <summary>
+        ///     Terminal point that indicates the first line of text
+        /// </summary>
         public TerminalPoint FirstTextLinePoint { get; private set; }
+
+        /// <summary>
+        ///     Terminal point that indicates where the header, if present, begins
+        /// </summary>
+        public TerminalPoint HeaderLinePoint { get; private set; }
         #endregion Public Properties
 
         #region Private Fields
-        private string _headerText = String.Empty;
-        private string _highlightText = null;
         private List<string> _lines;
         private int _topLineIndexPointer = 0;
 
@@ -87,33 +166,86 @@ namespace TerminalUI.Elements
         private bool _started = false;
         private TaskCompletionSource<bool> _tcs = null;
         private CancellationTokenSource _cts = null;
+        private CancellationTokenSource _watchdogCts = null;
 
         #endregion Private Fields
 
         #region Constructor
-        public Pager(bool show = false)
-            : base(show) 
+        /// <summary>
+        ///     Constuct a new pager
+        /// </summary>
+        /// <param name="autoScroll">If true, automatically scroll output</param>
+        /// <param name="showLineNumbers">Show the line numbers</param>
+        /// <param name="headerText">Text to display as a header</param>
+        /// <param name="highlightText">Text to highlight</param>
+        /// <param name="lines">Lines to start pager with</param>
+        /// <param name="area">TerminalArea to consume</param>
+        /// <param name="show">If true, element will be shown upon construction</param>
+        public Pager(bool autoScroll = false,
+                     bool showLineNumbers = false,
+                     string headerText = null,
+                     string highlightText = null,
+                     List<string> lines = null,
+                     TerminalArea area = TerminalArea.Default,
+                     bool show = false)
+            : base(area, show) 
         {
-            _lines = new List<string>();
-            _cts = new CancellationTokenSource();
 
-            this.TopLeftPoint = new TerminalPoint(0, 2);
-            this.TopRightPoint = new TerminalPoint(Terminal.Width, 2);
-            this.BottomLeftPoint = new TerminalPoint(0, Terminal.Height - 1);
-            this.BottomRightPoint = new TerminalPoint(Terminal.Width, Terminal.Height - 1);
+            this.AutoScroll = autoScroll;
+            this.ShowLineNumbers = showLineNumbers;
+            this.HeaderText = headerText;
+            this.HighlightText = highlightText;
 
-            this.FirstTextLinePoint = new TerminalPoint(0, this.TopLeftPoint.Top+1);
+            _lines = lines ?? new List<string>();
+
+            this.RecalculateAndRedraw();
         }
 
-        public Task RunAsync()
+        /// <summary>
+        ///     Recalculate the lauout and redraw the entire element
+        /// </summary>
+        internal override void RecalculateAndRedraw()
+        {
+            base.CalculateLayout();
+
+            using (this.OriginalPoint.GetMove())
+            {
+                // TODO: factor in TerminalArea
+                (this.TopLeftPoint, this.TopRightPoint, this.BottomLeftPoint, this.BottomRightPoint) 
+                    = TerminalPoint.GetAreaBounds(this.Area);
+
+                this.Width = this.TopRightPoint.Left - this.TopLeftPoint.Left;
+                this.Height = this.BottomLeftPoint.Top - this.TopLeftPoint.Top;
+
+                this.HeaderLinePoint = (this.ShowHeader ? this.TopLeftPoint.Clone() : null);
+                this.FirstTextLinePoint = (this.ShowHeader ? this.TopLeftPoint.AddY(1) : this.TopLeftPoint.Clone());
+            }
+
+            this.RedrawAll();
+        }
+
+        /// <summary>
+        ///     Run the pager asynchronously. This automatically sets up the status bar for navigation 
+        ///     and will continue running until the user cancels it, or the passed cToken is canceled
+        /// </summary>
+        /// <param name="cToken">Cancellation token</param>
+        /// <returns>Task</returns>
+        public Task RunAsync(CancellationToken cToken = default)
         {
             if (_tcs != null)
                 return Task.CompletedTask;
-
+            
+            _cts = CancellationTokenSource.CreateLinkedTokenSource(cToken);
             _tcs = new TaskCompletionSource<bool>();
             _started = true;
+
+            _watchdogCts = Helpers.SetupTaskWatchdog(cToken, () => {
+                _tcs?.TrySetResult(false);
+            });
             
-            Setup();
+            SetupStatusBar();
+
+            this.Visible = true;
 
             if (!_drawn)
                 Redraw();
@@ -121,16 +253,33 @@ namespace TerminalUI.Elements
             return _tcs.Task;
         }
 
+        /// <summary>
+        ///     Immediately stop the pager, if it is running
+        /// </summary>
         public void Stop()
-            => _tcs?.TrySetResult(true);
+        {
+            _cts?.Cancel();
+            _watchdogCts?.Cancel();
+            
+            _tcs?.TrySetResult(true);
 
+            Terminal.StatusBar?.Reset();
+        }
+
+        /// <summary>
+        ///     Start the pager as a background task
+        /// </summary>
         public void Start()
         {
             _deferDraw = false;            
             RunAsync();
-            WriteHeader();
+            DrawHeader();
         }
 
+        /// <summary>
+        ///     Shortcut method to start a create and start a new pager
+        /// </summary>
+        /// <returns>New pager instance with default config</returns>
         public static Pager StartNew()
         {
             Pager pager = new Pager();
@@ -139,6 +288,10 @@ namespace TerminalUI.Elements
             return pager;
         }
 
+        /// <summary>
+        ///     Wait until the pager is finished
+        /// </summary>
+        /// <returns>Task</returns>
         public async Task WaitForQuitAsync()
         {
             if (_tcs != null)
@@ -146,9 +299,52 @@ namespace TerminalUI.Elements
         }
         #endregion Constructor
 
+        /// <summary>
+        ///     Redraw the entire pager
+        /// </summary>
+        public override void Redraw()
+        {
+            if (!this.Visible)
+                return;
+                
+            _drawn = true;
+
+            DrawHeader();
+
+            List<string> linesToShow = _lines.Skip(_topLineIndexPointer).Take(this.MaxLines).ToList();
+
+            if (this.ShowLineNumbers)
+            {
+                if (this.LineNumberBackground != TerminalColor.DefaultBackground)
+                    Terminal.BackgroundColor = this.LineNumberBackground.Value;
+
+                if (this.LineNumberForeground != TerminalColor.DefaultForeground)
+                    Terminal.ForegroundColor = this.LineNumberForeground.Value;
+                
+                for (int i = 0; i < linesToShow.Count; i++)
+                    DrawLineNumber(i);
+
+                if (this.LineNumberBackground != TerminalColor.DefaultBackground)
+                    Terminal.ResetBackground();
+
+                if (this.LineNumberForeground != TerminalColor.DefaultForeground)
+                    Terminal.ResetForeground();
+            }
+
+            for (int i = 0; i < linesToShow.Count; i++)
+                DrawLine(i, linesToShow[i]);
+        }
+
+        /// <summary>
+        ///     Append a blank line to the pager
+        /// </summary>
         public void AppendLine()
             => AppendLine(string.Empty);
 
+        /// <summary>
+        ///     Append a line to the pager 
+        /// </summary>
+        /// <param name="line">Line to append</param>
         public void AppendLine(string line)
         {
             if (line == null)
@@ -195,6 +391,9 @@ namespace TerminalUI.Elements
             }
         }
 
+        /// <summary>
+        ///     Scroll to the top line
+        /// </summary>
         public void ScrollToTop()
         {
             _topLineIndexPointer = 0;
@@ -202,6 +401,9 @@ namespace TerminalUI.Elements
             Redraw();
         }
 
+        /// <summary>
+        ///     Scroll to the bottom line
+        /// </summary>
         public void ScrollToBottom()
         {
             _topLineIndexPointer = _totalLines - this.MaxLines;
@@ -209,6 +411,9 @@ namespace TerminalUI.Elements
             Redraw();
         }
 
+        /// <summary>
+        ///     Move up one line
+        /// </summary>
         public void UpLine()
         {
             _topLineIndexPointer--;
@@ -219,6 +424,9 @@ namespace TerminalUI.Elements
             Redraw();
         }
 
+        /// <summary>
+        ///     Move up one page
+        /// </summary>
         public void UpPage()
         {
             _topLineIndexPointer -= this.MaxLines;
@@ -230,6 +438,9 @@ namespace TerminalUI.Elements
         }
 
 
+        /// <summary>
+        ///     Move down one line
+        /// </summary>
         public void DownLine()
         {
             _topLineIndexPointer++;
@@ -240,6 +451,9 @@ namespace TerminalUI.Elements
             Redraw();
         }
 
+        /// <summary>
+        ///     Move down one page
+        /// </summary>
         public void DownPage()
         {
             _topLineIndexPointer += this.MaxLines;
@@ -310,20 +524,24 @@ namespace TerminalUI.Elements
         //     }
         // }
 
+        /// <summary>
+        ///     Cleanup the pager resources
+        /// </summary>
         public void Dispose()
             => Cleanup();
 
         #region Private Methods
-        private void Setup()
+        /// <summary>
+        ///     Setup the status bar for interactive user interface
+        /// </summary>
+        private void SetupStatusBar()
         {
-            Terminal.CursorVisible = false;
-
             Terminal.InitStatusBar(
                 new StatusBarItem(
-                    "Main Menu",
+                    "Quit Pager",
                     (key) => {
-                        _cts.Cancel();
-                        _tcs.TrySetResult(true);
+                        this.Stop();
+
                         return Task.CompletedTask;
                     },
                     Key.MakeKey(ConsoleKey.Q)
@@ -356,44 +574,40 @@ namespace TerminalUI.Elements
             );
         }
 
+        /// <summary>
+        ///     Cleanup any resources 
+        /// </summary>
         private void Cleanup()
         {
+            // TODO: we shouldn't do a complete clear of the terminal, instead just erase ourself
             Terminal.Clear();
             Terminal.ResetColor();
 
-            _lines.Clear();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            // TODO: is any of this actually necessary? is IDisposable necessary?
+            // _lines.Clear();
+            // GC.Collect();
+            // GC.WaitForPendingFinalizers();
         }
 
-        public override void Redraw()
-        {
-            _drawn = true;
-
-            WriteHeader();
-
-            IEnumerable<string> linesToShow = _lines.Skip(_topLineIndexPointer).Take(this.MaxLines);
-            int i = 0;
-
-            foreach (string line in linesToShow)
-            {
-                DrawLine(i, line);
-
-                i++;
-            }
-        }
-
+        /// <summary>
+        ///     Draw a single line
+        /// </summary>
+        /// <param name="index">Index to write the line to</param>
+        /// <param name="line">Line to write</param>
         private void DrawLine(int index, string line)
         {
-            Terminal.SetCursorPosition(0, this.FirstLine + index);
+            int xOffset = 0;
 
             if (ShowLineNumbers == true)
-            {
-                Terminal.BackgroundColor = ConsoleColor.DarkBlue;
-                Terminal.Write((_topLineIndexPointer + index + 1).ToString().PadLeft(this.LineNumberWidth));
-                Terminal.ResetColor();
-                Terminal.Write(" ");
-            }
+                xOffset = this.LineNumberWidth + 1;
+
+            this.FirstTextLinePoint.AddY(index).AddX(xOffset).MoveTo();
+
+            // if (ShowLineNumbers == true)
+            // {
+            //     Terminal.WriteColorBG(ConsoleColor.DarkBlue, (_topLineIndexPointer + index + 1).ToString().PadLeft(this.LineNumberWidth));
+            //     Terminal.Write(" ");
+            // }
 
             int lineWidth = (line.Length > this.PagerWidth ? this.PagerWidth : line.Length);
 
@@ -410,9 +624,10 @@ namespace TerminalUI.Elements
                         if (remainingChars < substringLength)
                             substringLength = remainingChars;
 
-                        Terminal.ForegroundColor = this.HighlightColor;
-                        Terminal.Write(line.Substring(s, substringLength));
-                        Terminal.ResetColor();
+                        if (this.HighlightForegroundColor != TerminalColor.DefaultForeground)
+                            Terminal.WriteColor(this.HighlightForegroundColor.Value, line.Substring(s, substringLength));
+                        else
+                            Terminal.Write(line.Substring(s, substringLength));
 
                         s += this.HighlightText.Length-1;
                     }
@@ -428,42 +643,58 @@ namespace TerminalUI.Elements
                 Terminal.Write(line.Substring(0, lineWidth).PadRight(this.PagerWidth));
         }
 
-        private void WriteHeader()
+        /// <summary>
+        ///     Draw the line number at the specified index
+        /// </summary>
+        /// <param name="index">index to draw line number for</param>
+        private void DrawLineNumber(int index)
         {
-            if (this.ShowHeader)
-            {
-                string line = this.HeaderText;
+            if (!ShowLineNumbers)
+                return;
 
-                if (line == null)
-                    line = String.Empty;
+            this.FirstTextLinePoint.AddY(index).MoveTo();
 
-                Terminal.SetCursorPosition(0, this.StartLine);
-                Terminal.BackgroundColor = ConsoleColor.DarkBlue;
-                Terminal.Write(line.PadRight(this.PagerWidth));
-                Terminal.ResetColor();
-            }
+            Terminal.Write((_topLineIndexPointer + index + 1).ToString().PadLeft(this.LineNumberWidth));
         }
 
-        private void WriteStatusBar()
+        /// <summary>
+        ///     Draw the header
+        /// </summary>
+        private void DrawHeader()
         {
-            string line = _statusLineLeft;
+            if (!this.ShowHeader)
+                return;
+         
+            this.HeaderLinePoint.MoveTo();
 
-            int startLine = _topLineIndexPointer + 1;
-            int endLine = _topLineIndexPointer + this.MaxLines;
+            string completeHeaderLine = String.Empty;
 
-            if (endLine > _totalLines)
-                endLine = _totalLines;
+            if (this.ShowLineNumbers)
+                completeHeaderLine = String.Empty.PadLeft(this.LineNumberWidth+1);
 
-            double linePct = Math.Round(((double)(endLine) / (double)_totalLines) * 100.0, 0);
-            string lineIndex = $"Line: {startLine}-{endLine} / {_totalLines}   {linePct.ToString("##0").PadLeft(3)}%";
+            completeHeaderLine += this.HeaderText.PadRight(this.PagerWidth);
 
-            int leftPad = this.WindowWidth - lineIndex.Length;
-
-            Terminal.SetCursorPosition(0, this.BottomLine);
-            Terminal.BackgroundColor = ConsoleColor.DarkBlue;
-            Terminal.Write(line.PadRight(leftPad) + lineIndex);
-            Terminal.ResetColor();
+            Terminal.WriteColorBG(TerminalColor.PagerHeaderBackground, completeHeaderLine);
         }
+
+        // private void WriteStatusBar()
+        // {
+        //     int startLine = _topLineIndexPointer + 1;
+        //     int endLine = _topLineIndexPointer + this.MaxLines;
+
+        //     if (endLine > _totalLines)
+        //         endLine = _totalLines;
+
+        //     double linePct = Math.Round(((double)(endLine) / (double)_totalLines) * 100.0, 0);
+        //     string lineIndex = $"Line: {startLine}-{endLine} / {_totalLines}   {linePct.ToString("##0").PadLeft(3)}%";
+
+        //     int leftPad = this.MaxWidth - lineIndex.Length;
+
+        //     Terminal.SetCursorPosition(0, this.BottomLine);
+        //     Terminal.BackgroundColor = ConsoleColor.DarkBlue;
+        //     Terminal.Write(lineIndex.PadLeft(leftPad));
+        //     Terminal.ResetColor();
+        // }
 
         #endregion Private Methods
     }
