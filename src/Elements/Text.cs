@@ -63,8 +63,8 @@ namespace TerminalUI.Elements
         /// <param name="foregroundColor">Color to use drawing the text element</param>
         /// <param name="valueText">Initial text to display</param>
         /// <param name="area">Terminal area to constrain the element to</param>
-        public Text(ConsoleColor foregroundColor, string valueText, TerminalArea area = TerminalArea.Default)
-            : base (area)
+        public Text(ConsoleColor foregroundColor, string valueText, TerminalArea area = TerminalArea.Default, bool show = false)
+            : base (area, show)
         {
             this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
 

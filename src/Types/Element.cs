@@ -79,26 +79,42 @@ namespace TerminalUI.Types
         public TerminalArea Area { get; private protected set; } = TerminalArea.Default;
 
         /// <summary>
+        ///     This represents the point the cursor was at when the element was first initialized
+        /// </summary>
+        protected TerminalPoint OriginalPoint { get; private protected set; }
+
+        /// <summary>
         ///     Default constructor used by all elements
         /// </summary>
-        protected Element()
-        { 
-            this.MaxWidth = Terminal.UsableWidth;
+        protected Element(bool show = false)
+        {
+            this.Visible = show;
+            this.OriginalPoint = TerminalPoint.GetCurrent();
+
+            this.CalculateLayout();
+
+            Terminal.RegisterElement(this);
         }
 
         /// <summary>
         ///     Constructor used by all elements when specifing a TerminalArea
         /// </summary>
         protected Element(TerminalArea area, bool show = false)
+            : this(show)
         {
-            if (area == TerminalArea.LeftHalf || area == TerminalArea.RightHalf)
-                this.MaxWidth = Terminal.UsableWidth / 2;
-            else if (area == TerminalArea.Default)
-                this.MaxWidth = Terminal.UsableWidth;
-            
-            if (show == true)
-                this.Visible = true;
+            this.Area = area;
         }
+
+        protected void CalculateLayout()
+        {
+            if (this.Area == TerminalArea.LeftHalf || this.Area == TerminalArea.RightHalf)
+                this.MaxWidth = Terminal.UsableWidth / 2;
+            else if (this.Area == TerminalArea.Default)
+                this.MaxWidth = Terminal.UsableWidth;
+        }
+
+        internal virtual void RecalculateAndRedraw()
+            => this.RedrawAll();
 
         /// <summary>
         ///     Redraw the entire element. For most elements, this is the same as calling

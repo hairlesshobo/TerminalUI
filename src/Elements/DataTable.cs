@@ -71,11 +71,11 @@ namespace TerminalUI.Elements
         #endregion Private Fields
 
         #region Constructors
-        public DataTable(DataTableSelectType selectType)
-            => Initalize(selectType);
+        public DataTable(DataTableSelectType selectType, bool show = false)
+            : base(show) => Initalize(selectType);
 
-        public DataTable()
-            => Initalize(null);
+        public DataTable(bool show = false)
+            : base(show) => Initalize(null);
 
         public void Initalize(DataTableSelectType? selectType = null)
         {
@@ -97,47 +97,51 @@ namespace TerminalUI.Elements
 
         public async Task<List<object>> ShowAsync(bool clearScreen = true)
         {
-            _choosenItems = null;
+            throw new NotImplementedException();
 
-            this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
+            // TODO: this does nothing right now....
+            // _choosenItems = null;
 
-            this.Redraw();
+            // this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
 
-            // this.SetupStatusBar();
+            // this.Redraw();
 
-            return await Task.Run(async () => 
-            {
-                // delay until the user does something
-                while (_choosenItems == null && _canceled == false)
-                    await Task.Delay(10);
+            // // this.SetupStatusBar();
 
-                if (_canceled)
-                    return null;
+            // return await Task.Run(async () => 
+            // {
+            //     // delay until the user does something
+            //     while (_choosenItems == null && _canceled == false)
+            //         await Task.Delay(10);
 
-                return _choosenItems;
-            });
+            //     if (_canceled)
+            //         return null;
+
+            //     return _choosenItems;
+            // });
         }
 
         public override void RedrawAll()
         {
-            if (this.Visible)
-            {
-                if (this.ShowHeader == true)
-                    this.DrawHeader();
+            if (!this.Visible)
+                return;
 
-                this.Redraw();
-            }
+            if (this.ShowHeader == true)
+                this.DrawHeader();
+
+            this.Redraw();
         }
 
         
 
         public override void Redraw()
         {
+            // TODO: Should we be calling this.Clear() instead?
+            // erase would remove the entire table, header included but then 
+            // the standard redraw would only draw the data rows.. right?
             this.Erase();
 
             this.DrawRows();
-            // foreach (DataTableHeader<TKey> entry in _entries.Skip(_entryOffset).Take(MaxLines))
-            //     WriteMenuEntry(entry);
         }
 
         public void AbortMenu()
@@ -148,10 +152,11 @@ namespace TerminalUI.Elements
         #region Private Methods
         private void DrawHeader()
         {            
-            if (this.Visible && this.ShowHeader)
+            if (!this.Visible | !this.ShowHeader)
+                return;
+
+            using (this.HeaderPoint.GetMove())
             {
-                TerminalPoint prevPt = TerminalPoint.GetCurrent();
-                this.HeaderPoint.MoveTo();
 
                 int remainingChars = this.TableWidth;
 
@@ -173,16 +178,17 @@ namespace TerminalUI.Elements
 
                 _headerLine.Show();
 
-                prevPt.MoveTo();
             }
         }
 
         private void DrawRows()
         {
-            if (this.Visible)
-            {
-                TerminalPoint prevPt = TerminalPoint.GetCurrent();
+            if (!this.Visible)
+                return;
 
+
+            using (this.DataPoint.GetMove())
+            {
                 for (int i = 0; i < this.DataStore.Count; i++)
                 {
                     this.DataPoint.AddY(i).MoveTo();
@@ -209,8 +215,6 @@ namespace TerminalUI.Elements
                     if (i >= (this.MaxLines))
                         break;
                 }
-
-                prevPt.MoveTo();
             }
         }
 

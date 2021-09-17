@@ -30,14 +30,16 @@ namespace TerminalUI.Elements
         private string text = String.Empty;
         private ConsoleColor color = TerminalColor.DefaultForeground;
 
-        public QueryYesNo(string queryText)
+        public QueryYesNo(string queryText, bool show = false)
+            : base(show) 
         {
             this.TopLeftPoint = TerminalPoint.GetCurrent();
 
             this.UpdateValue(queryText);
         }
 
-        public QueryYesNo(ConsoleColor color, string valueText)
+        public QueryYesNo(ConsoleColor color, string valueText, bool show = false)
+            : base(show) 
         {
             this.TopLeftPoint = TerminalPoint.GetCurrent();
 

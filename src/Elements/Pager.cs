@@ -91,7 +91,8 @@ namespace TerminalUI.Elements
         #endregion Private Fields
 
         #region Constructor
-        public Pager()
+        public Pager(bool show = false)
+            : base(show) 
         {
             _lines = new List<string>();
             _cts = new CancellationTokenSource();

@@ -9,7 +9,7 @@ namespace TerminalUI
 
         internal TerminalPointMove(TerminalPoint destPoint)
         {
-            this.DestinationPoint = destPoint ?? throw new ArgumentNullException(nameof(destPoint));
+            this.DestinationPoint = destPoint;
             this.PreviousPoint = this.DestinationPoint.MoveToWithCurrent();
         }
 

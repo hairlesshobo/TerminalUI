@@ -33,13 +33,24 @@ namespace TerminalUI.Elements
 
         private List<StatusBarItem> _defaultItems = new List<StatusBarItem>();
 
-        internal StatusBar(params StatusBarItem[] items) => Init(items);
-        internal StatusBar() => Init(new StatusBarItem[]{ });
+        internal StatusBar(bool show = false, params StatusBarItem[] items) 
+            : base(show) => Init(items);
+
+        internal StatusBar(bool show = false) 
+            : base(show) => Init(new StatusBarItem[]{ });
 
         private void Init(StatusBarItem[] items)
         {
+            this.SetItems(items);
+            this.RecalculateAndRedraw();
+        }
+
+        internal override void RecalculateAndRedraw()
+        {
+            base.CalculateLayout();
+
             this.Height = 1;
-            this.Width = Terminal.Width;
+            this.Width = this.MaxWidth;
 
             // OK so i'm not sure why this behaves differently on windows than it does on windows
             // and to be honest, i didn't feel like spending more than 30 seconds addressing it.
@@ -55,23 +66,26 @@ namespace TerminalUI.Elements
             
             this.TopLeftPoint = new TerminalPoint(0, Terminal.Height-1);
             this.TopRightPoint = new TerminalPoint(Terminal.Width, Terminal.Height-1);
-            this.BottomLeftPoint = null;
-            this.BottomRightPoint = null;
 
-            ShowItems(items);
+            this.RedrawAll();
         }
 
         internal void SetDefaultItems(params StatusBarItem[] items)
             => _defaultItems = items.ToList();
 
-        public void ShowItems(params StatusBarItem[] items)
+        internal void SetItems(params StatusBarItem[] items)
         {
             // stash the current items so that, during redraw, we can remove any key bindings we have
             _prevItems = _items;
 
             _items = items.ToList();
+        }
 
-            Redraw();
+        public void ShowItems(params StatusBarItem[] items)
+        {
+            this.SetItems(items);
+
+            this.Redraw();
         }
 
         public override void Redraw()

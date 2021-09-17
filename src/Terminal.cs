@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -387,10 +388,7 @@ namespace TerminalUI
         public static StatusBar InitStatusBar(params StatusBarItem[] items)
         {
             if (StatusBar == null)
-            {
-                StatusBar = new StatusBar(items);
-                StatusBar.Show();
-            }
+                StatusBar = new StatusBar(show: true, items);
             else
                 StatusBar.ShowItems(items);
 
@@ -487,5 +485,27 @@ namespace TerminalUI
 
             Task.WaitAll(main, listen);
         }
+
+        internal static void TerminalSizeChanged()
+        {
+            Debug.WriteLine("Notified of terminal size change");
+
+            Terminal.Clear();
+
+            foreach (Element element in _elements)
+            {
+                if (element == Terminal.Header || element == Terminal.StatusBar)
+                    continue;
+
+                element.RecalculateAndRedraw();
+            }
+
+            Terminal.Header?.RecalculateAndRedraw();
+            Terminal.StatusBar?.RecalculateAndRedraw();
+        }
+
+        private static List<Element> _elements = new List<Element>();
+        internal static void RegisterElement(Element element)
+            => _elements.Add(element);
     }
 }

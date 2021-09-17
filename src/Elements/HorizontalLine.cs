@@ -24,8 +24,9 @@ namespace TerminalUI.Elements
 {
     public class HorizontalLine : Element
     {
-        private LineType lineType;
-        private ConsoleColor color;
+        private int _configuredWidth = 0;
+        public LineType LineType { get; private set; }
+        public ConsoleColor ForegroundColor { get; private set; }
 
         public HorizontalLine(
             ConsoleColor color = ConsoleColor.White, 
@@ -35,19 +36,32 @@ namespace TerminalUI.Elements
             bool show = false)
             : base (area, show)
         {
-            this.lineType = lineType;
-            this.color = color;
-            this.Width = width;
+            _configuredWidth = width;
+
+            this.LineType = lineType;
+            this.ForegroundColor = color;
+            
+            this.RecalculateAndRedraw();
+        }
+
+        internal override void RecalculateAndRedraw()
+        {
+            base.CalculateLayout();
+
+            this.Width = _configuredWidth;
 
             if (this.Width == 0)
                 this.Width = this.MaxWidth;
             else if (this.Width < 0)
                 this.Width = this.MaxWidth + this.Width;
 
-            this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
-            this.TopRightPoint = new TerminalPoint(this.TopLeftPoint.Left + this.Width, this.TopLeftPoint.Top);
+            using (this.OriginalPoint.GetMove())
+            {
+                this.TopLeftPoint = TerminalPoint.GetLeftPoint(this.Area);
+                this.TopRightPoint = new TerminalPoint(this.TopLeftPoint.Left + this.Width, this.TopLeftPoint.Top);
+            }
 
-            this.Redraw();
+            this.RedrawAll();
         }
 
         public override void Redraw()
@@ -57,7 +71,7 @@ namespace TerminalUI.Elements
                 TerminalPoint prevPoint = this.TopLeftPoint.MoveToWithCurrent();
 
                 for (int i = 0; i < this.Width; i++)
-                    Terminal.WriteColor(color, (char)lineType);
+                    Terminal.WriteColor(ForegroundColor, (char)LineType);
 
                 prevPoint.MoveTo();
             }

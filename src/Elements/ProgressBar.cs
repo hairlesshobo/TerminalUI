@@ -37,13 +37,15 @@ namespace TerminalUI.Elements
             ProgressDisplay display = ProgressDisplay.Right,
             ProgressMode mode = ProgressMode.Default,
             double startPercent = 0.0,
-            int explicitWidth = 0
-            )
+            int explicitWidth = 0,
+            bool show = false
+            ) : base(show) 
         {
            Init(width, display, mode, startPercent, explicitWidth);
         }
 
-        public ProgressBar(ProgressMode mode)
+        public ProgressBar(ProgressMode mode, bool show = false)
+            : base(show) 
         {
             Init(mode: mode);
         }

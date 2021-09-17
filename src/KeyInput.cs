@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using TerminalUI.Types;
@@ -72,7 +73,7 @@ namespace TerminalUI
 
             _cts = cts ?? new CancellationTokenSource();
 
-            return (_listenTask = Task.Run(DoListen));
+            return (_listenTask = Task.Run(MainLoopAsync));
         }
 
         public static void ClearAllKeys()
@@ -84,12 +85,29 @@ namespace TerminalUI
         internal static void WaitForStop()
             => Task.WaitAll(_listenTask);
 
-        private static async Task DoListen()
+        private static async Task MainLoopAsync()
         {
             _listening = true;
+            int width = Console.WindowWidth;
+            int height = Console.WindowHeight;
+            Stopwatch terminalResizeSw = new Stopwatch();
 
             while (!_cts.Token.IsCancellationRequested)
             {
+                if (height != Console.WindowHeight || width != Console.WindowWidth)
+                {
+                    width = Console.WindowWidth;
+                    height = Console.WindowHeight;
+
+                    terminalResizeSw.Restart();
+                }
+
+                if (terminalResizeSw.IsRunning && terminalResizeSw.ElapsedMilliseconds > 150)
+                {
+                    Terminal.TerminalSizeChanged();
+                    terminalResizeSw.Stop();
+                }
+
                 if (Console.KeyAvailable && _listening)
                 {
                     ConsoleKeyInfo keyInfo = Console.ReadKey(true);

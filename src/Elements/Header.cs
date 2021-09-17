@@ -29,11 +29,8 @@ namespace TerminalUI.Elements
         private SplitLine splText = null;
         private HorizontalLine hl = null;
 
-        public Header(
-            string left, 
-            string right,
-            bool show = false
-            ) : base (TerminalArea.Default, show)
+        public Header(string left, string right, bool show = false) 
+            : base (show)
         {
             this.Height = 1;
             this.Width = Terminal.Width;

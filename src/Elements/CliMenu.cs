@@ -69,13 +69,13 @@ namespace TerminalUI.Elements
 
         #region Constructors
         public CliMenu(List<CliMenuEntry<TKey>> entries, bool multiSelect)
-            => Initalize(entries, multiSelect);
+            : base() => Initalize(entries, multiSelect);
 
         public CliMenu(List<CliMenuEntry<TKey>> Entries)
-            => Initalize(Entries, false);
+            : base() => Initalize(Entries, false);
 
         public CliMenu()
-            => Initalize(null, false);
+            : base() => Initalize(null, false);
 
         public void Initalize(List<CliMenuEntry<TKey>> entries, bool multiSelect)
         {
@@ -123,8 +123,6 @@ namespace TerminalUI.Elements
         {
             _cToken = cToken;
             _tcs = new TaskCompletionSource<List<TKey>>();
-
-            Terminal.CursorVisible = false;
 
             // Terminal.Clear();
 

@@ -48,7 +48,7 @@ namespace TestCLI
                 _text.UpdateValue($"interval {i}");
                 _kvt.UpdateValue($"interval {i}");
                 
-                Terminal.WriteLine("meow");
+                // Terminal.WriteLine("meow");
             }
 
         }

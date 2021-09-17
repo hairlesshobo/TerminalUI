@@ -31,7 +31,8 @@ namespace TerminalUI.Elements
         private TerminalPoint[] textLines;
         public int TextLines => this.Height - 2;
 
-        public NotificationBox(int height = 5, int width = 0)
+        public NotificationBox(int height = 5, int width = 0, bool show = false)
+            : base(show)
         {
             this.Height = height;
             this.Width = width;

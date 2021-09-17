@@ -27,11 +27,11 @@ namespace TerminalUI.Elements
         private ConsoleColor? _leftColor = null;
         private ConsoleColor? _rightColor = null;
 
-        private ConsoleColor LeftColor => (_leftColor != null ? _leftColor.Value : TerminalColor.HeaderLeft);
-        private ConsoleColor RightColor => (_rightColor != null ? _rightColor.Value : TerminalColor.HeaderRight);
+        public ConsoleColor LeftColor => (_leftColor != null ? _leftColor.Value : TerminalColor.HeaderLeft);
+        public ConsoleColor RightColor => (_rightColor != null ? _rightColor.Value : TerminalColor.HeaderRight);
 
-        private string leftText;
-        private string rightText;
+        public string LeftText { get; private set; }
+        public string RightText { get; private set; }
 
 
         public SplitLine(
@@ -40,20 +40,30 @@ namespace TerminalUI.Elements
             ConsoleColor? leftColor = null, 
             ConsoleColor? rightColor = null, 
             bool show = false
-            ) : base(TerminalArea.Default, show)
+            ) : base(show)
         {
             this._leftColor = leftColor;
             this._rightColor = rightColor;
 
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
-            this.TopRightPoint = new TerminalPoint(Terminal.Width, this.TopLeftPoint.Top);
-            this.BottomLeftPoint = null;
-            this.BottomRightPoint = null;
+            this.Update(leftText, rightText, true);
+
+            this.RecalculateAndRedraw();
+        }
+
+        internal override void RecalculateAndRedraw()
+        {
+            base.CalculateLayout();
+
+            using (this.OriginalPoint.GetMove())
+            {
+                this.TopLeftPoint = TerminalPoint.GetCurrent();
+                this.TopRightPoint = new TerminalPoint(Terminal.Width, this.TopLeftPoint.Top);
+            }
 
             this.Height = 1;
             this.Width = TopRightPoint.Left - TopLeftPoint.Left;
 
-            this.Update(leftText, rightText);
+            this.RedrawAll();
         }
 
         public override void Redraw()
@@ -63,37 +73,40 @@ namespace TerminalUI.Elements
 
             using (this.TopLeftPoint.GetMove())
             {
-                Terminal.WriteColor(this.LeftColor, leftText);
+                Terminal.WriteColor(this.LeftColor, LeftText);
 
-                int splitChars = this.Width - leftText.Length - rightText.Length;
+                int splitChars = this.Width - LeftText.Length - RightText.Length;
 
                 for (int i = 0; i < splitChars; i++)
                     Terminal.Write(' ');
 
-                Terminal.WriteColor(this.RightColor, rightText);
+                Terminal.WriteColor(this.RightColor, RightText);
             }
         }
 
-        public void Update(string left, string right)
+        public void Update(string left, string right, bool noRedraw = false)
         {
-            leftText = left;
-            rightText = right;
+            LeftText = left;
+            RightText = right;
 
-            this.Redraw();
+            if (!noRedraw)
+                this.Redraw();
         }
 
-        public void UpdateLeft(string text)
+        public void UpdateLeft(string text, bool noRedraw = false)
         {
-            leftText = text;
+            LeftText = text;
 
-            this.Redraw();
+            if (!noRedraw)
+                this.Redraw();
         }
 
-        public void UpdateRight(string text)
+        public void UpdateRight(string text, bool noRedraw = false)
         {
-            rightText = text;
+            RightText = text;
 
-            this.Redraw();
+            if (!noRedraw)
+                this.Redraw();
         }
     }
 }
