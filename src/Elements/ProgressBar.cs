@@ -25,12 +25,34 @@ namespace TerminalUI.Elements
 {
     public class ProgressBar : Element
     {
+        private int _configuredWidth = 0;
         public ProgressDisplay Display { get; private set; }
         public ProgressMode Mode { get; private set; }
-        public double CurrentPercent { get; private set; }
+        
+        public double CurrentPercent 
+        { 
+            get => _currentPercent;
+            private set
+            {
+                if (value < 0 || value > 1)
+                    throw new ArgumentOutOfRangeException("Provided percentage must be a decimal value between 0 and 1");
+
+                _currentPercent = value;
+            }
+        }
+
+        private double _currentPercent = 0.0;
+
         public int ExplicitWidth { get; private set; }
         public long Numerator { get; private set; }
         public long Divisor { get; private set; }
+
+
+        [Obsolete]
+        public ProgressBar(ProgressMode mode, bool show = false)
+            : this(width: 0, mode: mode, show: show) 
+        {
+        }
 
         public ProgressBar(
             int width = 0,
@@ -41,43 +63,40 @@ namespace TerminalUI.Elements
             bool show = false
             ) : base(show) 
         {
-           Init(width, display, mode, startPercent, explicitWidth);
-        }
-
-        public ProgressBar(ProgressMode mode, bool show = false)
-            : base(show) 
-        {
-            Init(mode: mode);
-        }
-
-        private void Init(
-            int width = 0,
-            ProgressDisplay display = ProgressDisplay.Right,
-            ProgressMode mode = ProgressMode.Default,
-            double startPercent = 0.0,
-            int explicitWidth = 0
-            )
-        {
-            if (width < 0)
-                throw new ArgumentOutOfRangeException(nameof(width), "Value cannot be less than 0");
-
             this.SetExplicitWidth(explicitWidth);
 
-            if (startPercent < 0 || startPercent > 1)
-                throw new ArgumentOutOfRangeException(nameof(startPercent), startPercent, "Provided percentage must be a decimal value between 0 and 1");
-
             this.CurrentPercent = startPercent;
-            this.Height = width;
-            this.Width = Terminal.Width;
-            
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
-            this.TopRightPoint = new TerminalPoint(this.TopLeftPoint.Left + this.Width, this.TopLeftPoint.Top);
-
             this.Display = display;
             this.Mode = mode;
+            _configuredWidth = width;
+            
 
-            if (this.Width == 0)
-                this.Width = Terminal.Width;
+            this.RecalculateAndRedraw();
+        }
+
+        internal override void RecalculateAndRedraw()
+        {
+            base.CalculateLayout();
+
+            using (this.OriginalPoint.GetMove())
+            {
+                this.Height = 1;
+                this.Width = this._configuredWidth;
+
+                // if the provided width value is negative, then we subtract that number
+                // from the max width we are allowed to work with. For example, if -3
+                // is specified, than our total width ends up being 3 less than the 
+                // max usable TerminalArea width
+                if (this.Width < 0)
+                    this.Width = this.MaxWidth + this.Width;
+                else if (this.Width == 0)
+                    this.Width = this.MaxWidth;
+                
+                this.TopLeftPoint = TerminalPoint.GetCurrent();
+                this.TopRightPoint = new TerminalPoint(this.TopLeftPoint.Left + this.Width, this.TopLeftPoint.Top);
+            }
+
+            this.RedrawAll();
         }
 
         public void SetExplicitWidth(int width)
@@ -135,9 +154,6 @@ namespace TerminalUI.Elements
 
         public void UpdateProgress(double newPercent)
         {
-            if (newPercent < 0 || newPercent > 1)
-                throw new ArgumentOutOfRangeException(nameof(newPercent), newPercent, "Provided percentage must be a decimal value between 0 and 1");
-
             this.CurrentPercent = newPercent;
             this.Visible = true;
             this.Redraw();

@@ -105,6 +105,9 @@ namespace TerminalUI.Types
             this.Area = area;
         }
 
+        /// <summary>
+        ///     Calculate the layout bounds based on the provided TerminalArea
+        /// </summary>
         protected void CalculateLayout()
         {
             if (this.Area == TerminalArea.LeftHalf || this.Area == TerminalArea.RightHalf)
@@ -113,8 +116,12 @@ namespace TerminalUI.Types
                 this.MaxWidth = Terminal.UsableWidth;
         }
 
-        internal virtual void RecalculateAndRedraw()
-            => this.RedrawAll();
+        /// <summary>
+        ///     Recalculates the layout and then re-draws the entire thing.
+        ///     This is really only needed after a terminal resize event
+        /// </summary>
+        // internal abstract void RecalculateAndRedraw();
+        internal virtual void RecalculateAndRedraw() => this.RedrawAll();
 
         /// <summary>
         ///     Redraw the entire element. For most elements, this is the same as calling

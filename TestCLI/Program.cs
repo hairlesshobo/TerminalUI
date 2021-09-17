@@ -17,16 +17,20 @@ namespace TestCLI
         private static Text _text;
         private static KeyValueText _kvt;
         private static SplitLine _split;
+        private static ProgressBar _progress;
 
         static async Task Entry(CancellationTokenSource cts)
         {
-            _text = new Text("Starting text", show: true);
+            _text = new Text("this", show: true);
             Terminal.NextLine();
 
             _kvt = new KeyValueText("test", "meow", -10, show: true);
             Terminal.NextLine();
 
             _split = new SplitLine("meow", "hey", show: true);
+            Terminal.NextLine();
+
+            _progress = new ProgressBar(show: true);
             Terminal.NextLine();
 
             await Loop(cts);
@@ -47,6 +51,9 @@ namespace TestCLI
 
                 _text.UpdateValue($"interval {i}");
                 _kvt.UpdateValue($"interval {i}");
+
+                if (i <= 10)
+                    _progress.UpdateProgress((double)i / 10.0);
                 
                 // Terminal.WriteLine("meow");
             }

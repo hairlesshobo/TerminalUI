@@ -64,9 +64,9 @@ namespace TerminalUI.Elements
 
         #region Private Fields
         private bool _showHeader = true;
-        private bool _canceled = false;
+        // private bool _canceled = false;
         private Dictionary<int, bool> _selectedIndexes = new Dictionary<int, bool>();
-        private List<object> _choosenItems = null;
+        // private List<object> _choosenItems = null;
         private HorizontalLine _headerLine = null;
         #endregion Private Fields
 
@@ -95,7 +95,7 @@ namespace TerminalUI.Elements
 
         #region Public Methods
 
-        public async Task<List<object>> ShowAsync(bool clearScreen = true)
+        public Task<List<object>> ShowAsync(bool clearScreen = true)
         {
             throw new NotImplementedException();
 
@@ -145,7 +145,8 @@ namespace TerminalUI.Elements
         }
 
         public void AbortMenu()
-            => _canceled = true;
+            => throw new NotImplementedException();
+            // => _canceled = true;
 
         #endregion
 

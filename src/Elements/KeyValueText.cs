@@ -29,11 +29,30 @@ namespace TerminalUI.Elements
     /// </summary>
     public class KeyValueText : Element
     {
-        private TerminalPoint kvtRightPoint;
-        private int leftWidth = 0;
-        private int prevRightWidth = 0;
-        private string keyName = String.Empty;
-        private string valueText = String.Empty;
+        private TerminalPoint _kvtRightPoint;
+        private int _prevRightWidth = 0;
+        private int _configuredLeftWidth = 0;
+        private int _configuredRightMaxLength = 0;
+        
+        /// <summary>
+        ///     Text to use for the key, that is, on the left side of the element
+        /// </summary>
+        public string KeyText 
+        { 
+            get => _keyText;
+            private set => _keyText = value ?? String.Empty;
+        }
+        private string _keyText = String.Empty;
+
+        /// <summary>
+        ///     Text to display on the right side of the element
+        /// </summary>
+        public string ValueText 
+        { 
+            get => _valueText;
+            private set => _valueText = value ?? String.Empty;
+        }
+        private string _valueText = String.Empty;
 
         /// <summary>
         ///     Foreground color to use for the "Key" string
@@ -43,9 +62,32 @@ namespace TerminalUI.Elements
         /// <summary>
         ///     Foreground color to use for the "Value" string
         /// </summary>
-        /// <value></value>
         public ConsoleColor ValueColor { get; set; } = TerminalColor.KeyValueTextValueColor;
 
+        /// <summary>
+        ///     Maximum length the value may be
+        /// </summary>
+        public int MaxValueLength { get; private set; } = 0;
+
+        /// <summary>
+        ///     How wide the left side of the element is 
+        /// </summary>
+        public int LeftWidth { get; private set; }
+
+        /// <summary>
+        ///     Width of the right part of the element
+        /// </summary>
+        public int RightWidth => this.ValueText.Length > this.MaxValueLength ? this.MaxValueLength : this.ValueText.Length;
+
+        /// <summary>
+        ///     String that is used as the separator between the left and the right
+        /// </summary>
+        public string Separator
+        {
+            get => _separator;
+            set => _separator = value ?? ": ";
+        }
+        private string _separator;
         
         /// <summary>
         ///     Construct a new KeyValueText element
@@ -61,27 +103,69 @@ namespace TerminalUI.Elements
         ///     - If the provided value is greater than 0, the value text is to be left-justified
         ///       with a fixed width using the absolutely width as provided
         /// </param>
+        /// <param name="rightMaxLength">Maximum string length the right part of the element may contain</param>
         /// <param name="area">TerminalArea the element should be constrainted to</param>
         public KeyValueText(
             string keyText, 
             string valueText = null, 
-            int leftWidth = 0, 
+            int leftWidth = 0,
+            int rightMaxLength = 0,
+            string separator = ": ",
             TerminalArea area = TerminalArea.Default,
             bool show = false)
             : base (area, show)
         {
-            this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
-            this.keyName = keyText;
-            this.leftWidth = (leftWidth != 0 ? Math.Abs(leftWidth) : keyText.Length) + 2;
-            this.kvtRightPoint = this.TopLeftPoint.AddX(this.leftWidth);
-            this.valueText = valueText;
+            this.KeyText = keyText;
+            this.ValueText = valueText;
+            this.Separator = separator;
+            
+            _configuredRightMaxLength = rightMaxLength;
+            _configuredLeftWidth =  leftWidth;
 
-            if (leftWidth < 0)
-                this.keyName = this.keyName.PadLeft(leftWidth * -1);
-            else if (leftWidth > 0)
-                this.keyName = this.keyName.PadRight(leftWidth);
+            this.RecalculateAndRedraw();
+        }
+
+        /// <summary>
+        ///     Recalculate the layout and redraw the entire element
+        /// </summary>
+        internal override void RecalculateAndRedraw()
+        {
+            base.CalculateLayout();
+
+            using (this.OriginalPoint.GetMove())
+            {
+                this.TopLeftPoint = TerminalPoint.GetLeftPoint(this.Area);
+                this.LeftWidth = this.ValueText.Length;
+
+                if (_configuredLeftWidth != 0)
+                    this.LeftWidth = Math.Abs(_configuredLeftWidth);
+
+                // add space for the left and right separator
+                this.LeftWidth += this.Separator.Length;
+
+                this.MaxValueLength = _configuredRightMaxLength;
+
+                if (this.MaxValueLength == 0)
+                    this.MaxValueLength = this.MaxWidth - this.LeftWidth;
+                else if (this.MaxValueLength < 0)
+                    this.MaxValueLength = (this.MaxWidth + this.MaxValueLength) - this.LeftWidth;
+                
+                this.TopRightPoint = this.TopLeftPoint.AddX(LeftWidth + this.RightWidth);
+                _kvtRightPoint = this.TopLeftPoint.AddX(LeftWidth);
+            }
 
             this.RedrawAll();
+        }
+
+        /// <summary>
+        ///     Change the separator that is used between left and right
+        /// </summary>
+        /// <param name="separator">new separator string</param>
+        public void SetSeparator(string separator)
+        {
+            this.Separator = separator;
+
+            this.RecalculateAndRedraw();
         }
 
         /// <summary>
@@ -94,10 +178,15 @@ namespace TerminalUI.Elements
             
             using (this.TopLeftPoint.GetMove())
             {
+                if (_configuredLeftWidth < 0)
+                    this.KeyText = this.KeyText.PadLeft(this.LeftWidth - this.Separator.Length);
+                else if (_configuredLeftWidth > 0)
+                    this.KeyText = this.KeyText.PadRight(this.LeftWidth - this.Separator.Length);
+
                 if (this.KeyColor != TerminalColor.DefaultForeground)
-                    Terminal.WriteColor(this.KeyColor, $"{keyName}: ");
+                    Terminal.WriteColor(this.KeyColor, $"{KeyText}{this.Separator}");
                 else
-                    Terminal.Write($"{keyName}: ");
+                    Terminal.Write($"{KeyText}{this.Separator}");
 
                 this.Redraw();
             }
@@ -111,35 +200,30 @@ namespace TerminalUI.Elements
             if (!this.Visible)
                 return;
 
-            using (this.kvtRightPoint.GetMove())
+            using (this._kvtRightPoint.GetMove())
             {
-                // TODO: if total length > this.MaxWidth.. truncate the text
-
-                if (this.valueText == null)
-                    this.valueText = String.Empty;
-
                 if (this.ValueColor != TerminalColor.DefaultForeground)
-                    Terminal.WriteColor(this.ValueColor, $"{keyName}: ");
+                    Terminal.WriteColor(this.ValueColor, this.ValueText.Substring(0, this.RightWidth));
                 else
-                    Terminal.Write(this.valueText);
+                    Terminal.Write(this.ValueText.Substring(0, this.RightWidth));
                 
-                if (this.valueText.Length < prevRightWidth)
+                this.TopRightPoint = TerminalPoint.GetCurrent();
+
+                if (this.RightWidth < _prevRightWidth)
                 {
-                    int spacesToClear = prevRightWidth - this.valueText.Length;
+                    int spacesToClear = _prevRightWidth - this.RightWidth;
 
                     for (int i = 0; i < spacesToClear; i++)
                         Terminal.Write(' ');
                 }
 
-                prevRightWidth = this.valueText.Length;
-
-                this.TopRightPoint = TerminalPoint.GetCurrent();
+                _prevRightWidth = this.RightWidth;
             }
         }
 
         public void UpdateValue(string newText)
         {
-            this.valueText = newText;
+            this.ValueText = newText;
 
             this.Redraw();
         }

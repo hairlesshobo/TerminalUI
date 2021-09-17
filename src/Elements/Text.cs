@@ -28,6 +28,7 @@ namespace TerminalUI.Elements
     /// </summary>
     public class Text : Element
     {
+        private int _configuredMaxLength = 0;
         private int _prevWidth = 0;
 
         /// <summary>
@@ -40,20 +41,37 @@ namespace TerminalUI.Elements
         /// <summary>
         ///     Current text value being displayed by the text element
         /// </summary>
-        public string TextValue { get; private set; } = String.Empty;
+        public string TextValue 
+        { 
+            get => _textValue;
+            private set => _textValue = value ?? String.Empty;
+        }
+        private string _textValue = String.Empty;
+
+        /// <summary>
+        ///     The effective width of the text
+        /// </summary>
+        public int TextWidth => this.TextValue.Length > this.MaxLength ? this.MaxLength : this.TextValue.Length;
+
+        /// <summary>
+        ///     Maximum length the string may be
+        /// </summary>
+        public int MaxLength { get; private set; } = 0;
 
         /// <summary>
         ///     Construct a new Text element, using the provided text as the initial 
         ///     text to be displayed
         /// </summary>
-        /// <param name="valueText">Initial text to display</param>
+        /// <param name="text">Initial text to display</param>
+        /// <param name="maxLength">Maximum number of characters the text field may contain</param>
         /// <param name="area">Terminal area to constrain the element to</param>
-        public Text(string valueText, TerminalArea area = TerminalArea.Default, bool show = false)
+        public Text(string text, int maxLength = 0, TerminalArea area = TerminalArea.Default, bool show = false)
             : base (area, show)
         {
-            this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
+            this.TextValue = text;
+            _configuredMaxLength = maxLength;
 
-            this.UpdateValue(valueText);
+            this.RecalculateAndRedraw();
         }
 
         /// <summary>
@@ -61,14 +79,46 @@ namespace TerminalUI.Elements
         ///     as the initial text to be displayed
         /// </summary>
         /// <param name="foregroundColor">Color to use drawing the text element</param>
-        /// <param name="valueText">Initial text to display</param>
+        /// <param name="text">Initial text to display</param>
+        /// <param name="maxLength">Maximum number of characters the text field may contain</param>
         /// <param name="area">Terminal area to constrain the element to</param>
-        public Text(ConsoleColor foregroundColor, string valueText, TerminalArea area = TerminalArea.Default, bool show = false)
+        public Text(ConsoleColor foregroundColor, 
+                    string text, 
+                    int maxLength = 0, 
+                    TerminalArea area = TerminalArea.Default, 
+                    bool show = false) 
             : base (area, show)
         {
-            this.TopLeftPoint = TerminalPoint.GetLeftPoint(area);
+            this.TextValue = text;
+            this.ForegroundColor = foregroundColor;
 
-            this.UpdateValue(foregroundColor, valueText);
+            _configuredMaxLength = maxLength;
+
+            this.RecalculateAndRedraw();
+        }
+
+        /// <summary>
+        ///     Recalculate the layout and redraw the entire element
+        /// </summary>
+        internal override void RecalculateAndRedraw()
+        {
+            base.CalculateLayout();
+
+            using (this.OriginalPoint.GetMove())
+            {
+                this.TopLeftPoint = TerminalPoint.GetLeftPoint(this.Area);
+                this.TopRightPoint = this.TopLeftPoint.AddX(this.TextValue.Length);
+
+                this.MaxLength = _configuredMaxLength;
+
+                // if less than 0, use that many characters less than MaxWidth
+                if (this.MaxLength < 0)
+                    this.MaxLength = this.MaxWidth + this.MaxLength;
+                else if (this.MaxWidth < this.MaxLength || this.MaxLength == 0)
+                    this.MaxLength = this.MaxWidth;
+            }
+
+            this.RedrawAll();
         }
 
         /// <summary>
@@ -81,13 +131,12 @@ namespace TerminalUI.Elements
              
             using (this.TopLeftPoint.GetMove())
             {
-                if (this.TextValue == null)
-                    this.TextValue = String.Empty;
-
                 if (this.ForegroundColor != null)
-                    Terminal.ForegroundColor = this.ForegroundColor.Value;
+                    Terminal.WriteColor(this.ForegroundColor.Value, this.TextValue.Substring(0, this.TextWidth));
+                else
+                    Terminal.Write(this.TextValue.Substring(0, this.TextWidth));
 
-                Terminal.Write(this.TextValue);
+                this.TopRightPoint = TerminalPoint.GetCurrent();
                 
                 if (this.TextValue.Length < _prevWidth)
                 {
@@ -97,12 +146,7 @@ namespace TerminalUI.Elements
                         Terminal.Write(' ');
                 }
 
-                if (this.ForegroundColor != null)
-                    Terminal.ResetForeground();
-
-                _prevWidth = this.TextValue.Length;
-
-                this.TopRightPoint = TerminalPoint.GetCurrent();
+                _prevWidth = this.TextWidth;
             }
         }
 
