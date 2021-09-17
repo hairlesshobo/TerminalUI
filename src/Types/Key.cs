@@ -1,4 +1,4 @@
-/**
+/*
  *  TerminalUI - Simple terminal widgets for C#
  * 
  *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -23,6 +23,9 @@ using System.Text;
 
 namespace TerminalUI.Types
 {
+    /// <summary>
+    ///     Class used to describe a terminal input key
+    /// </summary>
     public class Key
     {
         // OK.. so.. I'm gonna go ahead and say right up from that this is ugly. Basically,
@@ -112,6 +115,10 @@ namespace TerminalUI.Types
             return builder.ToString();
         }
 
+        /// <summary>
+        ///     Get the character described by the key
+        /// </summary>
+        /// <returns>Textual representation of the key</returns>
         public string GetRootKeyCharacter()
         {
             switch ((int)this.RootKey)

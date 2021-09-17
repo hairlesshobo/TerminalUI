@@ -1,4 +1,4 @@
-/**
+/*
  *  TerminalUI - Simple terminal widgets for C#
  * 
  *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -64,7 +64,9 @@ namespace TerminalUI.Elements
         /// </summary>
         /// <param name="text">Initial text to display</param>
         /// <param name="maxLength">Maximum number of characters the text field may contain</param>
+        /// <param name="foregroundColor">Color to use when drawing the text</param>
         /// <param name="area">Terminal area to constrain the element to</param>
+        /// <param name="show">If true, element will automatically be shown once constructed</param>
         public Text(string text = null, 
                     int maxLength = 0, 
                     Nullable<ConsoleColor> foregroundColor = null, 
@@ -88,6 +90,7 @@ namespace TerminalUI.Elements
         /// <param name="text">Initial text to display</param>
         /// <param name="maxLength">Maximum number of characters the text field may contain</param>
         /// <param name="area">Terminal area to constrain the element to</param>
+        /// <param name="show">If true, element will automatically be shown once constructed</param>
         [Obsolete]
         public Text(ConsoleColor foregroundColor, 
                     string text, 

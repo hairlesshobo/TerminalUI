@@ -1,4 +1,4 @@
-/**
+/*
  *  TerminalUI - Simple terminal widgets for C#
  * 
  *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -26,6 +26,9 @@ using TerminalUI.Types;
 
 namespace TerminalUI
 {
+    /// <summary>
+    ///     Class used for reading key input from the terminal
+    /// </summary>
     public static class KeyInput
     {
         private static volatile bool _started = false;
@@ -38,11 +41,23 @@ namespace TerminalUI
         private static TerminalPoint _bufferStartPoint = null;
         private static Action<string> _stringCallback = (_) => { };
 
+        /// <summary>
+        ///     If true, the class is currently listening for key input from the terminal
+        /// </summary>
         public static bool Listening => _listening;
 
+        /// <summary>
+        ///     Static constructor
+        /// </summary>
         static KeyInput()
             => _registeredKeys = new Dictionary<Key, Func<Key, Task>>();
 
+        /// <summary>
+        ///     Register a callback to a specific console key
+        /// </summary>
+        /// <param name="key">Key to listen for</param>
+        /// <param name="callback">Callback to execute if the key is received</param>
+        /// <returns>true if the key wa ssuccessfully registerde, false otherwise</returns>
         public static bool RegisterKey(Key key, Func<Key, Task> callback)
         {
             if (callback == null)
@@ -56,6 +71,11 @@ namespace TerminalUI
             return true;
         }
 
+        /// <summary>
+        ///     Unregister any callback that may exist for the specified key
+        /// </summary>
+        /// <param name="key">Key to unregister</param>
+        /// <returns>true if the key previously existed and was successfully unregistered, false otherwise</returns>
         public static bool UnregisterKey(Key key)
         {
             if (!_registeredKeys.ContainsKey(key))
@@ -66,6 +86,11 @@ namespace TerminalUI
             return true;
         }
 
+        /// <summary>
+        ///     Start the main loop that listens for keyboard input
+        /// </summary>
+        /// <param name="cts">CancellationTokenSource used to cancel listening</param>
+        /// <returns>Task</returns>
         public static Task StartLoop(CancellationTokenSource cts = null)
         {
             if (_started)
@@ -76,15 +101,29 @@ namespace TerminalUI
             return (_listenTask = Task.Run(MainLoopAsync));
         }
 
+        /// <summary>
+        ///     Clear all registered keys
+        /// </summary>
         public static void ClearAllKeys()
             => _registeredKeys.Clear();
 
+        /// <summary>
+        ///     Stop listening for key input
+        /// </summary>
         internal static void StopListening()
             => _cts.Cancel();
 
+        /// <summary>
+        ///     Synchronously wait until the listener stops before returning to the caller
+        /// </summary>
         internal static void WaitForStop()
             => Task.WaitAll(_listenTask);
 
+        // TODO: In the future, we may want to add the ability to specify additional code to execute during the main loop
+        /// <summary>
+        ///     Main loop that listens for key input as well as terminal resize events
+        /// </summary>
+        /// <returns>Task</returns>
         private static async Task MainLoopAsync()
         {
             _listening = true;
@@ -147,6 +186,11 @@ namespace TerminalUI
             _listening = false;
         }
 
+        /// <summary>
+        ///     Asynchronously read an string from the terminal
+        /// </summary>
+        /// <param name="cToken">Token used to cancel the key input</param>
+        /// <returns>Task that provides a string. Null if the input was canceled</returns>
         public async static Task<string> ReadStringAsync(CancellationToken cToken)
         {
             _bufferChars = true;

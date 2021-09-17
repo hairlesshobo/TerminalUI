@@ -1,4 +1,4 @@
-/**
+/*
  *  TerminalUI - Simple terminal widgets for C#
  * 
  *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -26,6 +26,11 @@ using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     Pager element that is used for displaying multi-line text that overflows
+    ///     beyond what the terminal is able to display. This element can be scrolled
+    ///     to allow for easy viewing of the content.
+    /// </summary>
     public class Pager : Element, IDisposable
     {
         #region Public Properties

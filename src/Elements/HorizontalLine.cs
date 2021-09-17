@@ -1,4 +1,4 @@
-/**
+/*
  *  TerminalUI - Simple terminal widgets for C#
  * 
  *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -22,28 +22,61 @@ using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     A horizontal line element is exactly what it sounds like.. a horizontal
+    ///     line that is used to separate a line above and below it
+    /// </summary>
     public class HorizontalLine : Element
     {
         private int _configuredWidth = 0;
-        public LineType LineType { get; private set; }
-        public ConsoleColor ForegroundColor { get; private set; }
 
-        public HorizontalLine(
-            ConsoleColor color = ConsoleColor.White, 
-            LineType lineType = LineType.Thin, 
-            int width = 0, 
-            TerminalArea area = TerminalArea.Default,
-            bool show = false)
+        /// <summary>
+        ///     Type of line to draw
+        /// </summary>
+        public LineType LineType { get; private set; }
+        
+        /// <summary>
+        ///     Foreground color to use when drawing the line
+        /// </summary>
+        public Nullable<ConsoleColor> ForegroundColor 
+        { 
+            get => _foregoundColor ?? TerminalColor.LineForegroundColor;
+            private set => _foregoundColor = value; 
+        }
+        private Nullable<ConsoleColor> _foregoundColor;
+
+        /// <summary>
+        ///     Construct a new horizontal line
+        /// </summary>
+        /// <param name="foregroundColor">Color to use when drawing the line</param>
+        /// <param name="lineType">Type of line to draw</param>
+        /// <param name="width">
+        ///     Width to draw the line to.. 
+        ///     if 0, it will automatically fill the provided area
+        ///     if below 0, it will be the area width - the absolute value provided
+        ///     if above 0, it will be a fixed width as provided
+        /// </param>
+        /// <param name="area">Area to fill</param>
+        /// <param name="show">If true, element will be displayed immediately upon construction</param>
+        public HorizontalLine(Nullable<ConsoleColor> foregroundColor = null, 
+                              LineType lineType = LineType.Thin, 
+                              int width = 0, 
+                              TerminalArea area = TerminalArea.Default,
+                              bool show = false)
             : base (area, show)
         {
             _configuredWidth = width;
 
             this.LineType = lineType;
-            this.ForegroundColor = color;
+            this.ForegroundColor = foregroundColor;
             
             this.RecalculateAndRedraw();
         }
 
+
+        /// <summary>
+        ///     Recalculate and redraw the entire element
+        /// </summary>
         internal override void RecalculateAndRedraw()
         {
             base.CalculateLayout();
@@ -64,16 +97,24 @@ namespace TerminalUI.Elements
             this.RedrawAll();
         }
 
+        /// <summary>
+        ///     Redraw the element, if visible
+        /// </summary>
         public override void Redraw()
         {
-            if (this.Visible)
+            if (!this.Visible)
+                return;
+
+            using (this.TopLeftPoint.GetMove())
             {
-                TerminalPoint prevPoint = this.TopLeftPoint.MoveToWithCurrent();
+                if (this.ForegroundColor != TerminalColor.DefaultForeground)
+                    Terminal.ForegroundColor = this.ForegroundColor.Value;
 
                 for (int i = 0; i < this.Width; i++)
-                    Terminal.WriteColor(ForegroundColor, (char)LineType);
+                    Terminal.Write((char)LineType);
 
-                prevPoint.MoveTo();
+                if (this.ForegroundColor != TerminalColor.DefaultForeground)
+                    Terminal.ResetForeground();
             }
         }
     }

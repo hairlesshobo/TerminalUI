@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  *  TerminalUI - Simple terminal widgets for C#
  * 
  *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -280,7 +280,7 @@ namespace TerminalUI
         /// <summary>
         ///     Clear the terminal
         /// </summary>
-        /// <param name="rawClear">if true, the entire console, header and status bar included, will be erased</param>
+        /// <param name="preserveElements">if true, the elements that are currently registered will NOT be unregistered</param>
         public static void Clear(bool preserveElements = false)
         {
             // clear any registered elements
@@ -322,7 +322,11 @@ namespace TerminalUI
 
         private static CancellationTokenSource _cts;
         private static bool _initialized = false;
+        private static List<Element> _elements = new List<Element>();
 
+        /// <summary>
+        ///     Initialize the Terminal application with all default settings
+        /// </summary>
         public static void Initialize()
             => Initialize(null, null);
 
@@ -395,9 +399,9 @@ namespace TerminalUI
         public static StatusBar InitStatusBar(params StatusBarItem[] items)
         {
             if (StatusBar == null)
-                StatusBar = new StatusBar(show: true, items);
-            else
-                StatusBar.ShowItems(items);
+                StatusBar = StatusBar.GetInstance();
+
+            StatusBar.ShowItems(items);
 
             return StatusBar;
         }
@@ -493,8 +497,13 @@ namespace TerminalUI
             Task.WaitAll(main, listen);
         }
 
+        /// <summary>
+        ///     Method to call when the terminal size has chaned
+        /// </summary>
         internal static void TerminalSizeChanged()
         {
+            // TODO: this should be converted to an event that exists on KeyInput
+
             Debug.WriteLine("Notified of terminal size change");
 
             Terminal.RawClear(true);
@@ -511,7 +520,10 @@ namespace TerminalUI
             Terminal.StatusBar?.RecalculateAndRedraw();
         }
 
-        private static List<Element> _elements = new List<Element>();
+        /// <summary>
+        ///     Method that is executed whenever a new element is constructed
+        /// </summary>
+        /// <param name="element">Element that is being constructed</param>
         internal static void RegisterElement(Element element)
             => _elements.Add(element);
     }

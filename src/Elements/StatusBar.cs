@@ -1,4 +1,4 @@
-/**
+/*
  *  TerminalUI - Simple terminal widgets for C#
  * 
  *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -25,6 +25,11 @@ using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     A status bar element is a special element that can only exist once
+    ///     and will be shown on the very bottom line of the screen. The status
+    ///     bar is also the entry point for any terminal key input
+    /// </summary>
     public class StatusBar : Element
     {
         private List<StatusBarItem> _items = new List<StatusBarItem>();
@@ -33,18 +38,12 @@ namespace TerminalUI.Elements
 
         private List<StatusBarItem> _defaultItems = new List<StatusBarItem>();
 
-        internal StatusBar(bool show = false, params StatusBarItem[] items) 
-            : base(show) => Init(items);
+        private StatusBar(bool show = false) 
+            : base(show) => this.RecalculateAndRedraw();
 
-        internal StatusBar(bool show = false) 
-            : base(show) => Init(new StatusBarItem[]{ });
-
-        private void Init(StatusBarItem[] items)
-        {
-            this.SetItems(items);
-            this.RecalculateAndRedraw();
-        }
-
+        /// <summary>
+        ///     Recalculate and redraw the status bar
+        /// </summary>
         internal override void RecalculateAndRedraw()
         {
             base.CalculateLayout();
@@ -81,6 +80,10 @@ namespace TerminalUI.Elements
             _items = items.ToList();
         }
 
+        /// <summary>
+        ///     Show the provided list of items on the status bar
+        /// </summary>
+        /// <param name="items">Items to display</param>
         public void ShowItems(params StatusBarItem[] items)
         {
             this.SetItems(items);
@@ -88,6 +91,9 @@ namespace TerminalUI.Elements
             this.Redraw();
         }
 
+        /// <summary>
+        ///     Redraw the status bar
+        /// </summary>
         public override void Redraw()
         {
             if (!this.Visible)
@@ -198,6 +204,10 @@ namespace TerminalUI.Elements
             _prevItems.Clear();
         }
 
+        /// <summary>
+        ///     Remove an item from the status bar by the provided name 
+        /// </summary>
+        /// <param name="name">name of the item to remove</param>
         public void RemoveItemByName(string name)
         {
             if (String.IsNullOrWhiteSpace(name))
@@ -209,13 +219,20 @@ namespace TerminalUI.Elements
                 item.Remove();
         }
 
+        /// <summary>
+        ///     Reset the status bar back to the default items
+        /// </summary>
         public void Reset()
             => this.ShowItems();
 
+        /// <summary>
+        ///     Get the existing instance of the StatusBar or create a new one
+        /// </summary>
+        /// <returns></returns>
         public static StatusBar GetInstance()
         {
             if (_instance == null)
-                _instance = new StatusBar();
+                _instance = new StatusBar(show: true);
 
             return _instance;
         }

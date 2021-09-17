@@ -1,4 +1,4 @@
-/**
+/*
 *  TerminalUI - Simple terminal widgets for C#
 * 
 *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -19,8 +19,14 @@
 
 namespace TerminalUI.Types 
 {
+    /// <summary>
+    ///     A Mmenu entry with the default T of string 
+    /// </summary>
     public class CliMenuEntry : CliMenuEntry<string>
     {
+        /// <summary>
+        ///     Default constructor
+        /// </summary>
         public CliMenuEntry() : base()
         { }
     }

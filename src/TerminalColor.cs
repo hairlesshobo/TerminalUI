@@ -1,4 +1,4 @@
-/**
+/*
  *  TerminalUI - Simple terminal widgets for C#
  * 
  *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -119,5 +119,10 @@ namespace TerminalUI
         ///     Background color of the pager header
         /// </summary>
         public static ConsoleColor PagerHeaderBackground { get; set; } = ConsoleColor.DarkBlue;
+
+        /// <summary>
+        ///     Foreground color of a line
+        /// </summary>
+        public static ConsoleColor LineForegroundColor { get; set; } = ConsoleColor.White;
     }
 }

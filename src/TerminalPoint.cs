@@ -1,4 +1,4 @@
-/**
+/*
  *  TerminalUI - Simple terminal widgets for C#
  * 
  *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -64,7 +64,7 @@ namespace TerminalUI
         public TerminalPoint AddY(int amount)
             => new TerminalPoint(this.Left, this.Top + amount);
 
-                /// <summary>
+        /// <summary>
         ///     Create a copy of the current terminal point and add the specified number of columns to it
         /// </summary>
         /// <param name="amountX">Number of columns to move</param>
@@ -91,6 +91,17 @@ namespace TerminalUI
             return point;
         }
 
+        /// <summary>
+        ///     Get the four TerminalPoint objects that mark the outer bounds of a particular area
+        /// </summary>
+        /// <param name="area">Area to describe</param>
+        /// <returns>
+        ///     Tuple that contains the 4 outer corners of the area. 
+        ///     0 = Top Left
+        ///     1 = Top Right
+        ///     2 = Bottom Left
+        ///     3 = Bottom Right
+        /// </returns>
         internal static (TerminalPoint, TerminalPoint, TerminalPoint, TerminalPoint) GetAreaBounds(TerminalArea area)
         {
             int usableHeight = Terminal.UsableHeight;
@@ -130,6 +141,10 @@ namespace TerminalUI
             
         }
 
+        /// <summary>
+        ///     Make a clone of this TerminalPoint
+        /// </summary>
+        /// <returns>New TerminalPoint that describes the same coordinates as the current</returns>
         public TerminalPoint Clone()
             => new TerminalPoint(this.Left, this.Top);
 
@@ -152,6 +167,10 @@ namespace TerminalUI
             return this;
         }
 
+        /// <summary>
+        ///     Get the TerminalPointMove object for this point
+        /// </summary>
+        /// <returns>TerminalPointMove object that is meant to be wrapped in a using block</returns>
         public TerminalPointMove GetMove()
             => new TerminalPointMove(this);
 

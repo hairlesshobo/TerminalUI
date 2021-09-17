@@ -1,4 +1,4 @@
-/**
+/*
 *  TerminalUI - Simple terminal widgets for C#
 * 
 *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -21,15 +21,36 @@ using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     A header element is a two-line element that is comprised of two 
+    ///     other elements. The first line is a <see cref="SplitLine" /> element
+    ///     the second element is a <see cref="HorizontalLine" />  
+    /// </summary>
     public class Header : Element
     {
-        public string Left { get; private set; }
-        public string Right { get; private set; }
+        /// <summary>
+        ///     Text to display on the left side of the SplitLine
+        /// </summary>
+        public string LeftText { get; private set; }
+
+        /// <summary>
+        ///     Text to display on the right side of the SplitLine
+        /// </summary>
+        /// <value></value>
+        public string RightText { get; private set; }
 
         private SplitLine splText = null;
         private HorizontalLine hl = null;
 
-        public Header(string left, string right, bool show = false) 
+        /// <summary>
+        ///     Construct a new header
+        /// </summary>
+        /// <param name="leftText">Text to display on left side of the header</param>
+        /// <param name="rightText">Text to display on the right side of the header</param>
+        /// <param name="show">If true, the header will display automatically upon construction</param>
+        public Header(string leftText, 
+                      string rightText, 
+                      bool show = false) 
             : base (show)
         {
             this.Height = 1;
@@ -40,31 +61,52 @@ namespace TerminalUI.Elements
             this.BottomLeftPoint = new TerminalPoint(0, 1);
             this.BottomRightPoint = new TerminalPoint(Terminal.Width, 1);
 
-            this.UpdateHeader(left, right);
+            this.UpdateHeader(leftText, rightText);
         }
 
-        public void UpdateLeft(string left)
+        internal override void RecalculateAndRedraw()
         {
-            this.Left = left;
+            // nothing needs to be done here because the child elements automatically handle it
+        }
+
+        /// <summary>
+        ///     Update the text on the left
+        /// </summary>
+        /// <param name="leftText">text on the left</param>
+        public void UpdateLeft(string leftText)
+        {
+            this.LeftText = leftText;
 
             this.Redraw();
         }
 
+        /// <summary>
+        ///     Update the text on the right
+        /// </summary>
+        /// <param name="right">Text on the right</param>
         public void UpdateRight(string right)
         {
-            this.Right = right;
+            this.RightText = right;
 
             this.Redraw();
         }
 
-        public void UpdateHeader(string left, string right)
+        /// <summary>
+        ///     Update both left and right text in the header
+        /// </summary>
+        /// <param name="leftText">Text on the left side of the header</param>
+        /// <param name="rightText">Text on the right side of the header</param>
+        public void UpdateHeader(string leftText, string rightText)
         {
-            this.Left = left;
-            this.Right = right;
+            this.LeftText = leftText;
+            this.RightText = rightText;
 
             this.Redraw();
         }
 
+        /// <summary>
+        ///     Redraw the entire header
+        /// </summary>
         public override void Redraw()
         {
             if (!this.Visible)
@@ -75,9 +117,9 @@ namespace TerminalUI.Elements
                 Terminal.BackgroundColor = TerminalColor.HeaderBackground;
 
                 if (splText == null)
-                    splText = new SplitLine(this.Left, this.Right, show: true);
+                    splText = new SplitLine(this.LeftText, this.RightText, show: true);
                 else
-                    splText.Update(this.Left, this.Right);
+                    splText.Update(this.LeftText, this.RightText);
 
                 this.BottomLeftPoint.MoveTo();
 
@@ -88,6 +130,9 @@ namespace TerminalUI.Elements
             }
         }
 
+        /// <summary>
+        ///     Show the header
+        /// </summary>
         public override void Show()
         {
             this.splText?.Show();
@@ -96,6 +141,9 @@ namespace TerminalUI.Elements
             base.Show();
         }
 
+        /// <summary>
+        ///     Hide the header
+        /// </summary>
         public override void Hide()
         {
             this.splText?.Hide();

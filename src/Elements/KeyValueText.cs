@@ -1,4 +1,4 @@
-/**
+/*
  *  TerminalUI - Simple terminal widgets for C#
  * 
  *  Copyright (c) 2021 Steve Cross <flip@foxhollow.cc>
@@ -104,15 +104,16 @@ namespace TerminalUI.Elements
         ///       with a fixed width using the absolutely width as provided
         /// </param>
         /// <param name="rightMaxLength">Maximum string length the right part of the element may contain</param>
+        /// <param name="separator">String used to separate the left and the right sides</param>
         /// <param name="area">TerminalArea the element should be constrainted to</param>
-        public KeyValueText(
-            string keyText, 
-            string valueText = null, 
-            int leftWidth = 0,
-            int rightMaxLength = 0,
-            string separator = ": ",
-            TerminalArea area = TerminalArea.Default,
-            bool show = false)
+        /// <param name="show">If true, the element will be shown immediately</param>
+        public KeyValueText(string keyText, 
+                            string valueText = null, 
+                            int leftWidth = 0,
+                            int rightMaxLength = 0,
+                            string separator = ": ",
+                            TerminalArea area = TerminalArea.Default,
+                            bool show = false)
             : base (area, show)
         {
             this.KeyText = keyText;
@@ -221,6 +222,10 @@ namespace TerminalUI.Elements
             }
         }
 
+        /// <summary>
+        ///     Update the value displayed by this element
+        /// </summary>
+        /// <param name="newText">New text to display</param>
         public void UpdateValue(string newText)
         {
             this.ValueText = newText;

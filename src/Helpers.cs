@@ -4,8 +4,21 @@ using System.Threading.Tasks;
 
 namespace TerminalUI
 {
+    /// <summary>
+    ///     Static class containing miscellaneous helper methods
+    /// </summary>
     internal static class Helpers
     {
+        /// <summary>
+        ///     Setup a cancel watchdog. This is used to execute a callback method upon 
+        ///     cancellation of the provided cToken
+        /// </summary>
+        /// <param name="cToken">Token to watch for cancellation</param>
+        /// <param name="cancelCallback">Callback to execute if token is cancelled</param>
+        /// <returns>
+        ///     A CancellationTokenSource object that is used to abort the watchdog once 
+        ///     it is no longer needed
+        /// </returns>
         internal static CancellationTokenSource SetupTaskWatchdog(CancellationToken cToken, Action cancelCallback)
         {
             if (cancelCallback is null)
