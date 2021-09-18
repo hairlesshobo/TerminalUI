@@ -75,29 +75,29 @@ namespace TerminalUI
 
         
         /// <summary>
-        ///     Default background color of the CliMenu cursor
+        ///     Default background color of the Menu cursor
         /// </summary>
-        public static ConsoleColor CliMenuCursorBackground { get; set; } = ConsoleColor.DarkGray;
+        public static ConsoleColor MenuCursorBackground { get; set; } = ConsoleColor.DarkGray;
         
         /// <summary>
-        ///     Default foreground color of the CliMenu cursor
+        ///     Default foreground color of the Menu cursor
         /// </summary>
-        public static ConsoleColor CliMenuCursorForeground { get; set; } = ConsoleColor.DarkGreen;
+        public static ConsoleColor MenuCursorForeground { get; set; } = ConsoleColor.DarkGreen;
         
         /// <summary>
-        ///     Default foreground color of the CliMenu cursor arrow
+        ///     Default foreground color of the Menu cursor arrow
         /// </summary>
-        public static ConsoleColor CliMenuCursorArrow { get; set; } = ConsoleColor.Green;
+        public static ConsoleColor MenuCursorArrow { get; set; } = ConsoleColor.Green;
         
         /// <summary>
-        ///     Default foreground color for a disabled CliMenu entry
+        ///     Default foreground color for a disabled Menu entry
         /// </summary>
-        public static ConsoleColor CliMenuDisabledForeground { get; set; } = ConsoleColor.DarkGray;
+        public static ConsoleColor MenuDisabledForeground { get; set; } = ConsoleColor.DarkGray;
         
         /// <summary>
-        ///     Default foreground for a CliMenu header entry
+        ///     Default foreground for a Menu header entry
         /// </summary>
-        public static ConsoleColor CliMenuHeaderForeground { get; set; } = ConsoleColor.Cyan;
+        public static ConsoleColor MenuHeaderForeground { get; set; } = ConsoleColor.Cyan;
 
         
         /// <summary>
@@ -124,5 +124,20 @@ namespace TerminalUI
         ///     Foreground color of a line
         /// </summary>
         public static ConsoleColor LineForegroundColor { get; set; } = ConsoleColor.White;
+
+        /// <summary>
+        ///     Background color used when drawing status bar
+        /// </summary>
+        public static ConsoleColor StatusBarBackgroundColor { get; set; } = ConsoleColor.DarkBlue;
+
+        /// <summary>
+        ///     Foreground color used when drawing keys on the status bar
+        /// </summary>
+        public static ConsoleColor StatusBarKeyForegroundColor { get; set; } = ConsoleColor.Magenta;
+
+        /// <summary>
+        ///     Foreground color used when drawing separators on the status bar
+        /// </summary>
+        public static ConsoleColor StatusBarSeparatorForegroundColor { get; set; } = ConsoleColor.DarkGray;
     }
 }

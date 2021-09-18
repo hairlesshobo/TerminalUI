@@ -16,7 +16,7 @@ progressBar.UpdateProgress(0.42);
 ```
 
 # Element list
-  * CliMenu
+  * Menu
   * DataTable
   * Header
   * HorizontalLine
@@ -32,6 +32,6 @@ progressBar.UpdateProgress(0.42);
 
 # To-do list
 * Add "area" parameter to all elements
-  * CliMenu
+  * Menu
 * Add "show" parameter to all elements
-  * CliMenu
+  * Menu

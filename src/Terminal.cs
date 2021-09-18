@@ -394,7 +394,7 @@ namespace TerminalUI
                 },
                 Key.MakeKey(ConsoleKey.Q)
             ));
-            Terminal.StatusBar.RedrawAll();
+            Terminal.StatusBar.Show();
             Terminal.RootPoint.MoveTo();
 
             _initialized = true;
@@ -430,9 +430,10 @@ namespace TerminalUI
         public static StatusBar InitStatusBar(params StatusBarItem[] items)
         {
             if (StatusBar == null)
-                StatusBar = StatusBar.GetInstance();
+                StatusBar = StatusBar.GetInstance(show: false);
 
-            StatusBar.ShowItems(items);
+            if (items.Length > 0)
+                StatusBar.ShowItems(items);
 
             return StatusBar;
         }

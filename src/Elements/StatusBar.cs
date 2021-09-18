@@ -98,80 +98,81 @@ namespace TerminalUI.Elements
         {
             if (!this.Visible)
                 return;
-                
+
             this.RemovePreviousKeyBindings();
 
-            TerminalPoint prevPoint = TerminalPoint.GetCurrent();
-            ConsoleColor prevBackgroundColor = Console.BackgroundColor;
-
-            this.TopLeftPoint.MoveTo();
-
-            Console.BackgroundColor = ConsoleColor.DarkBlue;
-
-            List<StatusBarItem> items = _items;
-            bool isDefaultList = false;
-            
-            if (items == null || items.Count == 0) 
+            using (this.TopLeftPoint.GetMove())
             {
-                items = _defaultItems;
-                isDefaultList = true;
-            }
-            else
-                this.RemoveDefaultKeyBindings();
+                ConsoleColor prevBackgroundColor = Console.BackgroundColor;
 
-            for (int i = 0; i < items.Count; i++)
-            {
-                StatusBarItem item = items[i];
+                this.TopLeftPoint.MoveTo();
 
-                Terminal.Write(' ');
+                Console.BackgroundColor = TerminalColor.StatusBarBackgroundColor;
 
-                if (item.Keys != null && item.Task != null)
+                List<StatusBarItem> items = _items;
+                bool isDefaultList = false;
+                
+                if (items == null || items.Count == 0) 
                 {
-                    for (int k = 0; k < item.Keys.Length; k++)
-                    {
-                        Key key = item.Keys[k];
+                    items = _defaultItems;
+                    isDefaultList = true;
+                }
+                else
+                    this.RemoveDefaultKeyBindings();
 
-                        // TODO: Convert to task
-                        KeyInput.RegisterKey(key, item.Task);
+                for (int i = 0; i < items.Count; i++)
+                {
+                    StatusBarItem item = items[i];
+
+                    Terminal.Write(' ');
+
+                    if (item.Keys != null && item.Task != null)
+                    {
+                        for (int k = 0; k < item.Keys.Length; k++)
+                        {
+                            Key key = item.Keys[k];
+
+                            // TODO: Convert to task
+                            KeyInput.RegisterKey(key, item.Task);
+
+                            if (item.ShowKey)
+                                Terminal.WriteColor(TerminalColor.StatusBarKeyForegroundColor, $"{key.ToString()}");
+
+                            if (k < (item.Keys.Length-1))
+                                Terminal.WriteColor(TerminalColor.StatusBarSeparatorForegroundColor, "/");
+                        }
 
                         if (item.ShowKey)
-                            Terminal.WriteColor(ConsoleColor.Magenta, $"{key.ToString()}");
-
-                        if (k < (item.Keys.Length-1))
-                            Terminal.WriteColor(ConsoleColor.DarkGray, "/");
+                            Terminal.Write(' ');
                     }
 
-                    if (item.ShowKey)
-                        Terminal.Write(' ');
+                    Terminal.Write(item.Name);
+                    Terminal.Write(' ');
+
+                    item.AddRemoveCallback(() => {
+                        if (item.Keys != null)
+                        {
+                            foreach (Key key in item.Keys)
+                                KeyInput.UnregisterKey(key);
+                        }
+
+                        if (!isDefaultList)
+                            _items.Remove(item);
+
+                        this.Redraw();
+                    });
+
+                    if (i < (items.Count-1))
+                        Terminal.WriteColor(TerminalColor.StatusBarSeparatorForegroundColor, (char)BoxChars.ThinVertical);
                 }
 
-                Terminal.Write(item.Name);
-                Terminal.Write(' ');
+                int charsToBlank = this.Width - Terminal.Left;
 
-                item.AddRemoveCallback(() => {
-                    if (item.Keys != null)
-                    {
-                        foreach (Key key in item.Keys)
-                            KeyInput.UnregisterKey(key);
-                    }
+                for (int i = 0; i < charsToBlank; i++)
+                    Terminal.Write(' ');
 
-                    if (!isDefaultList)
-                        _items.Remove(item);
-
-                    this.Redraw();
-                });
-
-                if (i < (items.Count-1))
-                    Terminal.Write((char)BoxChars.ThinVertical);
+                Console.BackgroundColor = prevBackgroundColor;
             }
-
-            int charsToBlank = this.Width - Terminal.Left;
-
-            for (int i = 0; i < charsToBlank; i++)
-                Terminal.Write(' ');
-
-            Console.BackgroundColor = prevBackgroundColor;
-            prevPoint.MoveTo();
         }
 
         private void RemoveDefaultKeyBindings()
@@ -228,11 +229,11 @@ namespace TerminalUI.Elements
         /// <summary>
         ///     Get the existing instance of the StatusBar or create a new one
         /// </summary>
-        /// <returns></returns>
-        public static StatusBar GetInstance()
+        /// <returns>StatusBar instance</returns>
+        public static StatusBar GetInstance(bool show = false)
         {
             if (_instance == null)
-                _instance = new StatusBar(show: true);
+                _instance = new StatusBar(show: show);
 
             return _instance;
         }

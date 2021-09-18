@@ -33,7 +33,7 @@ namespace TerminalUI.Elements
     ///     items
     /// </summary>
     /// <typeparam name="TKey">Type returned by the menu</typeparam>
-    public class Menu<TKey> : Element
+    public class Menu : Element
     {
         #region Public Properties
         [Obsolete]
@@ -41,9 +41,9 @@ namespace TerminalUI.Elements
         public bool EnableCancel { get; set; } = false;
         public bool MultiSelect { get; private set; } = false;
         public Func<Task> QuitCallback { get; set; } = null;
-        public List<TKey> SelectedValues => _entries.Where(x => x.Selected).Select(x => x.SelectedValue).ToList();
-        public IReadOnlyList<TKey> SelectedEntries => (IReadOnlyList<TKey>)_entries;
-        TaskCompletionSource<List<TKey>> _tcs;
+        public List<object> SelectedValues => _entries.Where(x => x.Selected).Select(x => x.SelectedValue).ToList();
+        public IReadOnlyList<object> SelectedEntries => (IReadOnlyList<object>)_entries;
+        TaskCompletionSource<List<object>> _tcs;
         public int MaxLines { get; private set; } // => Terminal.UsableHeight - 1;
         public int LeftPad { 
             get => _leftPad; 
@@ -63,7 +63,7 @@ namespace TerminalUI.Elements
         #endregion Public Properties
 
         #region Private Fields
-        private List<MenuEntry<TKey>> _entries;
+        private List<MenuEntry> _entries;
         private int _cursorIndex = -1;
         private string _leftPadStr = "    ";
         private int _leftPad = 4;
@@ -71,16 +71,16 @@ namespace TerminalUI.Elements
         #endregion Private Fields
 
         #region Constructors
-        public Menu(List<MenuEntry<TKey>> entries, bool multiSelect)
+        public Menu(List<MenuEntry> entries, bool multiSelect)
             : base() => Initalize(entries, multiSelect);
 
-        public Menu(List<MenuEntry<TKey>> Entries)
+        public Menu(List<MenuEntry> Entries)
             : base() => Initalize(Entries, false);
 
         public Menu()
             : base() => Initalize(null, false);
 
-        public void Initalize(List<MenuEntry<TKey>> entries, bool multiSelect)
+        public void Initalize(List<MenuEntry> entries, bool multiSelect)
         {
             this.MultiSelect = multiSelect;
 
@@ -97,7 +97,7 @@ namespace TerminalUI.Elements
         #endregion Constructors
 
         #region Public Methods
-        public void SetMenuItems(List<MenuEntry<TKey>> entries)
+        public void SetMenuItems(List<MenuEntry> entries)
         {
             _entries = entries;
             _cursorIndex = 0;
@@ -121,18 +121,14 @@ namespace TerminalUI.Elements
         private CancellationToken _cToken = default;
         private CancellationTokenSource _watchdogCts = null;
 
+        public async Task<List<TResult>> ShowAsync<TResult>(CancellationToken cToken = default)
+            => (await ShowAsync(cToken: cToken))?.Cast<TResult>()?.ToList();
+
         // TODO: remove clearScreen
-        public Task<List<TKey>> ShowAsync(bool clearScreen = true, CancellationToken cToken = default)
+        public Task<List<object>> ShowAsync(CancellationToken cToken = default)
         {
             _cToken = cToken;
-            _tcs = new TaskCompletionSource<List<TKey>>();
-
-            // Terminal.Clear();
-
-            // this.TopLeftPoint = TerminalPoint.GetCurrent();
-            // this.TopRightPoint = this.TopLeftPoint.AddX(Terminal.UsableWidth);
-            // this.BottomLeftPoint = this.TopLeftPoint.AddY(Terminal.UsableHeight);
-            // this.BottomRightPoint = this.BottomLeftPoint.AddX(Terminal.UsableWidth);
+            _tcs = new TaskCompletionSource<List<object>>();
 
             this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
 
@@ -155,29 +151,7 @@ namespace TerminalUI.Elements
 
             this.SetupStatusBar();
 
-            _watchdogCts = CancellationTokenSource.CreateLinkedTokenSource(cToken);
-
-            // this is used like a watchdog to sit and wait for a cancel request.
-            // if it happens, it'll cancel out of the menu
-            Task.Run(async () => {
-                try
-                {
-                    while (!_watchdogCts.Token.IsCancellationRequested)
-                        await Task.Delay(100000, _watchdogCts.Token);
-                }
-                catch
-                {
-                    if (cToken.IsCancellationRequested)
-                        return true;
-                    else
-                        return false;
-                }
-
-                return false;
-            }).ContinueWith((task) => {
-                if (task.Result == true)
-                    this.AbortMenu();
-            });
+            _watchdogCts = Helpers.SetupTaskWatchdog(cToken, this.AbortMenu);
 
             return _tcs.Task;
         }
@@ -186,7 +160,7 @@ namespace TerminalUI.Elements
         {
             this.Clear();
 
-            foreach (MenuEntry<TKey> entry in _entries.Skip(_entryOffset).Take(MaxLines))
+            foreach (MenuEntry entry in _entries.Skip(_entryOffset).Take(MaxLines))
                 WriteMenuEntry(entry);
         }
 
@@ -249,7 +223,7 @@ namespace TerminalUI.Elements
 
                     if ( this.MultiSelect == false)
                     {
-                        MenuEntry<TKey> finalEntry = _entries.First(x => x.Selected);
+                        MenuEntry finalEntry = _entries.First(x => x.Selected);
 
                         this.Clear();
 
@@ -258,7 +232,7 @@ namespace TerminalUI.Elements
                             if (finalEntry != null && finalEntry.Task != null)
                                 await finalEntry.Task(_cToken);
 
-                            _tcs.SetResult(new List<TKey>() {
+                            _tcs.SetResult(new List<object>() {
                                 finalEntry.SelectedValue
                             });
                         }
@@ -277,8 +251,8 @@ namespace TerminalUI.Elements
                 "Nav",
                 (key) =>
                 {
-                    MenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
-                    MenuEntry<TKey> previousEntry = selectedEntry;
+                    MenuEntry selectedEntry = _entries[_cursorIndex];
+                    MenuEntry previousEntry = selectedEntry;
 
                     bool down = (key.RootKey == ConsoleKey.DownArrow);
 
@@ -327,7 +301,7 @@ namespace TerminalUI.Elements
                     (key) => {
                         if (key.RootKey == ConsoleKey.Spacebar)
                         {
-                            MenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
+                            MenuEntry selectedEntry = _entries[_cursorIndex];
                 
                             selectedEntry.Selected = !selectedEntry.Selected;
                             WriteMenuEntry(selectedEntry);
@@ -368,12 +342,14 @@ namespace TerminalUI.Elements
         {
             _watchdogCts?.Cancel();
             _tcs.TrySetResult(null);
+
+            // Terminal.StatusBar?.Reset();
         }
 
         #endregion Public Methods
 
         #region Private Methods
-        private void MoveCursor(MenuEntry<TKey> entry, bool down)
+        private void MoveCursor(MenuEntry entry, bool down)
         {
             if (down == true)
             {
@@ -429,7 +405,7 @@ namespace TerminalUI.Elements
             }
         }
 
-        private void MoveCursor(MenuEntry<TKey> currentEntry, MenuEntry<TKey> newEntry)
+        private void MoveCursor(MenuEntry currentEntry, MenuEntry newEntry)
         {
             int newIndex = _entries.IndexOf(newEntry);
             currentEntry.Selected = false;
@@ -438,7 +414,7 @@ namespace TerminalUI.Elements
             _cursorIndex = newIndex;
         }
 
-        private void WriteMenuEntry(MenuEntry<TKey> entry)
+        private void WriteMenuEntry(MenuEntry entry)
         {
             int entryIndex = _entries.IndexOf(entry);
 
@@ -447,13 +423,13 @@ namespace TerminalUI.Elements
             // print the header
             if (entry.Header == true && entry.Name != null)
             {
-                Terminal.ForegroundColor = TerminalColor.CliMenuHeaderForeground;
+                Terminal.ForegroundColor = TerminalColor.MenuHeaderForeground;
                 Terminal.Write($"----- {entry.Name} -----");
                 Terminal.ResetForeground();
             }
             else if (entry.Disabled == true)
             {
-                Terminal.ForegroundColor = TerminalColor.CliMenuDisabledForeground;
+                Terminal.ForegroundColor = TerminalColor.MenuDisabledForeground;
                 Terminal.Write($"{_leftPadStr}  {entry.Name}");
                 Terminal.ResetForeground();
             }
@@ -467,12 +443,12 @@ namespace TerminalUI.Elements
                 if (entryIndex == _cursorIndex)
                 {
                     Terminal.Write(_leftPadStr);
-                    Terminal.BackgroundColor = TerminalColor.CliMenuCursorBackground;
-                    Terminal.ForegroundColor = TerminalColor.CliMenuCursorArrow;
+                    Terminal.BackgroundColor = TerminalColor.MenuCursorBackground;
+                    Terminal.ForegroundColor = TerminalColor.MenuCursorArrow;
                     Terminal.Write(">");
                     if (this.MultiSelect == true)
                         Terminal.Write(multiSelectChcekbox);
-                    Terminal.ForegroundColor = TerminalColor.CliMenuCursorForeground;
+                    Terminal.ForegroundColor = TerminalColor.MenuCursorForeground;
                     Terminal.Write($" {entry.Name}");
                     Terminal.ResetColor();
                 }
