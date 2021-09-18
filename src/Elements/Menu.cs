@@ -120,6 +120,8 @@ namespace TerminalUI.Elements
             this.BottomLeftPoint = new TerminalPoint(this.TopLeftPoint.Left, Terminal.UsableBottom);
             this.BottomRightPoint = this.BottomLeftPoint.AddX(Terminal.UsableWidth);
 
+            this.Width = this.TopRightPoint.Left - this.TopLeftPoint.Left;
+
             this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
 
             this.SetMenuItems(entries);
@@ -195,11 +197,11 @@ namespace TerminalUI.Elements
         /// </summary>
         public void AbortMenu()
         {
+            Terminal.StatusBar?.Reset();
+            this.Clear();
+
             _watchdogCts?.Cancel();
             _tcs.TrySetResult(null);
-
-            // TODO: why does main menu break on second draw after the status bar has been reset
-            // Terminal.StatusBar?.Reset();
         }
 
         #endregion Public Methods
@@ -211,7 +213,7 @@ namespace TerminalUI.Elements
             
             StringBuilder sb = new StringBuilder();
                 
-            for (int w = 0; w < Width; w++)
+            for (int w = 0; w < this.Width; w++)
                 sb.Append(' ');
 
             string wideString = sb.ToString();

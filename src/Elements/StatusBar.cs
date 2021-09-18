@@ -188,8 +188,6 @@ namespace TerminalUI.Elements
                         KeyInput.UnregisterKey(key);
                 }
             }
-
-            _prevItems.Clear();
         }
         private void RemovePreviousKeyBindings()
         {
