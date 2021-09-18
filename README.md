@@ -18,6 +18,7 @@ progressBar.UpdateProgress(0.42);
 # Element list
   * CliMenu
   * DataTable
+  * Header
   * HorizontalLine
   * KeyValueText
   * NotificationBox
@@ -27,16 +28,13 @@ progressBar.UpdateProgress(0.42);
   * SplitLine
   * Text
 
-  * Header **
   * StatusBar **
-
 
 # To-do list
 * Add "area" parameter to all elements
   * CliMenu
   * NotificationBox
   * QueryYesNo
-  * StatusBar
 * Add "show" parameter to all elements
   * CliMenu
   * NotificationBox

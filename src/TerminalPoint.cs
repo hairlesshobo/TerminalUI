@@ -197,8 +197,11 @@ namespace TerminalUI
         /// <returns>itself</returns>
         public TerminalPoint MoveTo()
         {
-            Console.CursorLeft = this.Left;
-            Console.CursorTop = this.Top;
+            if (this.Left != Console.CursorLeft)
+                Console.CursorLeft = this.Left;
+
+            if (this.Top != Console.CursorTop)
+                Console.CursorTop = this.Top;
 
             return this;
         }

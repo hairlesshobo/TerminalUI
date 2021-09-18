@@ -160,6 +160,20 @@ namespace TerminalUI
             => WriteColor(color, new string(new char[] { inputChar }));
 
         /// <summary>
+        ///     Write a character to the terminal with the specified foreground color, but only
+        ///     if the color isn't null and doesn't match the default foreground color of the terminal
+        /// </summary>
+        /// <param name="color">Possible color to use</param>
+        /// <param name="inputChar">Character to write</param>
+        public static void WriteColor(Nullable<ConsoleColor> color, char inputChar)
+        {
+            if (color.HasValue && color != TerminalColor.DefaultForeground)
+                WriteColor(color.Value, inputChar);
+            else
+                Write(inputChar);
+        }
+
+        /// <summary>
         ///     Write a string to the terminal using the specified foreground color
         /// </summary>
         /// <param name="color">Color to write</param>
@@ -169,6 +183,20 @@ namespace TerminalUI
             Terminal.ForegroundColor = color;
             Terminal.Write(inputString);
             Terminal.ResetForeground();
+        }
+
+        /// <summary>
+        ///     Write a string to the terminal with the specified foreground color, but only
+        ///     if the color isn't null and doesn't match the default foreground color of the terminal
+        /// </summary>
+        /// <param name="color">Possible color to use</param>
+        /// <param name="inputString">string to write</param>
+        public static void WriteColor(Nullable<ConsoleColor> color, string inputString)
+        {
+            if (color.HasValue && color != TerminalColor.DefaultForeground)
+                WriteColor(color.Value, inputString);
+            else
+                Write(inputString);
         }
 
         /// <summary>
@@ -528,10 +556,37 @@ namespace TerminalUI
         }
 
         /// <summary>
+        ///     This method will redraw all elements that are currently visible 
+        ///     on the terminal, aside from the header and status bar
+        /// </summary>
+        internal static void RedrawAllElements()
+        {
+            Terminal.Clear(true);
+
+            foreach (Element element in _elements)
+            {
+                if (element == Terminal.Header || element == Terminal.StatusBar)
+                    continue;
+
+                element.RedrawAll();
+            }
+        }
+
+        /// <summary>
         ///     Method that is executed whenever a new element is constructed
         /// </summary>
         /// <param name="element">Element that is being constructed</param>
         internal static void RegisterElement(Element element)
             => _elements.Add(element);
+
+        /// <summary>
+        ///     Unregister an existing element
+        /// </summary>
+        /// <param name="element">Element that is to be unregistered</param>
+        internal static void UnregisterElement(Element element)
+        {
+            if (_elements.Contains(element))
+                _elements.Remove(element);
+        }
     }
 }

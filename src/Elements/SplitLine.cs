@@ -52,12 +52,22 @@ namespace TerminalUI.Elements
         /// <summary>
         ///     Text that is displayed on the left
         /// </summary>
-        public string LeftText { get; private set; }
+        public string LeftText 
+        { 
+            get => _leftText ?? String.Empty;
+            private set => _leftText = value;
+        }
+        private string _leftText = null;
 
         /// <summary>
         ///     Text that is displayed on the right
         /// </summary>
-        public string RightText { get; private set; }
+        public string RightText 
+        { 
+            get => _rightText ?? String.Empty;
+            private set => _rightText = value;
+        }
+        private string _rightText = null;
 
 
         /// <summary>
@@ -70,7 +80,7 @@ namespace TerminalUI.Elements
         /// <param name="area">TerminalArea to be confined to</param>
         /// <param name="show">if true, the element will be shown immediately</param>
         public SplitLine(string leftText, 
-                         string rightText, 
+                         string rightText = null, 
                          ConsoleColor? leftColor = null, 
                          ConsoleColor? rightColor = null, 
                          TerminalArea area = TerminalArea.Default,

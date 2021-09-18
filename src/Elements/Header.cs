@@ -50,7 +50,7 @@ namespace TerminalUI.Elements
         /// <param name="area">TerminalArea to use when calcualting the layout</param>
         /// <param name="show">If true, the header will display automatically upon construction</param>
         public Header(string leftText, 
-                      string rightText,
+                      string rightText = null,
                       TerminalArea area = TerminalArea.Default,
                       bool show = false) 
             : base (area, show)

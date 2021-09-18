@@ -24,7 +24,7 @@ namespace TestCLI
 
         static async Task Entry(CancellationTokenSource cts)
         {
-            _text = new Text("This is a test...", foregroundColor: ConsoleColor.Cyan, show: true);
+            _text = new Text("This is a test...", foregroundColor: ConsoleColor.Cyan, area: TerminalArea.RightHalf, show: true);
             Terminal.NextLine();
 
             TerminalColor.PagerLineNumberBackground = TerminalColor.DefaultBackground;
@@ -164,17 +164,28 @@ namespace TestCLI
 
             Terminal.NextLine();
 
-            _kvt = new KeyValueText("test", "meow", -10, show: false);
+            _kvt = new KeyValueText("test", "meow", -10, area: TerminalArea.RightHalf, show: true);
             Terminal.NextLine();
 
-            _split = new SplitLine("meow", "hey", area: TerminalArea.RightHalf, show: true);
+            _split = new SplitLine("meow", "hey", area: TerminalArea.RightHalf, show: true); 
+            NotificationBox _box = new NotificationBox(height: 25, borderBackgroundColor: ConsoleColor.DarkBlue, defaultBackgroundColor: ConsoleColor.DarkBlue, area: TerminalArea.RightHalf);
             Terminal.NextLine();
 
-            _progress = new ProgressBar(area: TerminalArea.LeftHalf, show: true);
+            _progress = new ProgressBar(area: TerminalArea.RightHalf, show: true);
             Terminal.NextLine();
             Terminal.NextLine();
 
-            Header _header = new Header("test left", "test right", area: TerminalArea.RightHalf, show: true);
+            Header _header = new Header("test left", area: TerminalArea.RightHalf, show: true);
+            Terminal.NextLine();
+            Terminal.NextLine();
+            Terminal.NextLine();
+
+            _box.Show();
+            _box.UpdateLine(0, "meow", TextJustify.Center, ConsoleColor.Cyan);
+
+            // await Task.Delay(6000);
+
+            // _box.Hide();
 
             // List<DataTableColumn> columns = new List<DataTableColumn>()
             // {
