@@ -49,6 +49,28 @@ namespace TerminalUI
         }
 
         /// <summary>
+        ///     Set the left coordinate to the specific value
+        /// </summary>
+        /// <param name="value">new value</param>
+        /// <returns>This object</returns>
+        public TerminalPoint SetX(int value)
+        {
+            this.Left = value;
+            return this;
+        }
+
+        /// <summary>
+        ///     Set the top coordinate to the specific value
+        /// </summary>
+        /// <param name="value">new value</param>
+        /// <returns>This object</returns>
+        public TerminalPoint SetY(int value)
+        {
+            this.Top = value;
+            return this;
+        }
+
+        /// <summary>
         ///     Create a copy of the current terminal point and add the specified number of columns to it
         /// </summary>
         /// <param name="amount">Number of columns to move</param>

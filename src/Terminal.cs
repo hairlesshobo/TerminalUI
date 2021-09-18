@@ -378,7 +378,6 @@ namespace TerminalUI
             Console.TreatControlCAsInput = true;
 
             Terminal.ResetColor();
-            Terminal.RawClear();
 
             Console.CursorVisible = false;
 
@@ -394,7 +393,12 @@ namespace TerminalUI
                 },
                 Key.MakeKey(ConsoleKey.Q)
             ));
+
+            Terminal.RawClear();
+            
+            Terminal.Header.Show();
             Terminal.StatusBar.Show();
+
             Terminal.RootPoint.MoveTo();
 
             _initialized = true;
@@ -405,14 +409,15 @@ namespace TerminalUI
         /// </summary>
         /// <param name="left">Text to show on the left of the header</param>
         /// <param name="right">Text to show on the right of the header</param>
+        /// <param name="show">If true, the header will be shown immediately</param>
         /// <returns>Header object</returns>
-        public static Header InitHeader(string left, string right)
+        internal static Header InitHeader(string left, string right, bool show = false)
         {
             if (Header == null)
             {
                 using (RootPoint.GetMove())
                 {
-                    Header = new Header(left, right, show: true);
+                    Header = new Header(left, right, show: show);
                     RootPoint = new TerminalPoint(0, 2);
                 }
             }

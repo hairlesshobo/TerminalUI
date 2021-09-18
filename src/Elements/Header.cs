@@ -41,6 +41,7 @@ namespace TerminalUI.Elements
 
         private SplitLine splText = null;
         private HorizontalLine hl = null;
+        private bool _initialized = false;
 
         /// <summary>
         ///     Construct a new header
@@ -74,6 +75,22 @@ namespace TerminalUI.Elements
                 this.TopRightPoint = TerminalPoint.GetRightPoint(this.Area);
                 this.BottomLeftPoint = this.TopLeftPoint.AddY(1);
                 this.BottomRightPoint = this.TopRightPoint.AddY(1);
+
+                if (!_initialized)
+                {
+                    using (this.TopLeftPoint.GetMove())
+                        splText = new SplitLine(this.LeftText, this.RightText, area: this.Area, show: this.AutoShow);
+
+                    using (this.BottomLeftPoint.GetMove())
+                        hl = new HorizontalLine(TerminalColor.DefaultForeground, LineType.Thin, area: this.Area, show: this.AutoShow);
+                    
+                    _initialized = true;
+                }
+                else
+                {
+                    splText.RecalculateAndRedraw();
+                    hl.RecalculateAndRedraw();
+                }
             }
             // nothing needs to be done here because the child elements automatically handle it
 
@@ -127,10 +144,7 @@ namespace TerminalUI.Elements
             {
                 Terminal.BackgroundColor = TerminalColor.HeaderBackground;
 
-                if (splText == null)
-                    splText = new SplitLine(this.LeftText, this.RightText, area: this.Area, show: this.AutoShow);
-                else
-                    splText.Update(this.LeftText, this.RightText);
+                splText.Update(this.LeftText, this.RightText);
 
                 Terminal.ResetBackground();
             }
@@ -147,15 +161,6 @@ namespace TerminalUI.Elements
             this.Redraw();
 
             // draw the header line
-            using (this.BottomLeftPoint.GetMove())
-            {
-                Terminal.BackgroundColor = TerminalColor.HeaderBackground;
-
-                if (hl == null)
-                    hl = new HorizontalLine(TerminalColor.DefaultForeground, LineType.Thin, area: this.Area, show: this.AutoShow);
-
-                Terminal.ResetBackground();
-            }
         }
 
         /// <summary>
@@ -163,10 +168,10 @@ namespace TerminalUI.Elements
         /// </summary>
         public override void Show()
         {
+            base.Show();
+
             this.splText?.Show();
             this.hl?.Show();
-
-            base.Show();
         }
 
         /// <summary>

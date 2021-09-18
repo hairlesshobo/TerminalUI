@@ -34,6 +34,8 @@ namespace TerminalUI.Elements
     /// </summary>
     public class Menu : Element
     {
+        // TODO: make MenuEntry abstract and create MenuEntrySpace, MenuEntryHeader, MenuEntryItem concrete classes
+
         #region Public Properties
         /// <summary>
         ///     If true, the menu will show "Cancel" instead of "Quit"
@@ -101,32 +103,43 @@ namespace TerminalUI.Elements
         /// <param name="entries">Menu entries to display</param>
         /// <param name="multiSelect">Allow the user to select multiple entries</param>
         /// <param name="enableCancel">If true, "cancel" will be displayed on status bar instead of "quit"</param>
-        // <param name="area">TerminalArea to draw the element in</param>
+        /// <param name="area">TerminalArea to draw the element in</param>
         public Menu(List<MenuEntry> entries, 
                     bool multiSelect = false,
-                    bool enableCancel = false)
-                    // TerminalArea area = TerminalArea.Default)
-            // : base(area, false)
-            : base()
+                    bool enableCancel = false,
+                    TerminalArea area = TerminalArea.Default)
+            : base(area, false)
         {
-            // this.MultiSelect = multiSelect;
-
             this.MultiSelect = multiSelect;
             this.EnableCancel = enableCancel;
 
-            this.TopLeftPoint = TerminalPoint.GetCurrent();
-            this.TopRightPoint = this.TopLeftPoint.AddX(Terminal.UsableWidth);
-
-            this.BottomLeftPoint = new TerminalPoint(this.TopLeftPoint.Left, Terminal.UsableBottom);
-            this.BottomRightPoint = this.BottomLeftPoint.AddX(Terminal.UsableWidth);
-
-            this.Width = this.TopRightPoint.Left - this.TopLeftPoint.Left;
-
-            this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
-
             this.SetMenuItems(entries);
+            this.RecalculateAndRedraw();
         }
         #endregion Constructors
+
+        /// <summary>
+        ///     Recalculate the layout and redraw, if showing
+        /// </summary>
+        internal override void RecalculateAndRedraw()
+        {
+            base.CalculateLayout();
+
+            using (this.OriginalPoint.GetMove())
+            {
+                this.TopLeftPoint = TerminalPoint.GetLeftPoint(this.Area);
+                this.TopRightPoint = TerminalPoint.GetRightPoint(this.Area);
+
+                this.BottomLeftPoint = this.TopLeftPoint.Clone().SetY(Terminal.UsableBottom);
+                this.BottomRightPoint = this.TopRightPoint.Clone().SetY(Terminal.UsableBottom);
+
+                this.Width = this.TopRightPoint.Left - this.TopLeftPoint.Left;
+
+                this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
+            }
+
+            this.RedrawAll();
+        }
 
         #region Public Methods
 
@@ -156,7 +169,7 @@ namespace TerminalUI.Elements
             _tcs = new TaskCompletionSource<List<object>>();
 
             this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
-
+            this.Visible = true;
             this.Redraw();
 
             // string message = "to select item";
@@ -186,6 +199,9 @@ namespace TerminalUI.Elements
         /// </summary>
         public override void Redraw()
         {
+            if (!this.Visible)
+                return;
+
             this.Clear();
 
             foreach (MenuEntry entry in _entries.Skip(_entryOffset).Take(MaxLines))
