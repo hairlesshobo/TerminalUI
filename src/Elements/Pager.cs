@@ -158,6 +158,11 @@ namespace TerminalUI.Elements
         ///     Terminal point that indicates where the header, if present, begins
         /// </summary>
         public TerminalPoint HeaderLinePoint { get; private set; }
+
+        /// <summary>
+        ///     Cancellation token that is triggered when the user exits the pager
+        /// </summary>
+        public CancellationToken CancellationToken => _cts.Token;
         #endregion Public Properties
 
         #region Private Fields
@@ -170,6 +175,7 @@ namespace TerminalUI.Elements
         private bool _deferDraw = true;
         private bool _started = false;
         private TaskCompletionSource<bool> _tcs = null;
+        
         private CancellationTokenSource _cts = null;
         private CancellationTokenSource _watchdogCts = null;
 

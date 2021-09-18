@@ -20,7 +20,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -175,6 +174,13 @@ namespace TerminalUI.Elements
         }
 
         #region Public Methods
+
+        /// <summary>
+        ///     Set the data store to the object provided
+        /// </summary>
+        /// <param name="dataStore">New data store</param>
+        public void SetDataStore(IList dataStore)
+            => this.DataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
 
         /// <summary>
         ///     Not implemented yet

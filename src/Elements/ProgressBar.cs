@@ -79,18 +79,6 @@ namespace TerminalUI.Elements
 
 
         /// <summary>
-        ///     Obsolete
-        /// </summary>
-        /// <param name="mode"></param>
-        /// <param name="show"></param>
-        [Obsolete]
-        public ProgressBar(ProgressMode mode, bool show = false)
-            : this(width: 0, mode: mode, show: show) 
-        {
-        }
-
-
-        /// <summary>
         ///     Constuct a new instance of the progress bar element
         /// </summary>
         /// <param name="width">

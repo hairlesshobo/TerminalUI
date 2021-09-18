@@ -83,24 +83,6 @@ namespace TerminalUI.Elements
         }
 
         /// <summary>
-        ///     Construct a new Text element, using the provided text and foreground color
-        ///     as the initial text to be displayed
-        /// </summary>
-        /// <param name="foregroundColor">Color to use drawing the text element</param>
-        /// <param name="text">Initial text to display</param>
-        /// <param name="maxLength">Maximum number of characters the text field may contain</param>
-        /// <param name="area">Terminal area to constrain the element to</param>
-        /// <param name="show">If true, element will automatically be shown once constructed</param>
-        [Obsolete]
-        public Text(ConsoleColor foregroundColor, 
-                    string text, 
-                    int maxLength = 0, 
-                    TerminalArea area = TerminalArea.Default, 
-                    bool show = false) 
-            : this(text, maxLength, foregroundColor, area, show)
-        { }
-
-        /// <summary>
         ///     Recalculate the layout and redraw the entire element
         /// </summary>
         internal override void RecalculateAndRedraw()
