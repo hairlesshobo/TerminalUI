@@ -20,7 +20,7 @@ namespace TestCLI
         private static KeyValueText _kvt;
         private static SplitLine _split;
         private static ProgressBar _progress;
-        private static Pager _pager;
+        // private static Pager _pager;
 
         static async Task Entry(CancellationTokenSource cts)
         {
@@ -174,9 +174,24 @@ namespace TestCLI
             Terminal.NextLine();
             Terminal.NextLine();
 
-            List<DataTableColumn> columns = new List<DataTableColumn>();
+            Header _header = new Header("test left", "test right", area: TerminalArea.RightHalf, show: true);
+
+            // List<DataTableColumn> columns = new List<DataTableColumn>()
+            // {
+            //     new DataTableColumn("Name", "Person Name"),
+            //     new DataTableColumn("Age", "Age")
+            // };
+
+            // List<Person> people = new List<Person>()
+            // {
+            //     new Person("Steve Smith", "Male", 48, null),
+            //     new Person("John Smith", "Male", 37, null),
+            //     new Person("Jane Doe", "Female", 28, "Smith"),
+            //     new Person("Janet Brown", "Female", 2, "Smith"),
+            //     new Person("James", "Male", 12, null)
+            // };
             
-            // DataTable _dataTable = new DataTable() show: true);
+            // DataTable _dataTable = new DataTable(people, columns, showHeader: true, area: TerminalArea.LeftHalf, show: false);
 
             await Loop(cts);
         }
@@ -203,6 +218,22 @@ namespace TestCLI
                 // Terminal.WriteLine("meow");
             }
 
+        }
+
+        public class Person
+        {
+            public string Name { get; set; }
+            public string Gender { get; set; }
+            public int Age { get; set; }
+            public string MaidenName { get; set; }
+
+            public Person (string name, string gender, int age, string maidenName)
+            {
+                this.Name = name;
+                this.Gender = gender;
+                this.Age = age;
+                this.MaidenName = maidenName;
+            }
         }
     }
 }

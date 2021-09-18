@@ -34,13 +34,10 @@ progressBar.UpdateProgress(0.42);
 # To-do list
 * Add "area" parameter to all elements
   * CliMenu
-  * DataTable
-  * Header
   * NotificationBox
   * QueryYesNo
   * StatusBar
 * Add "show" parameter to all elements
   * CliMenu
-  * DataTable
   * NotificationBox
   * QueryYesNo

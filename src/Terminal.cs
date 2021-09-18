@@ -382,8 +382,11 @@ namespace TerminalUI
         {
             if (Header == null)
             {
-                Header = new Header(left, right, show: true);
-                RootPoint = new TerminalPoint(0, 2);
+                using (RootPoint.GetMove())
+                {
+                    Header = new Header(left, right, show: true);
+                    RootPoint = new TerminalPoint(0, 2);
+                }
             }
             else
                 Header.UpdateHeader(left, right);

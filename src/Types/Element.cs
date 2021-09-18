@@ -91,11 +91,17 @@ namespace TerminalUI.Types
         protected TerminalPoint OriginalPoint { get; private protected set; }
 
         /// <summary>
+        ///     If true, this means that the element was automatically shown upon creation
+        /// </summary>
+        protected bool AutoShow { get; private set; }
+
+        /// <summary>
         ///     Default constructor used by all elements
         /// </summary>
         protected Element(bool show = false)
         {
-            this.Visible = show;
+            this.AutoShow = show;
+            this.Visible = this.AutoShow;
             this.OriginalPoint = TerminalPoint.GetCurrent();
 
             this.CalculateLayout();

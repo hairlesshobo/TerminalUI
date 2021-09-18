@@ -47,26 +47,37 @@ namespace TerminalUI.Elements
         /// </summary>
         /// <param name="leftText">Text to display on left side of the header</param>
         /// <param name="rightText">Text to display on the right side of the header</param>
+        /// <param name="area">TerminalArea to use when calcualting the layout</param>
         /// <param name="show">If true, the header will display automatically upon construction</param>
         public Header(string leftText, 
-                      string rightText, 
+                      string rightText,
+                      TerminalArea area = TerminalArea.Default,
                       bool show = false) 
-            : base (show)
+            : base (area, show)
         {
-            this.Height = 1;
-            this.Width = Terminal.Width;
+            this.LeftText = leftText;
+            this.RightText = rightText;
             
-            this.TopLeftPoint = new TerminalPoint(0, 0);
-            this.TopRightPoint = new TerminalPoint(Terminal.Width, 0);
-            this.BottomLeftPoint = new TerminalPoint(0, 1);
-            this.BottomRightPoint = new TerminalPoint(Terminal.Width, 1);
-
-            this.UpdateHeader(leftText, rightText);
+            this.RecalculateAndRedraw();
         }
 
         internal override void RecalculateAndRedraw()
         {
+            base.CalculateLayout();
+
+            using (this.OriginalPoint.GetMove())
+            {
+                this.Height = 2;
+                this.Width = this.MaxWidth;
+
+                this.TopLeftPoint = TerminalPoint.GetLeftPoint(this.Area);
+                this.TopRightPoint = TerminalPoint.GetRightPoint(this.Area);
+                this.BottomLeftPoint = this.TopLeftPoint.AddY(1);
+                this.BottomRightPoint = this.TopRightPoint.AddY(1);
+            }
             // nothing needs to be done here because the child elements automatically handle it
+
+            this.RedrawAll();
         }
 
         /// <summary>
@@ -105,7 +116,7 @@ namespace TerminalUI.Elements
         }
 
         /// <summary>
-        ///     Redraw the entire header
+        ///     Redraw the text portion of the header
         /// </summary>
         public override void Redraw()
         {
@@ -117,14 +128,31 @@ namespace TerminalUI.Elements
                 Terminal.BackgroundColor = TerminalColor.HeaderBackground;
 
                 if (splText == null)
-                    splText = new SplitLine(this.LeftText, this.RightText, show: true);
+                    splText = new SplitLine(this.LeftText, this.RightText, area: this.Area, show: this.AutoShow);
                 else
                     splText.Update(this.LeftText, this.RightText);
 
-                this.BottomLeftPoint.MoveTo();
+                Terminal.ResetBackground();
+            }
+        }
+
+        /// <summary>
+        ///     Redraw the entire element
+        /// </summary>
+        public override void RedrawAll()
+        {
+            if (!this.Visible)
+                return;
+
+            this.Redraw();
+
+            // draw the header line
+            using (this.BottomLeftPoint.GetMove())
+            {
+                Terminal.BackgroundColor = TerminalColor.HeaderBackground;
 
                 if (hl == null)
-                    hl = new HorizontalLine(TerminalColor.DefaultForeground, LineType.Thin, show: true);
+                    hl = new HorizontalLine(TerminalColor.DefaultForeground, LineType.Thin, area: this.Area, show: this.AutoShow);
 
                 Terminal.ResetBackground();
             }
