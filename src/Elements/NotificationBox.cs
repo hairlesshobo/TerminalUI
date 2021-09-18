@@ -64,6 +64,9 @@ namespace TerminalUI.Elements
         private int _configuredHeight = 0;
         private int _configuredWidth = 0;
 
+        private ConsoleColor _currentForeground = TerminalColor.DefaultForeground;
+        private ConsoleColor _currentBackground = TerminalColor.DefaultBackground;
+
         /// <summary>
         ///     Construct a new notificatiom box element
         /// </summary>
@@ -179,7 +182,7 @@ namespace TerminalUI.Elements
             this.BorderForegroundColor = foreground;
             this.BorderBackgroundColor = background;
 
-            this.DrawBox();
+            this.RedrawAll();
         }
 
         /// <summary>
@@ -235,6 +238,30 @@ namespace TerminalUI.Elements
             this.DrawLine(index);
         }
 
+        private void ConditionallySetForeground(Nullable<ConsoleColor> color)
+        {
+            if (color != _currentForeground)
+                Terminal.ForegroundColor = _currentForeground = color.Value;
+        }
+
+        private void ConditionallySetBackground(Nullable<ConsoleColor> color)
+        {
+            if (color != _currentBackground)
+                Terminal.BackgroundColor = _currentBackground = color.Value;
+        }
+
+        private void ConditionallyResetForeground()
+        {
+            if (_currentForeground != TerminalColor.DefaultForeground)
+                Terminal.ForegroundColor = _currentForeground = TerminalColor.DefaultForeground;
+        }
+
+        private void ConditionallyResetBackground()
+        {
+            if (_currentBackground != TerminalColor.DefaultBackground)
+                Terminal.BackgroundColor = _currentBackground = TerminalColor.DefaultBackground;
+        }
+
         /// <summary>
         ///     Redraw the entire element.. that is, redraw the border and the text lines
         /// </summary>
@@ -242,10 +269,61 @@ namespace TerminalUI.Elements
         {
             if (!this.Visible)
                 return;
+                 
+            TerminalPoint currentPoint = this.TopLeftPoint.Clone();
 
-            this.DrawBox();
+            using (currentPoint.GetMove())
+            {
+                // If the border color isn't terminal default foreground.. we set the color
+                ConditionallySetForeground(this.BorderForegroundColor);
+                ConditionallySetBackground(this.BorderBackgroundColor);
 
-            this.Redraw();
+                // draw the top line
+                Terminal.Write((char)BoxChars.ThinTopLeft);
+
+                for (int curWidth = 1; curWidth < (this.Width-1); curWidth++)
+                    Terminal.Write((char)BoxChars.ThinHorizontal);
+
+                Terminal.Write((char)BoxChars.ThinTopRight);
+
+                // draw the sides
+
+                int verticalLines = this.Height - 2;
+
+                for (int i = 0; i < verticalLines; i++)
+                {
+                    currentPoint = currentPoint.AddY(1);
+                    currentPoint.MoveTo();
+
+                    ConditionallySetForeground(this.BorderForegroundColor);
+                    ConditionallySetBackground(this.BorderBackgroundColor);
+                    
+                    Terminal.Write((char)BoxChars.ThinVertical);
+
+                    this.DrawLine(i, true);
+
+                    ConditionallySetForeground(this.BorderForegroundColor);
+                    ConditionallySetBackground(this.BorderBackgroundColor);
+                    
+                    Terminal.Write((char)BoxChars.ThinVertical);
+                }
+
+                currentPoint = currentPoint.AddY(1);
+                currentPoint.MoveTo();
+
+                ConditionallySetForeground(this.BorderForegroundColor);
+                ConditionallySetBackground(this.BorderBackgroundColor);
+
+                Terminal.Write((char)BoxChars.ThinBottomLeft);
+
+                for (int curWidth = 1; curWidth < (this.Width-1); curWidth++)
+                    Terminal.Write((char)BoxChars.ThinHorizontal);
+
+                Terminal.Write((char)BoxChars.ThinBottomRight);
+
+                ConditionallyResetBackground();
+                ConditionallyResetForeground();
+            }
         }
 
         /// <summary>
@@ -276,71 +354,11 @@ namespace TerminalUI.Elements
         }
 
         /// <summary>
-        ///     Draw the box border
-        /// </summary>
-        private void DrawBox()
-        {
-            if (!this.Visible)
-                return;
-                 
-            TerminalPoint currentPoint = this.TopLeftPoint.Clone();
-
-            using (currentPoint.GetMove())
-            {
-                // If the border color isn't terminal default foreground.. we set the color
-                if (this.BorderForegroundColor != TerminalColor.DefaultForeground)
-                    Terminal.ForegroundColor = this.BorderForegroundColor.Value;
-
-                if (this.BorderBackgroundColor != TerminalColor.DefaultBackground)
-                    Terminal.BackgroundColor = this.BorderBackgroundColor.Value;
-
-                // draw the top line
-                Terminal.Write((char)BoxChars.ThinTopLeft);
-
-                for (int curWidth = 1; curWidth < (this.Width-1); curWidth++)
-                    Terminal.Write((char)BoxChars.ThinHorizontal);
-
-                Terminal.Write((char)BoxChars.ThinTopRight);
-
-                // draw the sides
-
-                int verticalLines = this.Height - 2;
-
-                for (int i = 0; i < verticalLines; i++)
-                {
-                    currentPoint = currentPoint.AddY(1);
-                    currentPoint.MoveTo();
-                    
-                    Terminal.Write((char)BoxChars.ThinVertical);
-
-                    currentPoint.AddX(this.Width-1).MoveTo();
-                    
-                    Terminal.Write((char)BoxChars.ThinVertical);
-                }
-
-                currentPoint = currentPoint.AddY(1);
-                currentPoint.MoveTo();
-
-                Terminal.Write((char)BoxChars.ThinBottomLeft);
-
-                for (int curWidth = 1; curWidth < (this.Width-1); curWidth++)
-                    Terminal.Write((char)BoxChars.ThinHorizontal);
-
-                Terminal.Write((char)BoxChars.ThinBottomRight);
-
-                if (this.BorderForegroundColor != TerminalColor.DefaultForeground)
-                    Terminal.ResetForeground();
-
-                if (this.BorderBackgroundColor != TerminalColor.DefaultBackground)
-                    Terminal.ResetBackground();
-            }
-        }
-
-        /// <summary>
         ///     Draw a single line
         /// </summary>
         /// <param name="index">Index to draw</param>
-        private void DrawLine(int index)
+        /// <param name="noMove">if true, no cursor movement will be performed when writing the line</param>
+        private void DrawLine(int index, bool noMove = false)
         {
             if (index > _lines.Length)
                 throw new IndexOutOfRangeException();
@@ -348,24 +366,22 @@ namespace TerminalUI.Elements
             if (!this.Visible)
                 return;
                 
-            using (_lines[index].RootPoint.GetMove())
+            TerminalPointMove move  = null;
+            
+            if (!noMove)
+                move = _lines[index].RootPoint.GetMove();
+             
+            ConditionallySetBackground(_lines[index].BackgroundColor); 
+            ConditionallySetForeground(_lines[index].ForegroundColor);
+
+            Terminal.Write(GetJustifiedText(index));
+
+            if (move != null)
             {
-                if (_lines[index].BackgroundColor != TerminalColor.DefaultBackground)
-                    Terminal.BackgroundColor = _lines[index].BackgroundColor.Value;
+                ConditionallyResetBackground();
+                ConditionallyResetForeground();
 
-                // TODO: make sure this works and is fast
-                Terminal.WriteColor(_lines[index].ForegroundColor, GetJustifiedText(index));
-
-                // if (_lines[index].ForegroundColor != TerminalColor.DefaultForeground)
-                //     Terminal.ForegroundColor = this._lines[index].ForegroundColor.Value;
-
-                // Terminal.Write(GetJustifiedText(index));
-
-                // if (_lines[index].ForegroundColor != TerminalColor.DefaultForeground)
-                //     Terminal.ResetForeground();
-
-                if (_lines[index].BackgroundColor != TerminalColor.DefaultBackground)
-                    Terminal.ResetBackground();
+                move.Dispose();
             }
         }
 
