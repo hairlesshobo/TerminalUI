@@ -355,6 +355,7 @@ namespace TerminalUI.Elements
 
             for (int h = 0; h < this.MaxLines; h++)
             {
+                // TODO: i feel like this should be calling a this.DataPoint.AddY(h).MoveTo(); instead of setting Console.CursorLeft
                 Console.CursorLeft = 0;
                 Terminal.Write(wideString);
             }

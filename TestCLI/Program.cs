@@ -180,12 +180,16 @@ namespace TestCLI
             Terminal.NextLine();
             Terminal.NextLine();
 
-            _box.Show();
+            if (!await Helpers.Delay(2000, cts.Token))
+                return;
+
             _box.UpdateLine(0, "meow", TextJustify.Center, ConsoleColor.Cyan);
+            _box.Show();
 
-            // await Task.Delay(6000);
+            if (!await Helpers.Delay(3000, cts.Token))
+                return;
 
-            // _box.Hide();
+            _box.Hide();
 
             // List<DataTableColumn> columns = new List<DataTableColumn>()
             // {
