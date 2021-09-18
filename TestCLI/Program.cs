@@ -11,6 +11,31 @@ namespace TestCLI
 {
     class Program
     {
+        /// <summary>
+        ///     Simple wrapper for Task.Delay that returns a boolean indicating whether 
+        ///     the request was canceled or not.
+        /// </summary>
+        /// <param name="milliseconds">Milliseconds to delay</param>
+        /// <param name="cToken">Token that allows for cancellation of the delay</param>
+        /// <returns>
+        ///     Booleaning indicating cancel status.
+        /// 
+        ///     false = Delay was canceled prematurely
+        ///      true = Delay executed to the end without being canceled
+        /// </returns>
+        public static async Task<bool> Delay(int milliseconds, CancellationToken cToken)
+        {
+            try {
+                await Task.Delay(milliseconds, cToken);
+
+                return true;
+            }
+            catch(TaskCanceledException)
+            {
+                 return false;
+            }
+        }
+        
         static void Main(string[] args)
         {
             Terminal.Run("TestCLI", "TerminalUI", Entry);
