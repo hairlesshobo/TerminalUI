@@ -93,7 +93,7 @@ namespace TerminalUI
         /// <summary>
         ///     Row number of the bottom-most usable row that is not a status bar
         /// </summary>
-        internal static int UsableBottomn => Terminal.Height - 1 - (StatusBar == null ? 0 : 1);
+        internal static int UsableBottom => Terminal.Height - 1 - (StatusBar == null ? 0 : 1);
 
         /// <summary>
         ///     Background color of the terminal. Only makes the call to change the 

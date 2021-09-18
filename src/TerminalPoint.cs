@@ -122,7 +122,7 @@ namespace TerminalUI
             TerminalPoint point = TerminalPoint.GetCurrent();
 
             // right now there is no non-full-height areas.. so nothing to do here
-            point.Top = Terminal.UsableBottomn;
+            point.Top = Terminal.UsableBottom;
 
             return point;
         }

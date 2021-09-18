@@ -87,7 +87,7 @@ namespace TerminalUI.Elements
             this.TopLeftPoint = TerminalPoint.GetCurrent();
             this.TopRightPoint = this.TopLeftPoint.AddX(Terminal.UsableWidth);
 
-            this.BottomLeftPoint = new TerminalPoint(this.TopLeftPoint.Left, Terminal.UsableBottomn);
+            this.BottomLeftPoint = new TerminalPoint(this.TopLeftPoint.Left, Terminal.UsableBottom);
             this.BottomRightPoint = this.BottomLeftPoint.AddX(Terminal.UsableWidth);
 
             this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
