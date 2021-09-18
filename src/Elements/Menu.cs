@@ -32,19 +32,42 @@ namespace TerminalUI.Elements
     ///     user to interactively select one or more (multiple select not yet implemented)
     ///     items
     /// </summary>
-    /// <typeparam name="TKey">Type returned by the menu</typeparam>
     public class Menu : Element
     {
         #region Public Properties
-        [Obsolete]
-        public string MenuLabel { get; set; } = null;
-        public bool EnableCancel { get; set; } = false;
+        /// <summary>
+        ///     If true, the menu will show "Cancel" instead of "Quit"
+        /// </summary>
+        public bool EnableCancel { get; private set; } = false;
+
+        /// <summary>
+        ///     If true, multi-select functionality is enabled
+        /// </summary>
         public bool MultiSelect { get; private set; } = false;
+
+        /// <summary>
+        ///     Callback that is executed when the user requests to quit the menu
+        /// </summary>
         public Func<Task> QuitCallback { get; set; } = null;
+
+        /// <summary>
+        ///     List of values that are selected
+        /// </summary>
         public List<object> SelectedValues => _entries.Where(x => x.Selected).Select(x => x.SelectedValue).ToList();
+
+        /// <summary>
+        ///     Entries that are currently selected
+        /// </summary>
         public IReadOnlyList<object> SelectedEntries => (IReadOnlyList<object>)_entries;
-        TaskCompletionSource<List<object>> _tcs;
+        
+        /// <summary>
+        ///     Maximum number of lines that can be displayed
+        /// </summary>
         public int MaxLines { get; private set; } // => Terminal.UsableHeight - 1;
+
+        /// <summary>
+        ///     How many spaces to pad the menu with on the left
+        /// </summary>
         public int LeftPad { 
             get => _leftPad; 
             set 
@@ -63,6 +86,7 @@ namespace TerminalUI.Elements
         #endregion Public Properties
 
         #region Private Fields
+        private TaskCompletionSource<List<object>> _tcs;
         private List<MenuEntry> _entries;
         private int _cursorIndex = -1;
         private string _leftPadStr = "    ";
@@ -71,18 +95,24 @@ namespace TerminalUI.Elements
         #endregion Private Fields
 
         #region Constructors
-        public Menu(List<MenuEntry> entries, bool multiSelect)
-            : base() => Initalize(entries, multiSelect);
-
-        public Menu(List<MenuEntry> Entries)
-            : base() => Initalize(Entries, false);
-
-        public Menu()
-            : base() => Initalize(null, false);
-
-        public void Initalize(List<MenuEntry> entries, bool multiSelect)
+        /// <summary>
+        ///     Constuct a new instance of the menu element
+        /// </summary>
+        /// <param name="entries">Menu entries to display</param>
+        /// <param name="multiSelect">Allow the user to select multiple entries</param>
+        /// <param name="enableCancel">If true, "cancel" will be displayed on status bar instead of "quit"</param>
+        // <param name="area">TerminalArea to draw the element in</param>
+        public Menu(List<MenuEntry> entries, 
+                    bool multiSelect = false,
+                    bool enableCancel = false)
+                    // TerminalArea area = TerminalArea.Default)
+            // : base(area, false)
+            : base()
         {
+            // this.MultiSelect = multiSelect;
+
             this.MultiSelect = multiSelect;
+            this.EnableCancel = enableCancel;
 
             this.TopLeftPoint = TerminalPoint.GetCurrent();
             this.TopRightPoint = this.TopLeftPoint.AddX(Terminal.UsableWidth);
@@ -92,7 +122,7 @@ namespace TerminalUI.Elements
 
             this.MaxLines = this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 1;
 
-            SetMenuItems(entries);
+            this.SetMenuItems(entries);
         }
         #endregion Constructors
 
