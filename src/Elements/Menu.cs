@@ -127,34 +127,27 @@ namespace TerminalUI.Elements
         #endregion Constructors
 
         #region Public Methods
-        public void SetMenuItems(List<MenuEntry> entries)
-        {
-            _entries = entries;
-            _cursorIndex = 0;
-
-            if (_entries != null && _entries.Count > 0)
-            {
-                _cursorIndex = _entries.IndexOf(_entries.First(x => !x.Disabled && !x.Header));
-
-                if (this.MultiSelect == false && (!_entries.Any(x => x.Selected && !x.Disabled && !x.Header)))
-                    _entries.First(x => !x.Disabled && !x.Header).Selected = true;
-
-                // if this isn't a multiselect menu, make sure there is only one selected by default
-                if (this.MultiSelect == false && _entries.Count(x => x.Selected == true) > 1)
-                {
-                    _entries.ForEach(x => x.Selected = false);
-                    _entries.First().Selected = true;
-                }
-            }
-        }
 
         private CancellationToken _cToken = default;
         private CancellationTokenSource _watchdogCts = null;
 
+        /// <summary>
+        ///     Show the menu asynchronously and either wait for the user
+        ///     to make a selection, or to cancel out of the menu. Cast the
+        ///     results to the specified type
+        /// </summary>
+        /// <typeparam name="TResult">Type tp cast the return list to</typeparam>
+        /// <param name="cToken">Token used to cancel the menu</param>
+        /// <returns>Task that returns an object, or null if canceled</returns>
         public async Task<List<TResult>> ShowAsync<TResult>(CancellationToken cToken = default)
             => (await ShowAsync(cToken: cToken))?.Cast<TResult>()?.ToList();
 
-        // TODO: remove clearScreen
+        /// <summary>
+        ///     Show the menu asynchronously and either wait for the user
+        ///     to make a selection, or to cancel out of the menu
+        /// </summary>
+        /// <param name="cToken">Token used to cancel the menu</param>
+        /// <returns>Task that returns an object, or null if canceled</returns>
         public Task<List<object>> ShowAsync(CancellationToken cToken = default)
         {
             _cToken = cToken;
@@ -186,6 +179,9 @@ namespace TerminalUI.Elements
             return _tcs.Task;
         }
 
+        /// <summary>
+        ///     Redraw the current menu
+        /// </summary>
         public override void Redraw()
         {
             this.Clear();
@@ -194,6 +190,21 @@ namespace TerminalUI.Elements
                 WriteMenuEntry(entry);
         }
 
+        /// <summary>
+        ///     Abort the current menu
+        /// </summary>
+        public void AbortMenu()
+        {
+            _watchdogCts?.Cancel();
+            _tcs.TrySetResult(null);
+
+            // TODO: why does main menu break on second draw after the status bar has been reset
+            // Terminal.StatusBar?.Reset();
+        }
+
+        #endregion Public Methods
+
+        #region Private Methods
         private void Clear()
         {
             this.TopLeftPoint.MoveTo();
@@ -212,6 +223,27 @@ namespace TerminalUI.Elements
             }
 
             this.TopLeftPoint.MoveTo();
+        }
+
+        private void SetMenuItems(List<MenuEntry> entries)
+        {
+            _entries = entries;
+            _cursorIndex = 0;
+
+            if (_entries != null && _entries.Count > 0)
+            {
+                _cursorIndex = _entries.IndexOf(_entries.First(x => !x.Disabled && !x.Header));
+
+                if (this.MultiSelect == false && (!_entries.Any(x => x.Selected && !x.Disabled && !x.Header)))
+                    _entries.First(x => !x.Disabled && !x.Header).Selected = true;
+
+                // if this isn't a multiselect menu, make sure there is only one selected by default
+                if (this.MultiSelect == false && _entries.Count(x => x.Selected == true) > 1)
+                {
+                    _entries.ForEach(x => x.Selected = false);
+                    _entries.First().Selected = true;
+                }
+            }
         }
 
         private void SetupStatusBar()
@@ -367,18 +399,7 @@ namespace TerminalUI.Elements
 
             Terminal.StatusBar.ShowItems(statusBarItems.ToArray());
         }
-
-        public void AbortMenu()
-        {
-            _watchdogCts?.Cancel();
-            _tcs.TrySetResult(null);
-
-            // Terminal.StatusBar?.Reset();
-        }
-
-        #endregion Public Methods
-
-        #region Private Methods
+        
         private void MoveCursor(MenuEntry entry, bool down)
         {
             if (down == true)

@@ -23,16 +23,52 @@ using System.Threading.Tasks;
 
 namespace TerminalUI.Types
 {
+    /// <summary>
+    ///     Represents a single menu entry that is to be displayed on a Menu element
+    /// </summary>
     public class MenuEntry
     {
+        /// <summary>
+        ///     Name of the menu entry (the text that is displayed to the end user)
+        /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        ///     Task to perform if this is the menu entry that is selected.
+        /// 
+        ///     Note: This task is only executed if the menu is in single-select mode.
+        ///           It will not be selected if the menu is in multi-select mode
+        /// </summary>
         public Func<CancellationToken, Task> Task { get; set; }
+
+        /// <summary>
+        ///     If true, the menu entry is disabled and cannot be selected by the end user
+        /// </summary>
         public bool Disabled { get; set; } = false;
+
+        /// <summary>
+        ///     If true, the menu entry is a header 
+        /// </summary>
         public bool Header { get; set; } = false;
+
+        /// <summary>
+        ///     Value that is to be returned if this menu entry is selected
+        /// </summary>
         public object SelectedValue { get; set; }
-        public ConsoleKey ShortcutKey { get; set; }
+        
+        /// <summary>
+        ///     Foreground color for this entry
+        /// </summary>
         public ConsoleColor ForegroundColor { get; set; } = Terminal.ForegroundColor;
+
+        /// <summary>
+        ///     Background color for this entry
+        /// </summary>
         public ConsoleColor BackgroundColor { get; set; } = Terminal.BackgroundColor;
+
+        /// <summary>
+        ///     Flag indicating whether this entry is selected
+        /// </summary>
         public bool Selected { get; internal set; }
     }
 }
