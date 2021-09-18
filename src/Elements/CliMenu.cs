@@ -27,11 +27,14 @@ using TerminalUI.Types;
 
 namespace TerminalUI.Elements
 {
+    /// <summary>
+    ///     Basic menu element that allows listing multiple options and allows the 
+    ///     user to interactively select one or more (multiple select not yet implemented)
+    ///     items
+    /// </summary>
+    /// <typeparam name="TKey">Type returned by the menu</typeparam>
     public class CliMenu<TKey> : Element
     {
-        // TODO:
-        // -- Add ability to define columns and format as a table view
-        // -- Add ability to edit entries in table mode 
         #region Public Properties
         [Obsolete]
         public string MenuLabel { get; set; } = null;
