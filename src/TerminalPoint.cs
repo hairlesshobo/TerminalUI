@@ -44,8 +44,8 @@ namespace TerminalUI
         /// <param name="top">top index</param>
         public TerminalPoint(int left, int top)
         {
-            Top = top;
-            Left = left;
+            this.Top = top;
+            this.Left = left;
         }
 
         /// <summary>
@@ -197,11 +197,7 @@ namespace TerminalUI
         /// <returns>itself</returns>
         public TerminalPoint MoveTo()
         {
-            if (this.Left != Console.CursorLeft)
-                Console.CursorLeft = this.Left;
-
-            if (this.Top != Console.CursorTop)
-                Console.CursorTop = this.Top;
+            Console.SetCursorPosition(this.Left, this.Top);
 
             return this;
         }
@@ -221,8 +217,7 @@ namespace TerminalUI
         {
             TerminalPoint currentPoint = TerminalPoint.GetCurrent();
 
-            Console.CursorLeft = this.Left;
-            Console.CursorTop = this.Top;
+            this.MoveTo();
 
             return currentPoint;
         }
