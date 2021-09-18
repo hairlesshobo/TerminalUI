@@ -38,6 +38,9 @@ namespace TerminalUI.Elements
     {
         // TODO: Add ability to define columns and format as a table view
         // TODO: Add ability to edit entries in table mode 
+        // TODO: Add a new "theme" that allows you to select between a header with and without a line
+        // TODO: add ability to specify colors and such for header
+        // TODO: dynamically calculate column width based on provided data (maybe need to defer drawing until all cells are calculated)
         #region Public Properties
         /// <summary>
         ///     Columns that are to be visible in the table
@@ -77,18 +80,8 @@ namespace TerminalUI.Elements
             get => _showHeader;
             set 
             {
-                if (value == true)
-                {
-                    this.HeaderPoint = this.TopLeftPoint;
-                    this.DataPoint = this.TopLeftPoint.AddY(2);
-                }
-                else
-                {
-                    this.HeaderPoint = null;
-                    this.DataPoint = this.TopLeftPoint;
-                }
-
                 _showHeader = value;
+                this.RecalculateAndRedraw();
             }
         }
         private bool _showHeader = true;
@@ -110,6 +103,7 @@ namespace TerminalUI.Elements
         ///     Constuct a new instance of the data table element
         /// </summary>
         /// <param name="dataStore">Data store to pull from</param>
+        /// <param name="columns">Column definitions used to generate the table</param>
         /// <param name="selectType">Row selection type to use</param>
         /// <param name="showHeader">Flag indicating whether to display a header</param>
         /// <param name="rows">
@@ -169,6 +163,9 @@ namespace TerminalUI.Elements
 
                 this.BottomLeftPoint = this.TopLeftPoint.AddY(this.Height);
                 this.BottomRightPoint = this.TopRightPoint.AddY(this.Height);
+
+                this.HeaderPoint = (this.ShowHeader ? this.TopLeftPoint : null);
+                this.DataPoint = (this.ShowHeader ? this.TopLeftPoint.AddY(2) : this.TopLeftPoint);
 
                 this.MaxLines = this.Height; // this.BottomLeftPoint.Top - this.TopLeftPoint.Top - 3;
                 this.Width = this.TopRightPoint.Left - this.TopLeftPoint.Left;
@@ -230,10 +227,7 @@ namespace TerminalUI.Elements
         /// </summary>
         public override void Redraw()
         {
-            // TODO: Should we be calling this.Clear() instead?
-            // erase would remove the entire table, header included but then 
-            // the standard redraw would only draw the data rows.. right?
-            this.Erase();
+            this.Clear();
 
             this.DrawRows();
         }
@@ -258,7 +252,6 @@ namespace TerminalUI.Elements
 
             using (this.HeaderPoint.GetMove())
             {
-
                 int remainingChars = this.Width;
 
                 for (int i = 0; i < this.Columns.Count; i++)
@@ -272,13 +265,12 @@ namespace TerminalUI.Elements
                     if (i < (this.Columns.Count-1))
                         Terminal.Write("   ");
                 }
-
-                Terminal.NextLine();
+                
                 if (_headerLine == null)
-                    _headerLine = new HorizontalLine(ConsoleColor.White, LineType.ThinTripleDash, this.Width);
-
-                _headerLine.Show();
-
+                {
+                    Terminal.NextLine();
+                    _headerLine = new HorizontalLine(ConsoleColor.White, LineType.ThinTripleDash, this.Width, area: this.Area, show: true);
+                }
             }
         }
 

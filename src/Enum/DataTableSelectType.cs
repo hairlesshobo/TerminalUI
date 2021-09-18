@@ -19,10 +19,24 @@
 
 namespace TerminalUI.Types
 {
+    /// <summary>
+    ///     Enum that describes the row selection mode of a data table
+    /// </summary>
     public enum DataTableSelectType
     {
+        /// <summary>
+        ///     No selection will be allowed
+        /// </summary>
         None = 0,
+        
+        /// <summary>
+        ///     Single row selection will be allowed
+        /// </summary>
         Single = 1,
+        
+        /// <summary>
+        ///     Multiple rows will be selectable
+        /// </summary>
         Multiple = 2
     }
 }

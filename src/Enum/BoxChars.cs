@@ -24,14 +24,49 @@ namespace TerminalUI.Types
     /// </summary>
     public enum BoxChars
     {
+        /// <summary>
+        ///     Top-left box character
+        /// </summary>
         ThinTopLeft = '\u250C',
+        
+        /// <summary>
+        ///     Bottom-left box character
+        /// </summary>
         ThinBottomLeft = '\u2514',
+        
+        /// <summary>
+        ///     Top right box character
+        /// </summary>
         ThinTopRight = '\u2510',
+        
+        /// <summary>
+        ///     Bottom right box character
+        /// </summary>
         ThinBottomRight = '\u2518',
+        
+        /// <summary>
+        ///     Vetical box character
+        /// </summary>
         ThinVertical = '\u2502',
+        
+        /// <summary>
+        ///     Horizontal box character
+        /// </summary>
         ThinHorizontal = '\u2500',
+        
+        /// <summary>
+        ///     Thick horizontal box character
+        /// </summary>
         ThickHorizontal = '\u2501',
+        
+        /// <summary>
+        ///     Thin dash horizontal box character
+        /// </summary>
         ThinDashHorizontal = '\u2504',
+        
+        /// <summary>
+        ///     Thick dash horizontal box character
+        /// </summary>
         ThickDashHorizontal = '\u2505'
     }
 }

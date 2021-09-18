@@ -494,7 +494,11 @@ namespace TerminalUI
             });
             Task listen = StartAsync(_cts);
 
-            Task.WaitAll(main, listen);
+            try
+            {
+                Task.WaitAll(main, listen);
+            }
+            catch { }
         }
 
         /// <summary>

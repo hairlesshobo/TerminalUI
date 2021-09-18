@@ -20,16 +20,43 @@
 namespace TerminalUI.Types
 {
     /// <summary>
-    ///     Characters used for drawing lines
+    ///     Characters used for drawing horizontal lines
     /// </summary>
     public enum LineType
     {
+        /// <summary>
+        ///     Thin horizontal line
+        /// </summary>
         Thin = '\u2500',
+        
+        /// <summary>
+        ///     Thick horizontal line
+        /// </summary>
         Thick = '\u2501',
+        
+        /// <summary>
+        ///     Thin triple dash horizontal line
+        /// </summary>
         ThinTripleDash = '\u2504',
+        
+        /// <summary>
+        ///     Thick triple dash horizontal line
+        /// </summary>
         ThickTripleDash ='\u2505',
+        
+        /// <summary>
+        ///     Double horizontal line
+        /// </summary>
         Double = '\u2550',
+        
+        /// <summary>
+        ///     Thin double horizontal line
+        /// </summary>
         ThinDoubleDash = '\u254C',
+        
+        /// <summary>
+        ///     Thick double horizontal line
+        /// </summary>
         ThickDoubleDash ='\u254D',
     }
 }

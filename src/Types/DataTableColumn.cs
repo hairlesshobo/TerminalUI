@@ -21,18 +21,33 @@ using System;
 
 namespace TerminalUI.Types
 {
+    /// <summary>
+    ///     Describes a column that is to be displayed on a DataTable
+    /// </summary>
     public class DataTableColumn
     {
-        private string label = null;
-        private int width = 0;
-
+        /// <summary>
+        ///     Name of the column. This needs to be the name of the property in the list
+        ///     that is being passed. It is best to use `nameof()`
+        /// </summary>
         public string Name { get; set; } = null;
+
+        /// <summary>
+        ///     Label to show in the header, if enabled
+        /// </summary>
         public string Label 
         { 
-            get => (label == null ? (this.Name == null ? String.Empty : this.Name) : label);
-            set => label = value;
+            get => (_label == null ? (this.Name == null ? String.Empty : this.Name) : _label);
+            set => _label = value;
         }
-        public string LabelFormatted {
+        private string _label = null;
+
+
+        /// <summary>
+        ///     Label that has been formatted with any alignment and padding
+        /// </summary>
+        public string LabelFormatted 
+        {
             get
             {
                 if (width < 0)
@@ -44,27 +59,46 @@ namespace TerminalUI.Types
             }
         }
 
+        /// <summary>
+        ///     Width of the column
+        /// </summary>
         public int Width { 
             get => (width == 0 ? this.Label.Length : width);
             set => width = value;
         }
-        public bool AllowEdit { get; set; }
+        private int width = 0;
+
+        /// <summary>
+        ///     If true, this will allow values in this column to be edited
+        ///     !! NOT IMPLEMENTED YET !!
+        /// </summary>
+        public bool AllowEdit { get; private set; }
+
+        /// <summary>
+        ///     Foreground color to use when drawing this column
+        /// </summary>
         public ConsoleColor ForegroundColor { get; set; } = Terminal.ForegroundColor;
+
+        /// <summary>
+        ///     Background color to use when drawing this column
+        /// </summary>
+        /// <value></value>
         public ConsoleColor BackgroundColor { get; set; } = Terminal.BackgroundColor;
+
+        /// <summary>
+        ///     Callback function that allows for custom formatting of the cell contents
+        /// </summary>
         public Func<object, string> Format = null;
 
-        public DataTableColumn()
-        { }
-
-        public DataTableColumn(string name, string label, int width = 0)
+        /// <summary>
+        ///     Construct a new DataTableColumn object
+        /// </summary>
+        /// <param name="name">Name of the property</param>
+        /// <param name="label">Optional label to use in the header, if enabled</param>
+        /// <param name="width">Width of the column</param>
+        public DataTableColumn(string name, string label = null, int width = 0)
         {
             this.Name = name;
-            this.Label = label;
-            this.width = width;
-        }
-
-        public DataTableColumn(string label, int width = 0)
-        {
             this.Label = label;
             this.width = width;
         }
