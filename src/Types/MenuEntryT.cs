@@ -17,17 +17,22 @@
 *  along with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace TerminalUI.Types 
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace TerminalUI.Types
 {
-    /// <summary>
-    ///     A Mmenu entry with the default T of string 
-    /// </summary>
-    public class CliMenuEntry : CliMenuEntry<string>
+    public class MenuEntry<TKey>
     {
-        /// <summary>
-        ///     Default constructor
-        /// </summary>
-        public CliMenuEntry() : base()
-        { }
+        public string Name { get; set; }
+        public Func<CancellationToken, Task> Task { get; set; }
+        public bool Disabled { get; set; } = false;
+        public bool Header { get; set; } = false;
+        public TKey SelectedValue { get; set; }
+        public ConsoleKey ShortcutKey { get; set; }
+        public ConsoleColor ForegroundColor { get; set; } = Terminal.ForegroundColor;
+        public ConsoleColor BackgroundColor { get; set; } = Terminal.BackgroundColor;
+        public bool Selected { get; internal set; }
     }
 }

@@ -33,7 +33,7 @@ namespace TerminalUI.Elements
     ///     items
     /// </summary>
     /// <typeparam name="TKey">Type returned by the menu</typeparam>
-    public class CliMenu<TKey> : Element
+    public class Menu<TKey> : Element
     {
         #region Public Properties
         [Obsolete]
@@ -63,7 +63,7 @@ namespace TerminalUI.Elements
         #endregion Public Properties
 
         #region Private Fields
-        private List<CliMenuEntry<TKey>> _entries;
+        private List<MenuEntry<TKey>> _entries;
         private int _cursorIndex = -1;
         private string _leftPadStr = "    ";
         private int _leftPad = 4;
@@ -71,16 +71,16 @@ namespace TerminalUI.Elements
         #endregion Private Fields
 
         #region Constructors
-        public CliMenu(List<CliMenuEntry<TKey>> entries, bool multiSelect)
+        public Menu(List<MenuEntry<TKey>> entries, bool multiSelect)
             : base() => Initalize(entries, multiSelect);
 
-        public CliMenu(List<CliMenuEntry<TKey>> Entries)
+        public Menu(List<MenuEntry<TKey>> Entries)
             : base() => Initalize(Entries, false);
 
-        public CliMenu()
+        public Menu()
             : base() => Initalize(null, false);
 
-        public void Initalize(List<CliMenuEntry<TKey>> entries, bool multiSelect)
+        public void Initalize(List<MenuEntry<TKey>> entries, bool multiSelect)
         {
             this.MultiSelect = multiSelect;
 
@@ -97,7 +97,7 @@ namespace TerminalUI.Elements
         #endregion Constructors
 
         #region Public Methods
-        public void SetMenuItems(List<CliMenuEntry<TKey>> entries)
+        public void SetMenuItems(List<MenuEntry<TKey>> entries)
         {
             _entries = entries;
             _cursorIndex = 0;
@@ -186,7 +186,7 @@ namespace TerminalUI.Elements
         {
             this.Clear();
 
-            foreach (CliMenuEntry<TKey> entry in _entries.Skip(_entryOffset).Take(MaxLines))
+            foreach (MenuEntry<TKey> entry in _entries.Skip(_entryOffset).Take(MaxLines))
                 WriteMenuEntry(entry);
         }
 
@@ -249,7 +249,7 @@ namespace TerminalUI.Elements
 
                     if ( this.MultiSelect == false)
                     {
-                        CliMenuEntry<TKey> finalEntry = _entries.First(x => x.Selected);
+                        MenuEntry<TKey> finalEntry = _entries.First(x => x.Selected);
 
                         this.Clear();
 
@@ -277,8 +277,8 @@ namespace TerminalUI.Elements
                 "Nav",
                 (key) =>
                 {
-                    CliMenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
-                    CliMenuEntry<TKey> previousEntry = selectedEntry;
+                    MenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
+                    MenuEntry<TKey> previousEntry = selectedEntry;
 
                     bool down = (key.RootKey == ConsoleKey.DownArrow);
 
@@ -327,7 +327,7 @@ namespace TerminalUI.Elements
                     (key) => {
                         if (key.RootKey == ConsoleKey.Spacebar)
                         {
-                            CliMenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
+                            MenuEntry<TKey> selectedEntry = _entries[_cursorIndex];
                 
                             selectedEntry.Selected = !selectedEntry.Selected;
                             WriteMenuEntry(selectedEntry);
@@ -373,7 +373,7 @@ namespace TerminalUI.Elements
         #endregion Public Methods
 
         #region Private Methods
-        private void MoveCursor(CliMenuEntry<TKey> entry, bool down)
+        private void MoveCursor(MenuEntry<TKey> entry, bool down)
         {
             if (down == true)
             {
@@ -429,7 +429,7 @@ namespace TerminalUI.Elements
             }
         }
 
-        private void MoveCursor(CliMenuEntry<TKey> currentEntry, CliMenuEntry<TKey> newEntry)
+        private void MoveCursor(MenuEntry<TKey> currentEntry, MenuEntry<TKey> newEntry)
         {
             int newIndex = _entries.IndexOf(newEntry);
             currentEntry.Selected = false;
@@ -438,7 +438,7 @@ namespace TerminalUI.Elements
             _cursorIndex = newIndex;
         }
 
-        private void WriteMenuEntry(CliMenuEntry<TKey> entry)
+        private void WriteMenuEntry(MenuEntry<TKey> entry)
         {
             int entryIndex = _entries.IndexOf(entry);
 
