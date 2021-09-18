@@ -33,9 +33,5 @@ progressBar.UpdateProgress(0.42);
 # To-do list
 * Add "area" parameter to all elements
   * CliMenu
-  * NotificationBox
-  * QueryYesNo
 * Add "show" parameter to all elements
   * CliMenu
-  * NotificationBox
-  * QueryYesNo
