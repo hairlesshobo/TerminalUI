@@ -205,13 +205,13 @@ namespace TestCLI
             Terminal.NextLine();
             Terminal.NextLine();
 
-            if (!await Helpers.Delay(2000, cts.Token))
+            if (!await Delay(2000, cts.Token))
                 return;
 
             _box.UpdateLine(0, "meow", TextJustify.Center, ConsoleColor.Cyan);
             _box.Show();
 
-            if (!await Helpers.Delay(3000, cts.Token))
+            if (!await Delay(3000, cts.Token))
                 return;
 
             _box.Hide();
