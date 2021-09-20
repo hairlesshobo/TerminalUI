@@ -9,7 +9,7 @@ I highly recommend that you go the NuGet route so that you can easily get new ve
 
 The library can be found on NuGet at the following location:
 
-https://nuget.com/blah
+<https://www.nuget.org/packages/FoxHollow.TerminalUI/>
 
 For dotnet core / dotnet 5.0+, run the following command
 
