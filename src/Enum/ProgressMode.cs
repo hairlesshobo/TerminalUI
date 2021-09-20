@@ -17,7 +17,7 @@
  *  along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace TerminalUI.Types
+namespace FoxHollow.TerminalUI.Types
 {
     /// <summary>
     ///     Enum used to configure additional modes for the progress bar

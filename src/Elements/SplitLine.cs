@@ -18,9 +18,9 @@
  */
 
 using System;
-using TerminalUI.Types;
+using FoxHollow.TerminalUI.Types;
 
-namespace TerminalUI.Elements
+namespace FoxHollow.TerminalUI.Elements
 {
     /// <summary>
     ///     Split-line element. This is used for displaying two pieces of text on a line, 

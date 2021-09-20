@@ -22,9 +22,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using TerminalUI.Types;
+using FoxHollow.TerminalUI.Types;
 
-namespace TerminalUI
+namespace FoxHollow.TerminalUI
 {
     /// <summary>
     ///     Class used for reading key input from the terminal

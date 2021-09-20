@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace TerminalUI.Types
+namespace FoxHollow.TerminalUI.Types
 {
     /// <summary>
     ///     Class used to describe a terminal input key

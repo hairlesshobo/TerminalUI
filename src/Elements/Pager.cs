@@ -22,9 +22,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TerminalUI.Types;
+using FoxHollow.TerminalUI.Types;
 
-namespace TerminalUI.Elements
+namespace FoxHollow.TerminalUI.Elements
 {
     /// <summary>
     ///     Pager element that is used for displaying multi-line text that overflows

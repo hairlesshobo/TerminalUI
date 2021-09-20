@@ -19,7 +19,7 @@
 
 using System;
 
-namespace TerminalUI.Types
+namespace FoxHollow.TerminalUI.Types
 {
     /// <summary>
     ///     Describes a column that is to be displayed on a DataTable

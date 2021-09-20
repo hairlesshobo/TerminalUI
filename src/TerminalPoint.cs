@@ -18,9 +18,9 @@
  */
 
 using System;
-using TerminalUI.Types;
+using FoxHollow.TerminalUI.Types;
 
-namespace TerminalUI
+namespace FoxHollow.TerminalUI
 {
     /// <summary>
     ///     Class used to make interacting with terminal positioning much easier

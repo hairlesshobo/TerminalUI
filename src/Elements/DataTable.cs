@@ -23,9 +23,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using TerminalUI.Types;
+using FoxHollow.TerminalUI.Types;
 
-namespace TerminalUI.Elements
+namespace FoxHollow.TerminalUI.Elements
 {
     /// <summary>
     ///     The data table element is meant for displaying data in a table format

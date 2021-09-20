@@ -19,9 +19,9 @@
 
 using System;
 using System.Linq;
-using TerminalUI.Types;
+using FoxHollow.TerminalUI.Types;
 
-namespace TerminalUI.Elements
+namespace FoxHollow.TerminalUI.Elements
 {
     /// <summary>
     ///     Progress bar element is designed for quickly representing a progress

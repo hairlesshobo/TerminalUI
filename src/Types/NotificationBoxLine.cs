@@ -19,7 +19,7 @@
 
 using System;
 
-namespace TerminalUI.Types
+namespace FoxHollow.TerminalUI.Types
 {
     /// <summary>
     ///     Class that defines a line that is to be displayed in a notification box

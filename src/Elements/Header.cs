@@ -17,9 +17,9 @@
 *  along with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-using TerminalUI.Types;
+using FoxHollow.TerminalUI.Types;
 
-namespace TerminalUI.Elements
+namespace FoxHollow.TerminalUI.Elements
 {
     /// <summary>
     ///     A header element is a two-line element that is comprised of two 

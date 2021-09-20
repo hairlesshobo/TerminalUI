@@ -20,9 +20,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TerminalUI.Types;
+using FoxHollow.TerminalUI.Types;
 
-namespace TerminalUI.Elements
+namespace FoxHollow.TerminalUI.Elements
 {
     /// <summary>
     ///     Simple element that is used to await a yes/no answer from the user

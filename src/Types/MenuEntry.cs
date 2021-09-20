@@ -21,7 +21,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TerminalUI.Types
+namespace FoxHollow.TerminalUI.Types
 {
     /// <summary>
     ///     Represents a single menu entry that is to be displayed on a Menu element

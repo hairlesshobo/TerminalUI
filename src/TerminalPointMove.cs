@@ -1,6 +1,6 @@
 using System;
 
-namespace TerminalUI
+namespace FoxHollow.TerminalUI
 {
     /// <summary>
     ///     TerminalPoint helper class that allows to wrap a TerminalPoint

@@ -18,9 +18,9 @@
  */
 
 using System;
-using TerminalUI.Types;
+using FoxHollow.TerminalUI.Types;
 
-namespace TerminalUI.Elements
+namespace FoxHollow.TerminalUI.Elements
 {
     /// <summary>
     ///     A horizontal line element is exactly what it sounds like.. a horizontal

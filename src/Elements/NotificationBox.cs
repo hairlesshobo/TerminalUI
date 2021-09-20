@@ -18,9 +18,9 @@
  */
 
 using System;
-using TerminalUI.Types;
+using FoxHollow.TerminalUI.Types;
 
-namespace TerminalUI.Elements
+namespace FoxHollow.TerminalUI.Elements
 {
     /// <summary>
     ///     A notification box is meant to be displayed above the rest of the 

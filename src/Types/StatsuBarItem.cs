@@ -20,7 +20,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace TerminalUI.Types
+namespace FoxHollow.TerminalUI.Types
 {
     /// <summary>
     ///     Describes an item that is to be displayed on the status bar

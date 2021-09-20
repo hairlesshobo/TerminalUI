@@ -19,7 +19,7 @@
 
 using System;
 
-namespace TerminalUI
+namespace FoxHollow.TerminalUI
 {
     /// <summary>
     ///     Allow to specify the default colors for the terminal

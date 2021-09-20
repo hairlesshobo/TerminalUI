@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TerminalUI;
-using TerminalUI.Elements;
-using TerminalUI.Types;
+using FoxHollow.TerminalUI;
+using FoxHollow.TerminalUI.Elements;
+using FoxHollow.TerminalUI.Types;
 
 namespace TestCLI
 {

@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>TerminalUI</PackageId>
+    <PackageId>FoxHollow.TerminalUI</PackageId>
+    
     <TargetFramework>netstandard2.0</TargetFramework>
 
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
