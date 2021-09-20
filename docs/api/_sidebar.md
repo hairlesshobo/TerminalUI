@@ -3,13 +3,13 @@
 -  [Elements](/elements.md "Elements [TerminalUI]")
 -  [Changelog](/changelog.md "Changelog [TerminalUI]")
 -  [API Reference](/api/index.md "API Reference [TerminalUI]")
-    - TerminalUI
+    - FoxHollow.TerminalUI
         - [KeyInput](./foxhollow.terminalui.keyinput.md)
         - [Terminal](./foxhollow.terminalui.terminal.md)
         - [TerminalColor](./foxhollow.terminalui.terminalcolor.md)
         - [TerminalPoint](./foxhollow.terminalui.terminalpoint.md)
         - [TerminalPointMove](./foxhollow.terminalui.terminalpointmove.md)
-    - TerminalUI.Elements
+    - FoxHollow.TerminalUI.Elements
         - [DataTable](./foxhollow.terminalui.elements.datatable.md)
         - [Header](./foxhollow.terminalui.elements.header.md)
         - [HorizontalLine](./foxhollow.terminalui.elements.horizontalline.md)
@@ -22,7 +22,7 @@
         - [SplitLine](./foxhollow.terminalui.elements.splitline.md)
         - [StatusBar](./foxhollow.terminalui.elements.statusbar.md)
         - [Text](./foxhollow.terminalui.elements.text.md)
-    - TerminalUI.Types
+    - FoxHollow.TerminalUI.Types
         - [BoxChars](./foxhollow.terminalui.types.boxchars.md)
         - [DataTableColumn](./foxhollow.terminalui.types.datatablecolumn.md)
         - [DataTableSelectType](./foxhollow.terminalui.types.datatableselecttype.md)
