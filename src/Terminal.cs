@@ -38,6 +38,7 @@ namespace FoxHollow.TerminalUI
         /// <summary>
         ///     Header object. Will be null until the first time <see cref="InitHeader" /> is called
         /// </summary>
+        /// <seealso cref="InitHeader">InitHeader()</seealso>
         public static Header Header { get; private set; } = null;
 
         /// <summary>
@@ -49,7 +50,7 @@ namespace FoxHollow.TerminalUI
         ///     The root point of the terminal, that is, the Top-leftmost position that is 
         ///     not part of the header
         /// </summary>
-        public static TerminalPoint RootPoint { get; private set; } = TerminalPoint.GetCurrent();
+        public static TerminalPoint RootPoint { get; private set; } = new TerminalPoint(0, 0);
 
         /// <summary>
         ///     Number of lines that are usable by the application. This accounts for and 
