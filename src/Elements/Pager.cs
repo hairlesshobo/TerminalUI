@@ -75,7 +75,22 @@ namespace FoxHollow.TerminalUI.Elements
         /// <summary>
         ///     If true, the header provided in <see cref="HeaderText" /> will be displayed
         /// </summary>
-        public bool ShowHeader { get; set; } = false;
+        public bool ShowHeader 
+        { 
+            get => _showHeader;
+            set
+            {
+                _showHeader = value;
+
+                if (this.TopLeftPoint != null)
+                {
+                    this.HeaderLinePoint = (value ? this.TopLeftPoint.Clone() : null);
+                    this.FirstTextLinePoint = (value ? this.TopLeftPoint.AddY(1) : this.TopLeftPoint.Clone());
+                }
+            }
+        }
+
+        private bool _showHeader = false;
 
         /// <summary>
         ///     Header text to display, if <see cref="ShowHeader" /> is enabled

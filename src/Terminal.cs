@@ -445,6 +445,18 @@ namespace FoxHollow.TerminalUI
         }
 
         /// <summary>
+        ///     Routine that needs to be called when the application is exiting.
+        /// 
+        ///     Note: this is automatically called when the application is started
+        ///     using the <see cref="Terminal.Run(string, string, Func{CancellationTokenSource, Task})" />
+        ///     entry point
+        /// </summary>
+        public static void Shutdown()
+        {
+            Console.CursorVisible = true;
+        }
+
+        /// <summary>
         ///     Move the cursor to the specified position
         /// </summary>
         /// <param name="left">left position</param>
@@ -537,6 +549,8 @@ namespace FoxHollow.TerminalUI
                 Task.WaitAll(main, listen);
             }
             catch { }
+
+            Shutdown();
         }
 
         /// <summary>
