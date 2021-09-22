@@ -436,6 +436,18 @@ Items to include in the status bar
 [StatusBar](./foxhollow.terminalui.elements.statusbar.md)<br>
 Status bar object
 
+### **Shutdown()**
+
+Routine that needs to be called when the application is exiting.
+ 
+ Note: this is automatically called when the application is started
+ using the FoxHollow.TerminalUI.Terminal.Run(System.String,System.String,System.Func{System.Threading.CancellationTokenSource,System.Threading.Tasks.Task})
+ entry point
+
+```csharp
+public static void Shutdown()
+```
+
 ### **SetCursorPosition(Int32, Int32)**
 
 Move the cursor to the specified position

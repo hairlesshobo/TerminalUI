@@ -2,7 +2,8 @@
 
 Namespace: FoxHollow.TerminalUI.Elements
 
-
+Progress bar element is designed for quickly representing a progress
+ as a percentage on a line bar
 
 ```csharp
 public class ProgressBar : FoxHollow.TerminalUI.Types.Element

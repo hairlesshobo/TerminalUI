@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # requirements
 #   - dotnet
 #   - xmldoc2md (https://charlesdevandiere.github.io/xmldoc2md/)
