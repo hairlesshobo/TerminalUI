@@ -284,12 +284,12 @@ namespace FoxHollow.TerminalUI.Elements
         /// </summary>
         public void Stop()
         {
+            Terminal.StatusBar?.Reset();
+
             _cts?.Cancel();
             _watchdogCts?.Cancel();
             
             _tcs?.TrySetResult(true);
-
-            Terminal.StatusBar?.Reset();
         }
 
         /// <summary>
