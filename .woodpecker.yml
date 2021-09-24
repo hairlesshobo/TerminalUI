@@ -12,7 +12,7 @@ pipeline:
       - ./scripts/generate_docs.sh
     when:
       event: push
-      branch: [master, develop, cicd_test]
+      branch: [master, develop]
 
   deploy_docs:
     image: drillster/drone-rsync
@@ -29,7 +29,7 @@ pipeline:
         target: plugin_user
     when:
       event: push
-      branch: [master, develop, cicd_test]
+      branch: [master, develop]
 
   prepare_publish:
     image: alpine:3.12
