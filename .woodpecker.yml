@@ -19,7 +19,7 @@ pipeline:
     source: ./docs/
     target: ~/html/terminal-ui/
     delete: true
-    args: "--verbose --dry-run"
+    args: "--verbose"
     secrets:
       - source: doc_deploy_key
         target: plugin_key
