@@ -1,7 +1,7 @@
 pipeline:
 
   build:
-    image: mcr.microsoft.com/dotnet/sdk:5.0.401-alpine3.12
+    image: mcr.microsoft.com/dotnet/sdk:5.0.401-alpine3.13
     commands:
       - dotnet restore --no-cache
       - dotnet build
@@ -65,7 +65,7 @@ pipeline:
       tag: release/*
 
   publish_nuget:
-    image: mcr.microsoft.com/dotnet/sdk:5.0.401-alpine3.12
+    image: mcr.microsoft.com/dotnet/sdk:5.0.401-alpine3.13
     commands:
       # uncomment below line to activate
       - dotnet nuget push dist/*.nupkg --api-key $NUGET_PUBLISH_KEY
