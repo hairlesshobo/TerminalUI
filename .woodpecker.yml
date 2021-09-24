@@ -45,7 +45,7 @@ pipeline:
     title: "TerminalUI ${DRONE_TAG##release/}"
     # Generate release notes somehow and include link to nuget
     # https://www.nuget.org/packages/FoxHollow.LibSMB2Sharp/1.0.0-beta1
-    # note: RELEASE_NOTES.md
+    note: RELEASE_NOTES.md
     # find some way to programmatically set the draft flag
     # draft: true
     files:
@@ -68,8 +68,8 @@ pipeline:
     image: mcr.microsoft.com/dotnet/sdk:5.0.401-alpine3.13
     commands:
       # uncomment below line to activate
-      - dotnet nuget push dist/*.nupkg --api-key $NUGET_PUBLISH_KEY
-      # - dotnet nuget push *.nupkg --api-key $NUGET_PUBLISH_KEY --source https://api.nuget.org/v3/index.json
+      # - dotnet nuget push dist/*.nupkg --api-key $NUGET_PUBLISH_KEY
+      - dotnet nuget push *.nupkg --api-key $NUGET_PUBLISH_KEY --source https://api.nuget.org/v3/index.json
     secrets: [nuget_publish_key]
     when:
       event: tag

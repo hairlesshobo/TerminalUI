@@ -16,9 +16,8 @@ progressBar.UpdateProgress(0.42);
 ```
 
 ## Demo
-Here you can see a screen grab of a few of these elements in use:
 
-![demo](/_media/QuickArchiverDemo.gif)
+For a demo, please visit the project homepage [here](https://code.foxhollow.cc/terminal-ui/#/README?id=demo).
 
 ## License
 TerminalUI is licensed under the GNU Lesser General Public License (LGPL) v2.1 or later
