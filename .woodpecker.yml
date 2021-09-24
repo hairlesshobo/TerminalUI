@@ -4,7 +4,6 @@ pipeline:
     image: alpine:3.12
     commands:
       - echo "first!"
-      - echo "second!"
 
 
   # build:
