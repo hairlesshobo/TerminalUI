@@ -18,7 +18,7 @@ progressBar.UpdateProgress(0.42);
 ## Demo
 Here you can see a screen grab of a few of these elements in use:
 
-![demo](./media/QuickArchiverDemo.gif)
+![demo](/_media/QuickArchiverDemo.gif)
 
 ## License
 TerminalUI is licensed under the GNU Lesser General Public License (LGPL) v2.1 or later

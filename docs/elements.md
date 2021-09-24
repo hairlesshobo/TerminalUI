@@ -5,7 +5,7 @@
 > Basic menu element that allows listing multiple options and allows the user to 
 > interactively select one or more (multiple select not yet implemented) items
 
-![Menu Example](./media/Menu.gif "Menu Example")
+![Menu Example](/_media/Menu.gif "Menu Example")
 
 [*API reference for the `Menu` element*](/api/foxhollow.terminalui.elements.menu)
 
@@ -62,7 +62,7 @@
 > A Progress bar element is designed for quickly displaying a visual representation of 
 > progress as a percentage on a line bar
 
-![ProgressBar Example](./media/ProgressBar.gif "ProgressBar Example")
+![ProgressBar Example](/_media/ProgressBar.gif "ProgressBar Example")
 
 [*API reference for the `ProgressBar` element*](/api/foxhollow.terminalui.elements.progressbar)
 

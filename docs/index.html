@@ -7,6 +7,11 @@
   <meta name="description" content="Description">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-darklight-theme@3.2.0/dist/style.min.css" title="docsify-darklight-theme" type="text/css" />
+  <style>
+    a.app-name-link > img {
+      max-width: 160px;
+    }
+  </style>
 </head>
 <body>
   <div id="app"></div>
@@ -15,6 +20,7 @@
       name: 'TerminalUI',
       nameLink: 'https://code.foxhollow.cc/terminal-ui/',
       repo: 'https://git.foxhollow.cc/hairlesshobo/TerminalUI',
+      // logo: '/_media/FoxHollow-02.png',
       coverpage: false,
       loadSidebar: true,
       maxLevel: 2,
@@ -25,6 +31,11 @@
         position: "top",
         color: "var(--theme-color,#42b983)",
         height: "3px",
+      },
+      mustache: {
+        data: [
+          'build_props.xml'
+        ]
       }
     }
   </script>
@@ -34,5 +45,7 @@
   <script src="//cdn.jsdelivr.net/npm/prismjs@1.25.0/components/prism-bash.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify-darklight-theme@3.2.0/dist/index.min.js" type="text/javascript"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify-progress@1.0.3/dist/progress.min.js"></script>
+  <script src="//unpkg.com/docsify-plugin-flexible-alerts@1.1.0"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-mustache@1.0.5"></script>
 </body>
 </html>
