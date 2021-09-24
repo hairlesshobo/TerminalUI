@@ -1,5 +1,7 @@
 # TerminalUI - Simple terminal widgets for C#
 
+![build badge](https://woodpecker.foxhollow.cc/api/badges/hairlesshobo/TerminalUI/status.svg?branch=master)
+
 ## Overview
 This project is meant to provide a very simple Terminal "UI" for dotnet
 projects. There are no movable windows, no mouse support, etc. It really
