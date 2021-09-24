@@ -69,7 +69,7 @@ pipeline:
     commands:
       # uncomment below line to activate
       # - dotnet nuget push dist/*.nupkg --api-key $NUGET_PUBLISH_KEY
-      - dotnet nuget push *.nupkg --api-key $NUGET_PUBLISH_KEY --source https://api.nuget.org/v3/index.json
+      - dotnet nuget push ./dist/*.nupkg --api-key $NUGET_PUBLISH_KEY --source https://api.nuget.org/v3/index.json
     secrets: [nuget_publish_key]
     when:
       event: tag
