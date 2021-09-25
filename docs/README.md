@@ -17,6 +17,13 @@ ProgressBar progressBar = new ProgressBar();
 progressBar.UpdateProgress(0.42);
 ```
 
+## Project Links
+
+* [Project Website](https://code.foxhollow.cc/terminal-ui/)
+* [NuGet Package](https://www.nuget.org/packages/FoxHollow.TerminalUI/)
+* [Git Repo](https://git.foxhollow.cc/hairlesshobo/TerminalUI)
+* [FoxHollow](https://www.foxhollow.cc)
+
 ## Demo
 Here you can see a screen grab of a few of these elements in use:
 
