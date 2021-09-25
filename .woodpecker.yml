@@ -34,6 +34,7 @@ pipeline:
   prepare_publish:
     image: alpine:3.12
     commands:
+      - apk update && apk add --no-cache zip
       - ./scripts/prepare_publish.sh
     when:
       event: tag

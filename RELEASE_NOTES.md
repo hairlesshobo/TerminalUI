@@ -1,4 +1,4 @@
-# 2.0.0-beta6
+# 2.0.0-beta7
 
-* Working on release automation. 
-* Added README to nuget package.
+* Hopefully finished release automation
+

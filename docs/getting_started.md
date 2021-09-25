@@ -18,7 +18,7 @@ dotnet add package FoxHollow.TerminalUI
 ```
 
 
-### Install from release
+### Install from source
 
 To install the library from source, you can either use a release version or you can directly clone the code with `git`.
 
