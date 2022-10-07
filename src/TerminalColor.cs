@@ -77,17 +77,17 @@ namespace FoxHollow.TerminalUI
         /// <summary>
         ///     Default background color of the Menu cursor
         /// </summary>
-        public static ConsoleColor MenuCursorBackground { get; set; } = ConsoleColor.DarkGray;
+        public static ConsoleColor MenuCursorBackground { get; set; } = ConsoleColor.DarkGreen;
         
         /// <summary>
         ///     Default foreground color of the Menu cursor
         /// </summary>
-        public static ConsoleColor MenuCursorForeground { get; set; } = ConsoleColor.DarkGreen;
+        public static ConsoleColor MenuCursorForeground { get; set; } = ConsoleColor.White;
         
         /// <summary>
         ///     Default foreground color of the Menu cursor arrow
         /// </summary>
-        public static ConsoleColor MenuCursorArrow { get; set; } = ConsoleColor.Green;
+        public static ConsoleColor MenuCursorArrow { get; set; } = ConsoleColor.Yellow;
         
         /// <summary>
         ///     Default foreground color for a disabled Menu entry
@@ -133,11 +133,16 @@ namespace FoxHollow.TerminalUI
         /// <summary>
         ///     Foreground color used when drawing keys on the status bar
         /// </summary>
-        public static ConsoleColor StatusBarKeyForegroundColor { get; set; } = ConsoleColor.Magenta;
+        public static ConsoleColor StatusBarKeyForegroundColor { get; set; } = ConsoleColor.Red;
 
         /// <summary>
         ///     Foreground color used when drawing separators on the status bar
         /// </summary>
         public static ConsoleColor StatusBarSeparatorForegroundColor { get; set; } = ConsoleColor.DarkGray;
+
+        /// <summary>
+        ///     Foreground color used when drawing normal text on the status bar
+        /// </summary>
+        public static ConsoleColor StatusBarForegroundColor { get; set; } = ConsoleColor.White;
     }
 }

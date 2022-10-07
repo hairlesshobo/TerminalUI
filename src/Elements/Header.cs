@@ -17,6 +17,7 @@
 *  along with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using FoxHollow.TerminalUI.Types;
 
 namespace FoxHollow.TerminalUI.Elements
@@ -39,6 +40,8 @@ namespace FoxHollow.TerminalUI.Elements
         /// <value></value>
         public string RightText { get; private set; }
 
+        private string _previousRightText;
+
         private SplitLine splText = null;
         private HorizontalLine hl = null;
         private bool _initialized = false;
@@ -57,7 +60,7 @@ namespace FoxHollow.TerminalUI.Elements
             : base (area, show)
         {
             this.LeftText = leftText;
-            this.RightText = rightText;
+            this.RightText = _previousRightText = rightText;
             
             this.RecalculateAndRedraw();
         }
@@ -112,9 +115,29 @@ namespace FoxHollow.TerminalUI.Elements
         ///     Update the text on the right
         /// </summary>
         /// <param name="right">Text on the right</param>
-        public void UpdateRight(string right)
+        /// <param name="temporary">
+        ///     If true, the specified value is only temporary and this can be reverted 
+        ///     to the previous value by calling RevertRight();
+        /// </param>
+        public void UpdateRight(string right, bool temporary = false)
         {
+            if (!temporary)
+                _previousRightText = right;
+
             this.RightText = right;
+
+            this.Redraw();
+        }
+
+        /// <summary>
+        ///     Revert the right text to the most recent non-temporary right value
+        /// </summary>
+        public void RevertRight()
+        {
+            if (String.IsNullOrWhiteSpace(_previousRightText))
+                return;
+
+            this.RightText = _previousRightText;
 
             this.Redraw();
         }

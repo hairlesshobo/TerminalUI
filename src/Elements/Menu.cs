@@ -281,7 +281,7 @@ namespace FoxHollow.TerminalUI.Elements
             } 
             else
             {
-                // TOOD: add callback here for quit that will allow me to use the global TCS to close out the application
+                // TODO: add callback here for quit that will allow me to use the global TCS to close out the application
                 statusBarItems.Add(new StatusBarItem(
                     "Quit Application",
                     async (key) => 
@@ -509,16 +509,25 @@ namespace FoxHollow.TerminalUI.Elements
                 if (this.MultiSelect)
                     multiSelectChcekbox = "[" + (entry.Selected == true? "X" : " ") + "]";
 
+                // We are drawing the currently selected menu entry
                 if (entryIndex == _cursorIndex)
                 {
                     Terminal.Write(_leftPadStr);
                     Terminal.BackgroundColor = TerminalColor.MenuCursorBackground;
                     Terminal.ForegroundColor = TerminalColor.MenuCursorArrow;
                     Terminal.Write(">");
+
                     if (this.MultiSelect == true)
                         Terminal.Write(multiSelectChcekbox);
+
                     Terminal.ForegroundColor = TerminalColor.MenuCursorForeground;
                     Terminal.Write($" {entry.Name}");
+
+                    if (!String.IsNullOrWhiteSpace(entry.HelpText))
+                        Terminal.Header.UpdateRight(entry.HelpText, true);
+                    else
+                        Terminal.Header.RevertRight();
+
                     Terminal.ResetColor();
                 }
                 else

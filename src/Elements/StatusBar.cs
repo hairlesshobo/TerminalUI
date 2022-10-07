@@ -146,7 +146,7 @@ namespace FoxHollow.TerminalUI.Elements
                             Terminal.Write(' ');
                     }
 
-                    Terminal.Write(item.Name);
+                    Terminal.WriteColor(TerminalColor.StatusBarForegroundColor, item.Name);
                     Terminal.Write(' ');
 
                     item.AddRemoveCallback(() => {

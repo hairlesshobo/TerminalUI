@@ -55,6 +55,11 @@ namespace FoxHollow.TerminalUI.Types
         ///     Value that is to be returned if this menu entry is selected
         /// </summary>
         public object SelectedValue { get; set; }
+
+        /// <summary>
+        ///     If specified, this help text will be displayed on the header bar when this menu entry is highlighted
+        /// </summary>
+        public string HelpText { get; set; }
         
         /// <summary>
         ///     Foreground color for this entry
